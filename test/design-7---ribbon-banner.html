@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Design 7 - Ribbon Banner</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: transparent;
+            font-family: 'Georgia', serif;
+        }
+
+        @keyframes bannerUnfurl {
+            from {
+                transform: scaleX(0);
+                transform-origin: left;
+            }
+            to {
+                transform: scaleX(1);
+                transform-origin: left;
+            }
+        }
+
+        @keyframes photoDropIn {
+            from {
+                transform: translateY(-150px) rotate(180deg);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0) rotate(0deg);
+                opacity: 1;
+            }
+        }
+
+        @keyframes ribbonWave {
+            0%, 100% { transform: translateY(0) scaleY(1); }
+            50% { transform: translateY(-3px) scaleY(1.02); }
+        }
+
+        @keyframes textFadeSlide {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes scroll {
+            from { transform: translateX(0); }
+            to { transform: translateX(-50%); }
+        }
+
+        @keyframes shimmerPass {
+            0% { left: -100%; }
+            100% { left: 200%; }
+        }
+
+        .banner-ribbon {
+            animation: bannerUnfurl 1s cubic-bezier(0.68, -0.55, 0.265, 1.55),
+                       ribbonWave 4s ease-in-out infinite 2s;
+            position: relative;
+        }
+
+        .banner-ribbon::before,
+        .banner-ribbon::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            width: 0;
+            height: 0;
+            border-style: solid;
+        }
+
+        .banner-ribbon::before {
+            right: -30px;
+            border-width: 50px 0 50px 30px;
+            border-color: transparent transparent transparent #92400e;
+        }
+
+        .banner-ribbon::after {
+            left: -30px;
+            border-width: 50px 30px 50px 0;
+            border-color: transparent #92400e transparent transparent;
+        }
+
+        .photo-drop {
+            animation: photoDropIn 1.2s cubic-bezier(0.68, -0.55, 0.265, 1.55) 0.5s both;
+        }
+
+        .text-reveal {
+            animation: textFadeSlide 0.8s ease-out 1s both;
+        }
+
+        .shimmer {
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            animation: shimmerPass 3s ease-in-out infinite;
+        }
+
+        .ticker-scroll {
+            animation: scroll 35s linear infinite;
+        }
+
+        #mainText, #subText {
+            transition: all 0.6s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="fixed bottom-0 left-0 w-full">
+        <div class="relative" style="padding: 30px 60px 0;">
+            <!-- Main Ribbon Banner -->
+            <div class="banner-ribbon relative bg-gradient-to-r from-amber-900 via-orange-800 to-amber-900 px-20 py-8 shadow-2xl overflow-hidden"
+                 style="margin-left: 30px; margin-right: 30px;">
+                <div class="shimmer"></div>
+
+                <!-- Photo Badge -->
+                <div class="photo-drop absolute -top-8 left-12 w-24 h-24 bg-gradient-to-br from-amber-600 to-orange-700 rounded-lg p-1 shadow-2xl transform rotate-6">
+                    <div class="w-full h-full rounded-md overflow-hidden border-2 border-amber-200/40">
+                        <img src="https://img.freepik.com/free-photo/man-s-white-sweater-psd-mockup-casual-apparel-close-up_53876-148045.jpg?semt=ais_hybrid&w=740&q=80"
+                             class="w-full h-full object-cover">
+                    </div>
+                    <div class="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-amber-700 px-3 py-0.5 text-xs text-white font-bold rounded">✟</div>
+                </div>
+
+                <!-- Text Content -->
+                <div class="text-reveal text-center">
+                    <h2 id="mainText" class="text-4xl font-bold text-amber-100 mb-3 tracking-widest"
+                        style="text-shadow: 2px 2px 4px rgba(0,0,0,0.5);">
+                        HONORING THEIR JOURNEY
+                    </h2>
+                    <div class="flex items-center justify-center gap-3 mb-2">
+                        <div class="w-24 h-px bg-amber-300"></div>
+                        <div class="text-amber-300 text-2xl">❖</div>
+                        <div class="w-24 h-px bg-amber-300"></div>
+                    </div>
+                    <p id="subText" class="text-xl text-amber-200 italic">
+                        A treasure cherished, forever remembered
+                    </p>
+                </div>
+
+                <!-- Logo Badge -->
+                <div class="absolute -top-6 right-12 bg-amber-950/90 backdrop-blur-sm rounded-lg px-5 py-3 shadow-xl border-2 border-amber-600/40">
+                    <img src="https://yt3.googleusercontent.com/hJD-YRx93VUY4VZG7sG0PjCh8iiBInbgY0S21liCJk0HLMeQhQmQKjcMrzUpKr22MGDr6YM0=s900-c-k-c0x00ffffff-no-rj"
+                         class="h-12 w-auto">
+                </div>
+            </div>
+        </div>
+
+        <!-- Ticker -->
+        <div class="bg-gradient-to-r from-stone-900 via-amber-950 to-stone-900 py-2.5 overflow-hidden border-t-2 border-amber-700/50">
+            <div class="ticker-scroll flex whitespace-nowrap">
+                <span class="mx-10 text-amber-200 text-sm">◈ A precious life treasured always</span>
+                <span class="mx-10 text-amber-200 text-sm">◈ Golden memories that never fade</span>
+                <span class="mx-10 text-amber-200 text-sm">◈ May their soul shine eternal</span>
+                <span class="mx-10 text-amber-200 text-sm">◈ Forever honored, forever loved</span>
+                <span class="mx-10 text-amber-200 text-sm">◈ A precious life treasured always</span>
+                <span class="mx-10 text-amber-200 text-sm">◈ Golden memories that never fade</span>
+                <span class="mx-10 text-amber-200 text-sm">◈ May their soul shine eternal</span>
+                <span class="mx-10 text-amber-200 text-sm">◈ Forever honored, forever loved</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const primaryTexts = [
+            "HONORING THEIR JOURNEY",
+            "A GOLDEN LEGACY",
+            "TREASURED FOREVER",
+            "IN PRECIOUS MEMORY",
+            "ETERNAL HONOR"
+        ];
+
+        const secondaryTexts = [
+            "A treasure cherished, forever remembered",
+            "Their worth beyond measure",
+            "A life of immeasurable value",
+            "Priceless memories we hold dear",
+            "Golden moments never forgotten"
+        ];
+
+        let idx = 0;
+
+        function cycleText() {
+            const mainEl = document.getElementById('mainText');
+            const subEl = document.getElementById('subText');
+
+            mainEl.style.opacity = '0';
+            subEl.style.opacity = '0';
+
+            setTimeout(() => {
+                idx = (idx + 1) % primaryTexts.length;
+                mainEl.textContent = primaryTexts[idx];
+                subEl.textContent = secondaryTexts[idx];
+
+                setTimeout(() => {
+                    mainEl.style.opacity = '1';
+                    subEl.style.opacity = '1';
+                }, 50);
+            }, 600);
+        }
+
+        setInterval(cycleText, 7000);
+    </script>
+</body>
+</html>

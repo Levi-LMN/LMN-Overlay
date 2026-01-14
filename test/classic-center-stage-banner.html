@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Classic Center Stage Banner</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: transparent;
+            font-family: 'Garamond', 'Georgia', serif;
+        }
+
+        @keyframes bannerSlideUp {
+            from {
+                transform: translateY(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes photoScale {
+            from {
+                transform: scale(0);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        @keyframes ribbonUnfurl {
+            from {
+                transform: scaleX(0);
+                opacity: 0;
+            }
+            to {
+                transform: scaleX(1);
+                opacity: 1;
+            }
+        }
+
+        @keyframes textFadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes shimmer {
+            0%, 100% {
+                text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+            }
+            50% {
+                text-shadow: 0 0 20px rgba(255, 255, 255, 0.5),
+                             0 0 30px rgba(255, 255, 255, 0.3);
+            }
+        }
+
+        .banner-slide {
+            animation: bannerSlideUp 1s ease-out;
+        }
+
+        .photo-scale {
+            animation: photoScale 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55) 0.6s both;
+        }
+
+        .ribbon-left {
+            animation: ribbonUnfurl 0.7s ease-out 0.4s both;
+            transform-origin: right center;
+        }
+
+        .ribbon-right {
+            animation: ribbonUnfurl 0.7s ease-out 0.4s both;
+            transform-origin: left center;
+        }
+
+        .text-fade-1 { animation: textFadeUp 0.6s ease-out 1s both; }
+        .text-fade-2 { animation: textFadeUp 0.6s ease-out 1.2s both; }
+        .text-fade-3 { animation: textFadeUp 0.6s ease-out 1.4s both; }
+        .text-fade-4 { animation: textFadeUp 0.6s ease-out 1.6s both; }
+
+        .shimmer-text {
+            animation: shimmer 3s ease-in-out infinite;
+        }
+
+        .text-transition {
+            transition: all 0.6s ease;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+
+        .floating {
+            animation: float 4s ease-in-out infinite;
+        }
+    </style>
+</head>
+<body>
+    <div class="fixed bottom-0 left-0 right-0 flex flex-col items-center pb-4">
+        <!-- Main Banner -->
+        <div class="banner-slide relative w-full max-w-5xl">
+
+            <!-- Decorative Ribbons -->
+            <div class="flex items-center justify-center gap-8 mb-4">
+                <div class="ribbon-left h-px bg-gradient-to-r from-transparent via-indigo-400 to-indigo-600" style="width: 250px;"></div>
+
+                <!-- Center Ornament -->
+                <div class="floating text-indigo-300 text-2xl">
+                    ✦
+                </div>
+
+                <div class="ribbon-right h-px bg-gradient-to-l from-transparent via-indigo-400 to-indigo-600" style="width: 250px;"></div>
+            </div>
+
+            <!-- Main Content Card -->
+            <div class="relative bg-gradient-to-br from-indigo-950/95 via-indigo-900/95 to-purple-950/95 backdrop-blur-md rounded-3xl shadow-2xl overflow-hidden border-2 border-indigo-500/30">
+
+                <!-- Top Accent Border -->
+                <div class="h-1 bg-gradient-to-r from-transparent via-indigo-400 to-transparent"></div>
+
+                <div class="px-12 py-8">
+                    <div class="flex items-center gap-10">
+
+                        <!-- Photo Section -->
+                        <div class="photo-scale flex-shrink-0">
+                            <div class="relative">
+                                <!-- Glow Effect -->
+                                <div class="absolute -inset-4 bg-gradient-to-br from-indigo-400 via-purple-500 to-indigo-600 rounded-2xl opacity-30 blur-2xl"></div>
+
+                                <!-- Frame -->
+                                <div class="relative w-44 h-44 rounded-2xl bg-gradient-to-br from-indigo-600 via-purple-700 to-indigo-800 p-2 shadow-2xl">
+                                    <div class="w-full h-full rounded-xl overflow-hidden border-4 border-indigo-300/40">
+                                        <img src="https://img.freepik.com/free-photo/man-s-white-sweater-psd-mockup-casual-apparel-close-up_53876-148045.jpg?semt=ais_hybrid&w=740&q=80"
+                                             class="w-full h-full object-cover">
+                                    </div>
+                                </div>
+
+                                <!-- Corner Decorations -->
+                                <div class="absolute -top-3 -left-3 w-8 h-8 border-t-3 border-l-3 border-indigo-400/60"></div>
+                                <div class="absolute -bottom-3 -right-3 w-8 h-8 border-b-3 border-r-3 border-indigo-400/60"></div>
+                            </div>
+                        </div>
+
+                        <!-- Vertical Divider -->
+                        <div class="h-40 w-px bg-gradient-to-b from-transparent via-indigo-400/50 to-transparent"></div>
+
+                        <!-- Text Content -->
+                        <div class="flex-1 space-y-4">
+                            <div class="text-fade-1">
+                                <h2 id="mainTitle" class="text-transition text-4xl font-bold text-indigo-100 tracking-wide shimmer-text">
+                                    IN LOVING MEMORY
+                                </h2>
+                            </div>
+
+                            <div class="flex items-center gap-4">
+                                <div class="w-16 h-px bg-indigo-400/60"></div>
+                                <span class="text-indigo-300 text-lg">❖</span>
+                                <div class="flex-1 h-px bg-gradient-to-r from-indigo-400/60 to-transparent"></div>
+                            </div>
+
+                            <div class="text-fade-2">
+                                <p id="subtitle" class="text-transition text-2xl text-indigo-200 italic font-light">
+                                    Forever in our hearts
+                                </p>
+                            </div>
+
+                            <div class="text-fade-3">
+                                <p id="description" class="text-transition text-sm text-indigo-300 uppercase tracking-widest">
+                                    A life celebrated
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Vertical Divider -->
+                        <div class="h-40 w-px bg-gradient-to-b from-transparent via-indigo-400/50 to-transparent"></div>
+
+                        <!-- Company Section -->
+                        <div class="text-fade-4 flex-shrink-0 text-center space-y-3" style="width: 180px;">
+                            <div class="bg-indigo-800/40 rounded-2xl p-3 backdrop-blur-sm inline-block">
+                                <img src="https://yt3.googleusercontent.com/hJD-YRx93VUY4VZG7sG0PjCh8iiBInbgY0S21liCJk0HLMeQhQmQKjcMrzUpKr22MGDr6YM0=s900-c-k-c0x00ffffff-no-rj"
+                                     class="h-12 w-auto">
+                            </div>
+                            <div>
+                                <h3 class="text-xl font-bold text-indigo-100 tracking-wider">WAMONIC</h3>
+                                <p class="text-xs text-indigo-400 tracking-wide mt-1">Memorial Services</p>
+                            </div>
+                            <div class="pt-3 border-t border-indigo-700/50">
+                                <p class="text-sm text-indigo-300 mb-1">Call Us Anytime</p>
+                                <p class="text-lg font-bold text-indigo-100">+254 712 345 678</p>
+                                <p class="text-xs text-indigo-400 mt-2">Compassionate • Professional • 24/7</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bottom Accent Border -->
+                <div class="h-1 bg-gradient-to-r from-transparent via-indigo-400 to-transparent"></div>
+            </div>
+
+            <!-- Bottom Message -->
+            <div class="text-center mt-4">
+                <p class="text-sm text-indigo-300/80">
+                    <span class="text-indigo-400">✦</span> Honoring lives with dignity, respect, and compassion <span class="text-indigo-400">✦</span>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const mainTitles = [
+            "IN LOVING MEMORY",
+            "CELEBRATING A LIFE",
+            "FOREVER REMEMBERED",
+            "REST IN PEACE",
+            "ETERNAL LEGACY"
+        ];
+
+        const subtitles = [
+            "Forever in our hearts",
+            "A beautiful soul",
+            "Gone but never forgotten",
+            "May they find peace",
+            "Their memory lives on"
+        ];
+
+        const descriptions = [
+            "A life celebrated",
+            "Cherished always",
+            "Loved beyond measure",
+            "Always in our thoughts",
+            "Forever with us"
+        ];
+
+        let idx = 0;
+
+        function cycleText() {
+            const mainTitle = document.getElementById('mainTitle');
+            const subtitle = document.getElementById('subtitle');
+            const description = document.getElementById('description');
+
+            mainTitle.style.opacity = '0';
+            subtitle.style.opacity = '0';
+            description.style.opacity = '0';
+
+            setTimeout(() => {
+                idx = (idx + 1) % mainTitles.length;
+                mainTitle.textContent = mainTitles[idx];
+                subtitle.textContent = subtitles[idx];
+                description.textContent = descriptions[idx];
+
+                setTimeout(() => {
+                    mainTitle.style.opacity = '1';
+                    subtitle.style.opacity = '1';
+                    description.style.opacity = '1';
+                }, 50);
+            }, 600);
+        }
+
+        setInterval(cycleText, 6000);
+    </script>
+</body>
+</html>

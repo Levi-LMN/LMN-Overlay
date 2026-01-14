@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Funeral Lower Third Overlay</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: transparent;
+            font-family: 'Crimson Text', 'Playfair Display', serif;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+
+        @keyframes photoReveal {
+            from {
+                opacity: 0;
+                transform: scale(0.8) rotate(-5deg);
+                filter: blur(10px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) rotate(0deg);
+                filter: blur(0);
+            }
+        }
+
+        @keyframes lineExpand {
+            from { transform: scaleX(0); }
+            to { transform: scaleX(1); }
+        }
+
+        @keyframes textFadeIn {
+            from { opacity: 0; transform: translateX(-30px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        @keyframes logoFloat {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-8px) scale(1.05); }
+        }
+
+        @keyframes glowPulse {
+            0%, 100% {
+                box-shadow: 0 0 20px rgba(212, 175, 55, 0.4),
+                            0 0 40px rgba(212, 175, 55, 0.2),
+                            inset 0 0 15px rgba(255, 255, 255, 0.1);
+            }
+            50% {
+                box-shadow: 0 0 30px rgba(212, 175, 55, 0.6),
+                            0 0 60px rgba(212, 175, 55, 0.3),
+                            inset 0 0 20px rgba(255, 255, 255, 0.15);
+            }
+        }
+
+        @keyframes scrollTicker {
+            from { transform: translateX(0); }
+            to { transform: translateX(-50%); }
+        }
+
+        @keyframes particleFloat {
+            0% { transform: translateY(0) translateX(0) scale(1); opacity: 0; }
+            10% { opacity: 0.3; }
+            90% { opacity: 0.3; }
+            100% { transform: translateY(-100px) translateX(20px) scale(1.5); opacity: 0; }
+        }
+
+        @keyframes shimmerSweep {
+            0% { left: -100%; }
+            100% { left: 200%; }
+        }
+
+        .main-wrapper {
+            animation: slideUp 1s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .photo-frame {
+            animation: photoReveal 1.2s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s both,
+                       glowPulse 3s ease-in-out infinite 1.5s;
+            position: relative;
+            background: linear-gradient(135deg, rgba(212, 175, 55, 0.15), rgba(184, 134, 11, 0.1));
+        }
+
+        .photo-frame::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg,
+                transparent 30%,
+                rgba(212, 175, 55, 0.6) 50%,
+                transparent 70%);
+            border-radius: inherit;
+            opacity: 0;
+            animation: shimmerSweep 3s ease-in-out infinite;
+        }
+
+        .divider-line {
+            transform-origin: left;
+            animation: lineExpand 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) 0.6s both;
+        }
+
+        .text-group {
+            animation: textFadeIn 0.8s ease-out 0.8s both;
+        }
+
+        .logo-box {
+            animation: textFadeIn 0.8s ease-out 1s both,
+                       logoFloat 4s ease-in-out infinite 2s;
+        }
+
+        .ticker-scroll {
+            animation: scrollTicker 35s linear infinite;
+        }
+
+        .glass-effect {
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(212, 175, 55, 0.2);
+        }
+
+        .gradient-overlay {
+            background: linear-gradient(90deg,
+                rgba(15, 23, 42, 0.95) 0%,
+                rgba(30, 41, 59, 0.9) 60%,
+                transparent 100%);
+        }
+
+        .gold-gradient {
+            background: linear-gradient(90deg,
+                rgba(212, 175, 55, 0.8) 0%,
+                rgba(255, 215, 0, 0.6) 50%,
+                rgba(212, 175, 55, 0.4) 100%);
+        }
+
+        .text-gold-glow {
+            text-shadow: 0 0 10px rgba(212, 175, 55, 0.5),
+                         0 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: radial-gradient(circle, rgba(212, 175, 55, 0.8), transparent);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        .particle:nth-child(1) { left: 15%; animation: particleFloat 8s ease-in-out infinite; }
+        .particle:nth-child(2) { left: 35%; animation: particleFloat 10s ease-in-out infinite 2s; }
+        .particle:nth-child(3) { left: 55%; animation: particleFloat 9s ease-in-out infinite 4s; }
+        .particle:nth-child(4) { left: 75%; animation: particleFloat 11s ease-in-out infinite 1s; }
+
+        .ornament {
+            width: 30px;
+            height: 30px;
+            border: 1.5px solid rgba(212, 175, 55, 0.4);
+            position: absolute;
+        }
+
+        .ornament-tl {
+            top: -8px;
+            left: -8px;
+            border-right: none;
+            border-bottom: none;
+        }
+
+        .ornament-br {
+            bottom: -8px;
+            right: -8px;
+            border-left: none;
+            border-top: none;
+        }
+
+        #primaryText, #secondaryText {
+            transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+    </style>
+</head>
+<body>
+    <div class="fixed bottom-0 left-0 w-full">
+        <div class="main-wrapper relative">
+            <!-- Floating Particles -->
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+
+            <!-- Main Lower Third Container -->
+            <div class="gradient-overlay relative">
+                <div class="flex items-center px-8 py-4 gap-6">
+
+                    <!-- Memorial Photo -->
+                    <div class="relative flex-shrink-0">
+                        <div class="ornament ornament-tl"></div>
+                        <div class="ornament ornament-br"></div>
+
+                        <div class="photo-frame rounded-xl p-1" style="width: 100px; height: 100px;">
+                            <div class="w-full h-full rounded-lg overflow-hidden border border-amber-200/30">
+                                <img src="https://img.freepik.com/free-photo/man-s-white-sweater-psd-mockup-casual-apparel-close-up_53876-148045.jpg?semt=ais_hybrid&w=740&q=80"
+                                     alt="Memorial"
+                                     class="w-full h-full object-cover">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Content Section -->
+                    <div class="text-group flex-1 space-y-2">
+                        <!-- Title -->
+                        <div class="overflow-hidden" style="height: 32px;">
+                            <div id="primaryText">
+                                <h1 class="text-3xl font-bold text-white text-gold-glow tracking-wide">
+                                    In Loving Memory
+                                </h1>
+                            </div>
+                        </div>
+
+                        <!-- Divider -->
+                        <div class="divider-line gold-gradient rounded-full" style="height: 2px; width: 220px;"></div>
+
+                        <!-- Subtitle -->
+                        <div class="overflow-hidden" style="height: 24px;">
+                            <div id="secondaryText">
+                                <p class="text-lg text-amber-50 italic font-light tracking-wide">
+                                    Forever in our hearts
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Logo -->
+                    <div class="logo-box flex-shrink-0">
+                        <div class="glass-effect rounded-xl px-5 py-3 shadow-2xl">
+                            <img src="https://yt3.googleusercontent.com/hJD-YRx93VUY4VZG7sG0PjCh8iiBInbgY0S21liCJk0HLMeQhQmQKjcMrzUpKr22MGDr6YM0=s900-c-k-c0x00ffffff-no-rj"
+                                 alt="Logo"
+                                 class="h-14 w-auto object-contain opacity-95">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ticker -->
+            <div class="relative overflow-hidden" style="background: linear-gradient(90deg, rgba(15, 23, 42, 0.9), rgba(30, 41, 59, 0.85)); border-top: 1px solid rgba(212, 175, 55, 0.3);">
+                <div class="py-2 flex">
+                    <div class="ticker-scroll flex items-center whitespace-nowrap">
+                        <span class="inline-flex items-center mx-8">
+                            <span class="text-amber-400 text-base">◆</span>
+                            <span class="mx-3 text-gray-300 text-sm">Celebrating a life of love and grace</span>
+                        </span>
+                        <span class="inline-flex items-center mx-8">
+                            <span class="text-amber-400 text-base">◆</span>
+                            <span class="mx-3 text-gray-300 text-sm">Honoring precious memories</span>
+                        </span>
+                        <span class="inline-flex items-center mx-8">
+                            <span class="text-amber-400 text-base">◆</span>
+                            <span class="mx-3 text-gray-300 text-sm">May peace be eternal</span>
+                        </span>
+                        <span class="inline-flex items-center mx-8">
+                            <span class="text-amber-400 text-base">◆</span>
+                            <span class="mx-3 text-gray-300 text-sm">United in remembrance</span>
+                        </span>
+                        <!-- Duplicate -->
+                        <span class="inline-flex items-center mx-8">
+                            <span class="text-amber-400 text-base">◆</span>
+                            <span class="mx-3 text-gray-300 text-sm">Celebrating a life of love and grace</span>
+                        </span>
+                        <span class="inline-flex items-center mx-8">
+                            <span class="text-amber-400 text-base">◆</span>
+                            <span class="mx-3 text-gray-300 text-sm">Honoring precious memories</span>
+                        </span>
+                        <span class="inline-flex items-center mx-8">
+                            <span class="text-amber-400 text-base">◆</span>
+                            <span class="mx-3 text-gray-300 text-sm">May peace be eternal</span>
+                        </span>
+                        <span class="inline-flex items-center mx-8">
+                            <span class="text-amber-400 text-base">◆</span>
+                            <span class="mx-3 text-gray-300 text-sm">United in remembrance</span>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const primary = [
+            "In Loving Memory",
+            "Celebrating A Life Well Lived",
+            "Forever Remembered",
+            "Honoring Their Legacy",
+            "A Beautiful Soul"
+        ];
+
+        const secondary = [
+            "Forever in our hearts",
+            "Your light shines eternal",
+            "Rest in perfect peace",
+            "Cherished always",
+            "Gone but never forgotten"
+        ];
+
+        let pIdx = 0, sIdx = 0;
+
+        function cycle(el, phrases, idx) {
+            const elem = document.getElementById(el);
+            elem.style.opacity = '0';
+            elem.style.transform = 'translateX(-20px)';
+
+            setTimeout(() => {
+                idx = (idx + 1) % phrases.length;
+                if (el === 'primaryText') {
+                    elem.innerHTML = `<h1 class="text-3xl font-bold text-white text-gold-glow tracking-wide">${phrases[idx]}</h1>`;
+                    pIdx = idx;
+                } else {
+                    elem.innerHTML = `<p class="text-lg text-amber-50 italic font-light tracking-wide">${phrases[idx]}</p>`;
+                    sIdx = idx;
+                }
+                setTimeout(() => {
+                    elem.style.opacity = '1';
+                    elem.style.transform = 'translateX(0)';
+                }, 50);
+            }, 600);
+        }
+
+        setInterval(() => cycle('primaryText', primary, pIdx), 5500);
+        setInterval(() => cycle('secondaryText', secondary, sIdx), 7500);
+    </script>
+</body>
+</html>

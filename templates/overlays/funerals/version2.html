@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ribbon Banner Style - Memorial Overlay</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: transparent; font-family: 'Crimson Text', 'Georgia', serif; overflow: hidden; }
+
+        @keyframes ribbonUnfold { 0% { clip-path: polygon(0 50%, 0 50%, 0 50%, 0 50%); opacity: 0; } 100% { clip-path: polygon(0 0, 100% 0, 95% 100%, 0 100%); opacity: 1; } }
+        @keyframes photoRevealScale { from { transform: scale(0) translateY(30px); opacity: 0; } to { transform: scale(1) translateY(0); opacity: 1; } }
+        @keyframes textUnfold { from { opacity: 0; transform: translateX(-40px) rotateY(-20deg); } to { opacity: 1; transform: translateX(0) rotateY(0deg); } }
+        @keyframes subtleShine { 0%, 100% { box-shadow: 0 0 15px rgba(147, 51, 234, 0.3); } 50% { box-shadow: 0 0 25px rgba(147, 51, 234, 0.5); } }
+        @keyframes tickerFlow { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+
+        .ribbon-fold { position: relative; }
+        .ribbon-fold::after { content: ''; position: absolute; right: -20px; top: 0; width: 0; height: 0; border-style: solid; border-width: 60px 0 60px 20px; border-color: transparent transparent transparent rgba(88, 28, 135, 0.98); }
+    </style>
+</head>
+<body>
+    <div id="main-overlay" class="fixed bottom-0 left-0" style="display: none;">
+        <div id="ribbon-container" class="ribbon-fold relative bg-gradient-to-r from-purple-950/98 via-purple-900/98 to-purple-800/98 backdrop-blur-lg shadow-2xl" style="width: 85%; height: 120px;">
+            <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-purple-600 via-violet-500 to-purple-600"></div>
+
+            <div class="flex items-center h-full px-10 gap-8">
+                <!-- Photo -->
+                <div id="photo-section" class="relative flex-shrink-0" style="display: none;">
+                    <div class="relative">
+                        <div class="absolute -inset-3 bg-gradient-to-br from-purple-500/30 to-violet-600/30 blur-xl"></div>
+                        <div class="relative w-28 h-28 bg-gradient-to-br from-purple-600 to-violet-700 p-2 shadow-2xl transform rotate-45 overflow-hidden">
+                            <div class="w-full h-full overflow-hidden transform -rotate-45 scale-150">
+                                <img id="deceased-photo" src="" class="w-full h-full object-cover">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="absolute -bottom-2 left-1/2 transform -translate-x-1/2 bg-purple-900 rounded-full px-2 py-1 border-2 border-purple-400/50">
+                        <span class="text-purple-200 text-xs">✟</span>
+                    </div>
+                </div>
+
+                <!-- Text Content -->
+                <div class="flex-1 space-y-2.5">
+                    <h2 id="main-heading" class="text-3xl font-bold text-purple-50 tracking-wide">IN LOVING MEMORY</h2>
+                    <div class="flex items-center gap-3">
+                        <div class="w-24 h-0.5 bg-purple-400/60"></div>
+                        <div class="flex gap-1.5">
+                            <div class="w-1.5 h-1.5 bg-purple-400 rounded-full"></div>
+                            <div class="w-1.5 h-1.5 bg-purple-400 rounded-full"></div>
+                            <div class="w-1.5 h-1.5 bg-purple-400 rounded-full"></div>
+                        </div>
+                        <div class="flex-1 h-0.5 bg-gradient-to-r from-purple-400/60 to-transparent"></div>
+                    </div>
+                    <p id="deceased-name" class="text-xl text-purple-200 italic font-light"></p>
+                    <p id="dates-display" class="text-xs text-purple-300 uppercase tracking-widest"></p>
+                </div>
+
+                <!-- Company Badge -->
+                <div id="company-badge" class="flex items-center gap-4 bg-purple-800/50 rounded-2xl px-6 py-4 backdrop-blur-sm border-2 border-purple-600/40" style="display: none;">
+                    <div id="company-logo-container" class="bg-purple-700/60 rounded-xl p-2.5 shadow-lg" style="display: none;">
+                        <img id="company-logo" src="" class="h-12 w-auto">
+                    </div>
+                    <div>
+                        <h3 id="company-name" class="text-xl font-bold text-purple-100 tracking-wider"></h3>
+                        <p id="company-tagline" class="text-xs text-purple-400 tracking-wide"></p>
+                        <div class="mt-2 flex items-center gap-2">
+                            <span class="text-purple-300 text-xs">📞</span>
+                            <p id="company-phone" class="text-sm font-semibold text-purple-200"></p>
+                        </div>
+                        <p class="text-xs text-purple-400 mt-1">24/7 Support</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-purple-600 via-violet-500 to-purple-600"></div>
+        </div>
+
+        <!-- Ticker -->
+        <div id="ticker-section" class="w-full bg-gradient-to-r from-purple-950/98 via-purple-900/98 to-purple-850/98 py-2 overflow-hidden border-t-2 border-purple-600/50" style="display: none;">
+            <div id="ticker-content" class="flex whitespace-nowrap"></div>
+        </div>
+    </div>
+
+    <script>
+        const socket = io();
+        const overlayId = '{{ overlay_id }}';
+        let overlayData = {};
+
+        socket.on('connect', () => {
+            socket.emit('join', {overlay_id: overlayId});
+            loadOverlayData();
+        });
+
+        socket.on('overlay_update', (data) => {
+            overlayData = {...overlayData, ...data};
+            updateDisplay();
+        });
+
+        async function loadOverlayData() {
+            try {
+                const response = await fetch(`/api/overlay/${overlayId}`);
+                if (response.ok) {
+                    overlayData = await response.json();
+                    updateDisplay();
+                }
+            } catch (error) {
+                console.error('Error loading overlay data:', error);
+            }
+        }
+
+        function updateDisplay() {
+            const mainOverlay = document.getElementById('main-overlay');
+            const ribbonContainer = document.getElementById('ribbon-container');
+
+            // Apply container animation
+            if (overlayData.container_animation && overlayData.container_animation !== 'none') {
+                ribbonContainer.style.animation = `ribbonUnfold 1.2s ease-out`;
+            }
+
+            // Show/hide sections
+            document.getElementById('photo-section').style.display = overlayData.show_logo === 'true' ? 'block' : 'none';
+            document.getElementById('company-badge').style.display = {% if overlay.show_company_info %}overlayData.show_speaker === 'true' ? 'flex' : 'none'{% else %}'none'{% endif %};
+
+            // Update photo
+            if (overlayData.photo_path) {
+                document.getElementById('deceased-photo').src = `/static/${overlayData.photo_path}`;
+            }
+
+            // Update text content
+            if (overlayData.deceased_name) {
+                document.getElementById('deceased-name').textContent = overlayData.deceased_name;
+            }
+
+            // Update dates
+            let datesText = '';
+            if (overlayData.birth_date) datesText += formatDate(overlayData.birth_date);
+            if (overlayData.birth_date && overlayData.death_date) datesText += ' — ';
+            if (overlayData.death_date) datesText += formatDate(overlayData.death_date);
+            document.getElementById('dates-display').textContent = datesText;
+
+            // Update company info
+            {% if overlay.logo_path %}
+            document.getElementById('company-logo').src = '/static/{{ overlay.logo_path }}';
+            document.getElementById('company-logo-container').style.display = 'block';
+            {% endif %}
+            {% if overlay.company_name %}
+            document.getElementById('company-name').textContent = '{{ overlay.company_name }}';
+            {% endif %}
+            {% if overlay.company_phone %}
+            document.getElementById('company-phone').textContent = '{{ overlay.company_phone }}';
+            {% endif %}
+            {% if overlay.company_tagline %}
+            document.getElementById('company-tagline').textContent = '{{ overlay.company_tagline }}';
+            {% endif %}
+
+            // Update ticker
+            const tickerSection = document.getElementById('ticker-section');
+            const tickerContent = document.getElementById('ticker-content');
+            if (overlayData.show_ticker === 'true' && overlayData.ticker_text) {
+                tickerSection.style.display = 'block';
+                tickerContent.innerHTML = `
+                    <span class="mx-12 text-purple-200 text-sm">${overlayData.ticker_text}</span>
+                    <span class="mx-12 text-purple-200 text-sm">${overlayData.ticker_text}</span>
+                `;
+                tickerContent.style.animation = 'tickerFlow 40s linear infinite';
+            } else {
+                tickerSection.style.display = 'none';
+            }
+
+            // Apply colors
+            if (overlayData.primary_color) {
+                ribbonContainer.style.background = `linear-gradient(to right, ${overlayData.primary_color}fa, ${overlayData.primary_color}f5, ${overlayData.primary_color}f0)`;
+            }
+
+            mainOverlay.style.display = 'block';
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr) return '';
+            const date = new Date(dateStr);
+            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        }
+    </script>
+</body>
+</html>

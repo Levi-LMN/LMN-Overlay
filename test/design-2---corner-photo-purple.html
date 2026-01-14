@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Design 2 - Corner Photo Purple</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: transparent;
+            font-family: 'Georgia', serif;
+        }
+
+        @keyframes slideInLeft {
+            from { transform: translateX(-100%); }
+            to { transform: translateX(0); }
+        }
+
+        @keyframes diagonalWipe {
+            from { clip-path: polygon(0 0, 0 0, 0 100%, 0 100%); }
+            to { clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%); }
+        }
+
+        @keyframes textReveal {
+            from { opacity: 0; transform: translateX(30px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        @keyframes scroll {
+            from { transform: translateX(0); }
+            to { transform: translateX(-50%); }
+        }
+
+        @keyframes rotate3d {
+            from { transform: rotateY(-10deg) scale(0.9); opacity: 0; }
+            to { transform: rotateY(0deg) scale(1); opacity: 1; }
+        }
+
+        @keyframes badgeFloat {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+
+        .photo-corner {
+            animation: slideInLeft 0.8s ease-out;
+        }
+
+        .photo-corner .photo-3d {
+            animation: rotate3d 1s ease-out 0.3s both;
+        }
+
+        .bar-extended {
+            animation: diagonalWipe 1s ease-out 0.3s both;
+        }
+
+        .text-content {
+            animation: textReveal 0.8s ease-out 0.8s both;
+        }
+
+        .cross-badge {
+            animation: badgeFloat 2s ease-in-out infinite 1s;
+        }
+
+        .ticker-scroll {
+            animation: scroll 35s linear infinite;
+        }
+
+        #mainText, #subText {
+            transition: all 0.6s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="fixed bottom-0 left-0 w-full">
+        <div class="relative">
+            <!-- Photo Bottom Left -->
+            <div class="photo-corner absolute bottom-0 left-8" style="width: 120px; height: 120px; z-index: 10;">
+                <div class="photo-3d relative w-full h-full">
+                    <div class="absolute inset-0 bg-gradient-to-br from-purple-600 via-purple-700 to-purple-900 transform rotate-3"></div>
+                    <div class="absolute inset-1 bg-black">
+                        <img src="https://img.freepik.com/free-photo/man-s-white-sweater-psd-mockup-casual-apparel-close-up_53876-148045.jpg?semt=ais_hybrid&w=740&q=80"
+                             class="w-full h-full object-cover">
+                    </div>
+                    <div class="cross-badge absolute -top-3 left-1/2 -translate-x-1/2 bg-purple-600 px-3 py-1 text-white text-xs font-bold">✝</div>
+                </div>
+            </div>
+
+            <!-- Extended Bar -->
+            <div class="bar-extended relative bg-gradient-to-r from-purple-900 via-purple-800 to-transparent pt-6 pb-4 pr-32" style="padding-left: 160px;">
+                <div class="text-content">
+                    <h2 id="mainText" class="text-3xl font-bold text-white mb-2 tracking-wide">REMEMBERING A LEGEND</h2>
+                    <div class="h-1 w-48 bg-gradient-to-r from-purple-400 to-transparent mb-2"></div>
+                    <p id="subText" class="text-lg text-purple-200">A soul that touched countless lives</p>
+                </div>
+
+                <!-- Logo Right -->
+                <div class="absolute right-8 top-1/2 -translate-y-1/2 bg-purple-950/80 backdrop-blur-sm rounded-xl px-5 py-3 border border-purple-500/30">
+                    <img src="https://yt3.googleusercontent.com/hJD-YRx93VUY4VZG7sG0PjCh8iiBInbgY0S21liCJk0HLMeQhQmQKjcMrzUpKr22MGDr6YM0=s900-c-k-c0x00ffffff-no-rj"
+                         class="h-14 w-auto opacity-90">
+                </div>
+            </div>
+
+            <!-- Ticker -->
+            <div class="bg-purple-950/90 py-2 overflow-hidden border-t border-purple-500/40">
+                <div class="ticker-scroll flex whitespace-nowrap">
+                    <span class="mx-10 text-purple-200 text-xs uppercase tracking-widest">◆ Celebrating a beautiful journey</span>
+                    <span class="mx-10 text-purple-200 text-xs uppercase tracking-widest">◆ Honoring their legacy</span>
+                    <span class="mx-10 text-purple-200 text-xs uppercase tracking-widest">◆ Forever in our memories</span>
+                    <span class="mx-10 text-purple-200 text-xs uppercase tracking-widest">◆ May peace be with them</span>
+                    <span class="mx-10 text-purple-200 text-xs uppercase tracking-widest">◆ Celebrating a beautiful journey</span>
+                    <span class="mx-10 text-purple-200 text-xs uppercase tracking-widest">◆ Honoring their legacy</span>
+                    <span class="mx-10 text-purple-200 text-xs uppercase tracking-widest">◆ Forever in our memories</span>
+                    <span class="mx-10 text-purple-200 text-xs uppercase tracking-widest">◆ May peace be with them</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const primaryTexts = [
+            "REMEMBERING A LEGEND",
+            "IN LOVING MEMORY",
+            "A BEAUTIFUL SOUL",
+            "FOREVER IN OUR HEARTS",
+            "CELEBRATING THEIR LIFE"
+        ];
+
+        const secondaryTexts = [
+            "A soul that touched countless lives",
+            "Gone but never forgotten",
+            "Their light shines eternal",
+            "May they rest in peace",
+            "A legacy that endures"
+        ];
+
+        let idx = 0;
+
+        function cycleText() {
+            const mainEl = document.getElementById('mainText');
+            const subEl = document.getElementById('subText');
+
+            mainEl.style.opacity = '0';
+            subEl.style.opacity = '0';
+
+            setTimeout(() => {
+                idx = (idx + 1) % primaryTexts.length;
+                mainEl.textContent = primaryTexts[idx];
+                subEl.textContent = secondaryTexts[idx];
+
+                setTimeout(() => {
+                    mainEl.style.opacity = '1';
+                    subEl.style.opacity = '1';
+                }, 50);
+            }, 600);
+        }
+
+        setInterval(cycleText, 6000);
+    </script>
+</body>
+</html>

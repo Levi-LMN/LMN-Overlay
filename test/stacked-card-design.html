@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stacked Card Design</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: transparent;
+            font-family: 'Merriweather', 'Georgia', serif;
+            overflow: hidden;
+        }
+
+        @keyframes cardStack {
+            0% {
+                transform: translateY(150px) scale(0.9);
+                opacity: 0;
+            }
+            50% {
+                transform: translateY(75px) scale(0.95);
+                opacity: 0.5;
+            }
+            100% {
+                transform: translateY(0) scale(1);
+                opacity: 1;
+            }
+        }
+
+        @keyframes photoSlide {
+            from {
+                transform: translateX(-100px) rotate(-10deg);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0) rotate(0deg);
+                opacity: 1;
+            }
+        }
+
+        @keyframes textPop {
+            from {
+                opacity: 0;
+                transform: scale(0.8);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        @keyframes shine {
+            0% {
+                background-position: -200% center;
+            }
+            100% {
+                background-position: 200% center;
+            }
+        }
+
+        @keyframes softGlow {
+            0%, 100% {
+                box-shadow: 0 0 20px rgba(236, 72, 153, 0.3),
+                            0 10px 40px rgba(236, 72, 153, 0.2);
+            }
+            50% {
+                box-shadow: 0 0 30px rgba(236, 72, 153, 0.5),
+                            0 10px 60px rgba(236, 72, 153, 0.3);
+            }
+        }
+
+        @keyframes tickerScroll {
+            from { transform: translateX(0); }
+            to { transform: translateX(-50%); }
+        }
+
+        .card-stack {
+            animation: cardStack 1s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        .photo-slide {
+            animation: photoSlide 0.9s cubic-bezier(0.68, -0.55, 0.265, 1.55) 0.4s both,
+                       softGlow 3s ease-in-out infinite 1.5s;
+        }
+
+        .text-pop-1 { animation: textPop 0.5s ease-out 0.8s both; }
+        .text-pop-2 { animation: textPop 0.5s ease-out 1s both; }
+        .text-pop-3 { animation: textPop 0.5s ease-out 1.2s both; }
+        .text-pop-4 { animation: textPop 0.5s ease-out 1.4s both; }
+
+        .shine-effect {
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.08), transparent);
+            background-size: 200% 100%;
+            animation: shine 4s infinite;
+        }
+
+        .ticker-scroll { animation: tickerScroll 35s linear infinite; }
+
+        .text-shadow-strong {
+            text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.9),
+                         0 0 15px rgba(0, 0, 0, 0.7);
+        }
+
+        .text-transition {
+            transition: all 0.5s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="fixed bottom-0 left-0 right-0">
+        <div class="flex justify-center pb-3 px-8">
+            <div class="relative" style="width: 850px;">
+
+                <!-- Background Card (for depth) -->
+                <div class="absolute bottom-1 left-6 right-6 h-16 bg-pink-900/30 rounded-2xl blur-sm"></div>
+                <div class="absolute bottom-0.5 left-3 right-3 h-16 bg-pink-900/50 rounded-2xl blur-sm"></div>
+
+                <!-- Main Card -->
+                <div class="card-stack relative bg-gradient-to-br from-rose-950 via-pink-900 to-rose-950 rounded-2xl shadow-2xl border-2 border-rose-500/40 overflow-hidden">
+
+                    <!-- Shine Overlay -->
+                    <div class="shine-effect absolute inset-0 pointer-events-none"></div>
+
+                    <!-- Top Accent Bar -->
+                    <div class="h-1 bg-gradient-to-r from-rose-600 via-pink-500 to-rose-600"></div>
+
+                    <div class="relative px-10 py-3">
+                        <div class="flex items-center gap-8">
+
+                            <!-- Photo Section -->
+                            <div class="photo-slide relative flex-shrink-0">
+                                <div class="relative">
+                                    <!-- Decorative Frame -->
+                                    <div class="absolute -inset-2 bg-gradient-to-br from-rose-500/30 to-pink-600/30 rounded-2xl blur-lg"></div>
+
+                                    <div class="relative w-24 h-24 rounded-2xl bg-gradient-to-br from-rose-600 to-pink-700 p-2 shadow-2xl">
+                                        <div class="w-full h-full rounded-xl overflow-hidden border-2 border-rose-300/40">
+                                            <img src="https://img.freepik.com/free-photo/man-s-white-sweater-psd-mockup-casual-apparel-close-up_53876-148045.jpg?semt=ais_hybrid&w=740&q=80"
+                                                 class="w-full h-full object-cover"
+                                                 style="object-position: center;">
+                                        </div>
+                                    </div>
+
+                                    <!-- Corner Decorations -->
+                                    <div class="absolute top-0 left-0 w-3 h-3 border-t-2 border-l-2 border-rose-400/70 -translate-x-1 -translate-y-1"></div>
+                                    <div class="absolute bottom-0 right-0 w-3 h-3 border-b-2 border-r-2 border-rose-400/70 translate-x-1 translate-y-1"></div>
+                                </div>
+                            </div>
+
+                            <!-- Content Section -->
+                            <div class="flex-1">
+                                <div class="space-y-1">
+                                    <div class="text-pop-1">
+                                        <h2 class="text-xl font-bold text-rose-50 tracking-wide text-shadow-strong">
+                                            John Michael Smith
+                                        </h2>
+                                    </div>
+
+                                    <div class="flex items-center gap-3">
+                                        <div class="h-px flex-1 bg-gradient-to-r from-rose-500 to-transparent"></div>
+                                        <span class="text-rose-400 text-sm">✦</span>
+                                        <div class="h-px w-12 bg-rose-500/50"></div>
+                                    </div>
+
+                                    <div class="text-pop-2">
+                                        <p class="text-sm text-rose-200 italic text-shadow-strong">
+                                            Forever in our hearts
+                                        </p>
+                                    </div>
+
+                                    <div class="text-pop-3 flex items-center gap-3 text-xs text-rose-300 text-shadow-strong pt-0.5">
+                                        <span>Born: Jan 15, 1950</span>
+                                        <span class="text-rose-400">•</span>
+                                        <span>Died: Dec 20, 2024</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Vertical Divider -->
+                            <div class="h-20 w-px bg-gradient-to-b from-transparent via-rose-400/50 to-transparent"></div>
+
+                            <!-- Company Card -->
+                            <div class="text-pop-4 flex-shrink-0 bg-rose-900/40 rounded-xl px-4 py-2.5 border border-rose-600/30" style="width: 180px;">
+                                <div class="flex flex-col items-center text-center space-y-1.5">
+                                    <div class="bg-rose-800/50 rounded-lg p-1.5">
+                                        <img src="https://yt3.googleusercontent.com/hJD-YRx93VUY4VZG7sG0PjCh8iiBInbgY0S21liCJk0HLMeQhQmQKjcMrzUpKr22MGDr6YM0=s900-c-k-c0x00ffffff-no-rj"
+                                             class="h-9 w-auto">
+                                    </div>
+                                    <div>
+                                        <h3 class="text-sm font-bold text-rose-100 tracking-wider text-shadow-strong">WAMONIC</h3>
+                                        <p class="text-xs text-rose-400 mt-0.5 text-shadow-strong">Memorial Services</p>
+                                    </div>
+                                    <div class="w-full h-px bg-rose-600/40"></div>
+                                    <div>
+                                        <p class="text-xs text-rose-300 mb-0.5 text-shadow-strong">Contact</p>
+                                        <p class="text-sm font-bold text-rose-100 text-shadow-strong">+254 712 345 678</p>
+                                        <p class="text-xs text-rose-400 mt-1 text-shadow-strong">24/7 Care</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bottom Accent Bar -->
+                    <div class="h-1 bg-gradient-to-r from-rose-600 via-pink-500 to-rose-600"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Scrolling Ticker -->
+        <div class="bg-gradient-to-r from-rose-950 via-pink-950 to-rose-950 py-1.5 overflow-hidden border-t border-rose-600/50">
+            <div class="ticker-scroll flex whitespace-nowrap">
+                <span class="mx-12 text-rose-200 text-xs text-shadow-strong">✦ Honoring lives with dignity and respect</span>
+                <span class="mx-12 text-rose-200 text-xs text-shadow-strong">✦ Professional memorial services</span>
+                <span class="mx-12 text-rose-200 text-xs text-shadow-strong">✦ Supporting families in their time of need</span>
+                <span class="mx-12 text-rose-200 text-xs text-shadow-strong">✦ Celebrating memories that last forever</span>
+                <span class="mx-12 text-rose-200 text-xs text-shadow-strong">✦ Honoring lives with dignity and respect</span>
+                <span class="mx-12 text-rose-200 text-xs text-shadow-strong">✦ Professional memorial services</span>
+                <span class="mx-12 text-rose-200 text-xs text-shadow-strong">✦ Supporting families in their time of need</span>
+                <span class="mx-12 text-rose-200 text-xs text-shadow-strong">✦ Celebrating memories that last forever</span>
+            </div>
+        </div>
+
+    <script>
+        const memorialPhrases = [
+            "Forever in our hearts",
+            "A beautiful soul",
+            "Gone but never forgotten",
+            "Always remembered, deeply missed",
+            "Their memory lives on",
+            "Rest in eternal peace",
+            "Loved beyond words",
+            "A life beautifully lived",
+            "In loving memory",
+            "Forever cherished"
+        ];
+
+        let phraseIdx = 0;
+
+        function cyclePhrase() {
+            const phrase = document.getElementById('memorialPhrase');
+
+            phrase.style.opacity = '0';
+            phrase.style.transform = 'scale(0.8)';
+
+            setTimeout(() => {
+                phraseIdx = (phraseIdx + 1) % memorialPhrases.length;
+                phrase.textContent = memorialPhrases[phraseIdx];
+
+                setTimeout(() => {
+                    phrase.style.opacity = '1';
+                    phrase.style.transform = 'scale(1)';
+                }, 50);
+            }, 500);
+        }
+
+        setInterval(cyclePhrase, 5000);
+    </script>
+</body>
+</html>

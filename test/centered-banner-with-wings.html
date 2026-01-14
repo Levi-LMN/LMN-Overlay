@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Centered Banner with Wings</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: transparent;
+            font-family: 'Cinzel', 'Georgia', serif;
+            overflow: hidden;
+        }
+
+        @keyframes bannerDrop {
+            from {
+                transform: translateY(-100px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes photoFloat {
+            from {
+                transform: translateY(-30px) scale(0.8);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0) scale(1);
+                opacity: 1;
+            }
+        }
+
+        @keyframes wingsSpread {
+            from {
+                transform: scaleX(0);
+                opacity: 0;
+            }
+            to {
+                transform: scaleX(1);
+                opacity: 1;
+            }
+        }
+
+        @keyframes textReveal {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes shimmer {
+            0% { background-position: -200% center; }
+            100% { background-position: 200% center; }
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-6px); }
+        }
+
+        @keyframes tickerScroll {
+            from { transform: translateX(0); }
+            to { transform: translateX(-50%); }
+        }
+
+        .banner {
+            animation: bannerDrop 1s ease-out;
+        }
+
+        .photo-float {
+            animation: photoFloat 0.7s ease-out 0.3s both;
+        }
+
+        .wing-left {
+            animation: wingsSpread 0.6s ease-out 0.6s both;
+            transform-origin: right center;
+        }
+
+        .wing-right {
+            animation: wingsSpread 0.6s ease-out 0.6s both;
+            transform-origin: left center;
+        }
+
+        .text-reveal-1 { animation: textReveal 0.5s ease-out 0.9s both; }
+        .text-reveal-2 { animation: textReveal 0.5s ease-out 1.1s both; }
+        .text-reveal-3 { animation: textReveal 0.5s ease-out 1.3s both; }
+
+        .shimmer-effect {
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            background-size: 200% 100%;
+            animation: shimmer 3s infinite;
+        }
+
+        .floating {
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .ticker-scroll { animation: tickerScroll 35s linear infinite; }
+
+        .text-shadow-strong {
+            text-shadow: 2px 2px 10px rgba(0, 0, 0, 0.9),
+                         0 0 20px rgba(0, 0, 0, 0.8);
+        }
+
+        .text-transition {
+            transition: all 0.5s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="fixed bottom-0 left-0 right-0 flex justify-center" style="padding-bottom: 2rem;">
+        <!-- Main Banner Container -->
+        <div class="banner relative" style="width: 800px;">
+
+            <!-- Decorative Wings with Photo -->
+            <div class="flex items-center justify-center gap-4 mb-1">
+                <!-- Left Wing -->
+                <div class="wing-left h-px bg-gradient-to-r from-transparent via-rose-400 to-rose-600" style="width: 120px;"></div>
+
+                <!-- Photo Circle (Floating Above) -->
+                <div class="photo-float relative z-10">
+                    <div class="relative">
+                        <!-- Halo Effect -->
+                        <div class="absolute -inset-2 bg-gradient-to-br from-rose-300 via-rose-400 to-rose-600 rounded-full opacity-30 blur-lg floating"></div>
+
+                        <!-- Photo Frame -->
+                        <div class="relative w-16 h-16 rounded-full bg-gradient-to-br from-rose-600 to-rose-800 p-1 shadow-2xl">
+                            <div class="w-full h-full rounded-full overflow-hidden border-2 border-rose-200/50">
+                                <img src="https://img.freepik.com/free-photo/man-s-white-sweater-psd-mockup-casual-apparel-close-up_53876-148045.jpg?semt=ais_hybrid&w=740&q=80"
+                                     class="w-full h-full object-cover"
+                                     style="object-position: center;">
+                            </div>
+                        </div>
+
+                        <!-- Angel Wings Icon -->
+                        <div class="absolute -bottom-1 left-1/2 transform -translate-x-1/2 bg-rose-900 rounded-full px-2 py-0.5 border border-rose-400/40 shadow-lg">
+                            <span class="text-rose-200" style="font-size: 10px;">🕊️</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Wing -->
+                <div class="wing-right h-px bg-gradient-to-l from-transparent via-rose-400 to-rose-600" style="width: 120px;"></div>
+            </div>
+
+            <!-- Main Content Banner -->
+            <div class="relative bg-gradient-to-r from-rose-950 via-rose-900 to-rose-950 rounded-2xl shadow-2xl overflow-hidden border-t-2 border-rose-600/40">
+
+                <!-- Shimmer Overlay -->
+                <div class="shimmer-effect absolute inset-0 pointer-events-none"></div>
+
+                <div class="relative px-8 py-2">
+                    <div class="flex items-center justify-between gap-6">
+
+                        <!-- Text Content -->
+                        <div class="flex-1 text-center space-y-0.5">
+                            <div class="text-reveal-1">
+                                <h2 class="text-lg font-bold text-rose-100 tracking-widest text-shadow-strong">
+                                    John Michael Smith
+                                </h2>
+                            </div>
+
+                            <div class="flex items-center justify-center gap-2">
+                                <div class="w-8 h-px bg-rose-400/50"></div>
+                                <span class="text-rose-300 text-xs">✦</span>
+                                <div class="w-8 h-px bg-rose-400/50"></div>
+                            </div>
+
+                            <div class="text-reveal-2">
+                                <p id="memorialPhrase" class="text-transition text-xs text-rose-200 italic text-shadow-strong">
+                                    Forever in our hearts
+                                </p>
+                            </div>
+
+                            <div class="text-reveal-3 flex items-center justify-center gap-2 text-xs text-rose-300 text-shadow-strong">
+                                <span style="font-size: 10px;">Jan 15, 1950</span>
+                                <span style="font-size: 10px;">—</span>
+                                <span style="font-size: 10px;">Dec 20, 2024</span>
+                            </div>
+                        </div>
+
+                        <!-- Vertical Divider -->
+                        <div class="h-12 w-px bg-gradient-to-b from-transparent via-rose-400/50 to-transparent"></div>
+
+                        <!-- Company Section -->
+                        <div class="flex-shrink-0 text-center space-y-0.5" style="width: 110px;">
+                            <div class="bg-rose-800/40 rounded-lg p-1 inline-block">
+                                <img src="https://yt3.googleusercontent.com/hJD-YRx93VUY4VZG7sG0PjCh8iiBInbgY0S21liCJk0HLMeQhQmQKjcMrzUpKr22MGDr6YM0=s900-c-k-c0x00ffffff-no-rj"
+                                     class="h-6 w-auto">
+                            </div>
+                            <h3 class="text-xs font-bold text-rose-100 tracking-wider text-shadow-strong">WAMONIC</h3>
+                            <p class="text-xs text-rose-300 text-shadow-strong" style="font-size: 10px;">Memorial Services</p>
+                            <div class="pt-0.5 border-t border-rose-700/50">
+                                <p class="text-xs font-semibold text-rose-200 text-shadow-strong" style="font-size: 10px;">+254 712 345 678</p>
+                                <p class="text-rose-400 text-shadow-strong" style="font-size: 9px;">24/7</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bottom Accent Line -->
+                <div class="h-0.5 bg-gradient-to-r from-transparent via-rose-500 to-transparent"></div>
+            </div>
+        </div>
+
+        <!-- Scrolling Ticker -->
+        <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-r from-rose-950 via-rose-900 to-rose-950 py-1 overflow-hidden border-t border-rose-600/40">
+            <div class="ticker-scroll flex whitespace-nowrap">
+                <span class="mx-10 text-rose-300 text-xs text-shadow-strong">✦ Honoring lives with dignity</span>
+                <span class="mx-10 text-rose-300 text-xs text-shadow-strong">✦ Professional services</span>
+                <span class="mx-10 text-rose-300 text-xs text-shadow-strong">✦ Supporting families</span>
+                <span class="mx-10 text-rose-300 text-xs text-shadow-strong">✦ Celebrating memories</span>
+                <span class="mx-10 text-rose-300 text-xs text-shadow-strong">✦ Honoring lives with dignity</span>
+                <span class="mx-10 text-rose-300 text-xs text-shadow-strong">✦ Professional services</span>
+                <span class="mx-10 text-rose-300 text-xs text-shadow-strong">✦ Supporting families</span>
+                <span class="mx-10 text-rose-300 text-xs text-shadow-strong">✦ Celebrating memories</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const memorialPhrases = [
+            "Forever in our hearts",
+            "A beautiful soul",
+            "Gone but never forgotten",
+            "Always remembered, deeply missed",
+            "Their memory lives on",
+            "Rest in eternal peace",
+            "Loved beyond words",
+            "A life beautifully lived",
+            "In loving memory",
+            "Forever cherished"
+        ];
+
+        let phraseIdx = 0;
+
+        function cyclePhrase() {
+            const phrase = document.getElementById('memorialPhrase');
+
+            phrase.style.opacity = '0';
+            phrase.style.transform = 'translateY(10px)';
+
+            setTimeout(() => {
+                phraseIdx = (phraseIdx + 1) % memorialPhrases.length;
+                phrase.textContent = memorialPhrases[phraseIdx];
+
+                setTimeout(() => {
+                    phrase.style.opacity = '1';
+                    phrase.style.transform = 'translateY(0)';
+                }, 50);
+            }, 500);
+        }
+
+        setInterval(cyclePhrase, 5000);
+    </script>
+</body>
+</html>

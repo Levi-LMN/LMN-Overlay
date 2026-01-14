@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Design 5 - Diagonal Split</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: transparent;
+            font-family: 'Georgia', serif;
+        }
+
+        @keyframes diagonalSlide {
+            from {
+                clip-path: polygon(100% 0, 100% 0, 100% 100%, 100% 100%);
+                opacity: 0;
+            }
+            to {
+                clip-path: polygon(0 0, 100% 0, 100% 100%, 15% 100%);
+                opacity: 1;
+            }
+        }
+
+        @keyframes photoSlideRotate {
+            from {
+                transform: translateX(-200px) rotate(-90deg) scale(0);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0) rotate(0deg) scale(1);
+                opacity: 1;
+            }
+        }
+
+        @keyframes textTypewriter {
+            from {
+                width: 0;
+                opacity: 0;
+            }
+            to {
+                width: 100%;
+                opacity: 1;
+            }
+        }
+
+        @keyframes scroll {
+            from { transform: translateX(0); }
+            to { transform: translateX(-50%); }
+        }
+
+        @keyframes orbRotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .diagonal-container {
+            animation: diagonalSlide 1.2s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            clip-path: polygon(0 0, 100% 0, 100% 100%, 15% 100%);
+        }
+
+        .photo-hex {
+            animation: photoSlideRotate 1s ease-out 0.3s both;
+            clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+        }
+
+        .text-appear {
+            animation: textTypewriter 1s ease-out 0.8s both;
+            overflow: hidden;
+        }
+
+        .orbit-ring {
+            animation: orbRotate 20s linear infinite;
+        }
+
+        .ticker-scroll {
+            animation: scroll 30s linear infinite;
+        }
+
+        #mainText, #subText {
+            transition: all 0.6s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="fixed bottom-0 left-0 w-full">
+        <div class="relative">
+            <!-- Diagonal Main Bar -->
+            <div class="diagonal-container relative bg-gradient-to-br from-blue-950 via-indigo-900 to-blue-950 px-16 py-6">
+                <!-- Hexagon Photo -->
+                <div class="absolute left-20 top-1/2 -translate-y-1/2" style="width: 100px; height: 100px;">
+                    <div class="photo-hex relative w-full h-full bg-gradient-to-br from-blue-400 to-indigo-600 p-1">
+                        <div class="w-full h-full overflow-hidden" style="clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);">
+                            <img src="https://img.freepik.com/free-photo/man-s-white-sweater-psd-mockup-casual-apparel-close-up_53876-148045.jpg?semt=ais_hybrid&w=740&q=80"
+                                 class="w-full h-full object-cover">
+                        </div>
+                    </div>
+                    <!-- Orbit Ring -->
+                    <div class="orbit-ring absolute inset-0 border-2 border-blue-400/30 rounded-full" style="margin: -15px;"></div>
+                </div>
+
+                <!-- Text Content -->
+                <div style="margin-left: 140px; margin-right: 150px;">
+                    <div class="text-appear mb-2">
+                        <h2 id="mainText" class="text-3xl font-bold text-blue-100 tracking-wider">ETERNAL REMEMBRANCE</h2>
+                    </div>
+                    <div class="flex items-center gap-3 mb-2">
+                        <div class="w-20 h-px bg-gradient-to-r from-blue-400 to-transparent"></div>
+                        <div class="text-blue-300 text-xl">✦</div>
+                        <div class="w-20 h-px bg-gradient-to-l from-blue-400 to-transparent"></div>
+                    </div>
+                    <div class="text-appear">
+                        <p id="subText" class="text-lg text-blue-200">Their legacy shines like the stars</p>
+                    </div>
+                </div>
+
+                <!-- Logo Corner -->
+                <div class="absolute right-10 top-1/2 -translate-y-1/2 bg-blue-900/70 backdrop-blur-lg px-5 py-4"
+                     style="clip-path: polygon(20% 0%, 100% 0%, 100% 100%, 0% 100%, 0% 20%);">
+                    <img src="https://yt3.googleusercontent.com/hJD-YRx93VUY4VZG7sG0PjCh8iiBInbgY0S21liCJk0HLMeQhQmQKjcMrzUpKr22MGDr6YM0=s900-c-k-c0x00ffffff-no-rj"
+                         class="h-14 w-auto">
+                </div>
+            </div>
+
+            <!-- Ticker -->
+            <div class="bg-gradient-to-r from-indigo-950 to-blue-950 py-2 overflow-hidden border-t border-blue-500/30">
+                <div class="ticker-scroll flex whitespace-nowrap">
+                    <span class="mx-12 text-blue-200 text-sm">★ A soul that illuminated the world</span>
+                    <span class="mx-12 text-blue-200 text-sm">★ Forever written in the stars</span>
+                    <span class="mx-12 text-blue-200 text-sm">★ May eternal light shine upon them</span>
+                    <span class="mx-12 text-blue-200 text-sm">★ Remembered across the heavens</span>
+                    <span class="mx-12 text-blue-200 text-sm">★ A soul that illuminated the world</span>
+                    <span class="mx-12 text-blue-200 text-sm">★ Forever written in the stars</span>
+                    <span class="mx-12 text-blue-200 text-sm">★ May eternal light shine upon them</span>
+                    <span class="mx-12 text-blue-200 text-sm">★ Remembered across the heavens</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const primaryTexts = [
+            "ETERNAL REMEMBRANCE",
+            "A STAR AMONG US",
+            "FOREVER IN THE LIGHT",
+            "CELESTIAL MEMORY",
+            "DIVINE LEGACY"
+        ];
+
+        const secondaryTexts = [
+            "Their legacy shines like the stars",
+            "A soul that touched the heavens",
+            "Forever illuminating our path",
+            "Written in the cosmos forever",
+            "Their light guides us still"
+        ];
+
+        let idx = 0;
+
+        function cycleText() {
+            const mainEl = document.getElementById('mainText');
+            const subEl = document.getElementById('subText');
+
+            mainEl.style.opacity = '0';
+            subEl.style.opacity = '0';
+
+            setTimeout(() => {
+                idx = (idx + 1) % primaryTexts.length;
+                mainEl.textContent = primaryTexts[idx];
+                subEl.textContent = secondaryTexts[idx];
+
+                setTimeout(() => {
+                    mainEl.style.opacity = '1';
+                    subEl.style.opacity = '1';
+                }, 50);
+            }, 600);
+        }
+
+        setInterval(cycleText, 6500);
+    </script>
+</body>
+</html>

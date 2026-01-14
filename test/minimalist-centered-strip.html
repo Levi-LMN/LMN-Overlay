@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minimalist Centered Strip</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: transparent;
+            font-family: 'Helvetica Neue', sans-serif;
+            overflow: hidden;
+        }
+
+        @keyframes expandFromCenter {
+            from {
+                transform: scaleX(0);
+                opacity: 0;
+            }
+            to {
+                transform: scaleX(1);
+                opacity: 1;
+            }
+        }
+
+        @keyframes photoReveal {
+            from {
+                transform: scale(0);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(15px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes subtlePulse {
+            0%, 100% {
+                box-shadow: 0 0 15px rgba(100, 116, 139, 0.3);
+            }
+            50% {
+                box-shadow: 0 0 25px rgba(100, 116, 139, 0.5);
+            }
+        }
+
+        @keyframes tickerScroll {
+            from { transform: translateX(0); }
+            to { transform: translateX(-50%); }
+        }
+
+        .expand-center {
+            animation: expandFromCenter 1s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            transform-origin: center;
+        }
+
+        .photo-reveal {
+            animation: photoReveal 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55) 0.6s both,
+                       subtlePulse 3s ease-in-out infinite 1.5s;
+        }
+
+        .fade-up-1 { animation: fadeUp 0.6s ease-out 0.9s both; }
+        .fade-up-2 { animation: fadeUp 0.6s ease-out 1.1s both; }
+        .fade-up-3 { animation: fadeUp 0.6s ease-out 1.3s both; }
+
+        .ticker-scroll { animation: tickerScroll 35s linear infinite; }
+
+        .text-shadow-strong {
+            text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.9),
+                         0 0 15px rgba(0, 0, 0, 0.7);
+        }
+
+        .text-transition {
+            transition: all 0.5s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="fixed bottom-0 left-0 right-0">
+        <div class="flex flex-col items-center pb-3">
+            <!-- Main Content Bar -->
+            <div class="expand-center relative bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 rounded-full shadow-2xl border border-slate-600/40" style="max-width: 950px;">
+                <div class="flex items-center px-8 py-3.5 gap-6">
+
+                    <!-- Photo -->
+                    <div class="photo-reveal relative flex-shrink-0">
+                        <div class="w-20 h-20 rounded-full bg-gradient-to-br from-slate-500 to-slate-700 p-1 shadow-xl">
+                            <div class="w-full h-full rounded-full overflow-hidden border-2 border-slate-400/30">
+                                <img src="https://img.freepik.com/free-photo/man-s-white-sweater-psd-mockup-casual-apparel-close-up_53876-148045.jpg?semt=ais_hybrid&w=740&q=80"
+                                     class="w-full h-full object-cover"
+                                     style="object-position: center;">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Text Content -->
+                    <div class="flex-1 text-center space-y-1 min-w-0">
+                        <div class="fade-up-1">
+                            <h2 class="text-xl font-bold text-slate-100 tracking-wide text-shadow-strong">
+                                John Michael Smith
+                            </h2>
+                        </div>
+
+                        <div class="flex items-center justify-center gap-2">
+                            <div class="w-8 h-px bg-slate-500"></div>
+                            <span class="text-slate-400 text-xs">•</span>
+                            <div class="w-8 h-px bg-slate-500"></div>
+                        </div>
+
+                        <div class="fade-up-2">
+                            <p id="memorialPhrase" class="text-transition text-sm text-slate-300 italic text-shadow-strong">
+                                Forever in our hearts
+                            </p>
+                        </div>
+
+                        <div class="fade-up-3 flex items-center justify-center gap-3 text-xs text-slate-400 text-shadow-strong">
+                            <span>Jan 15, 1950</span>
+                            <span>—</span>
+                            <span>Dec 20, 2024</span>
+                        </div>
+                    </div>
+
+                    <!-- Divider -->
+                    <div class="h-14 w-px bg-gradient-to-b from-transparent via-slate-500 to-transparent"></div>
+
+                    <!-- Company Badge -->
+                    <div class="flex items-center gap-3 flex-shrink-0">
+                        <div class="text-right">
+                            <h3 class="text-base font-bold text-slate-100 text-shadow-strong">WAMONIC</h3>
+                            <p class="text-xs text-slate-400 text-shadow-strong">Memorial Services</p>
+                            <p class="text-sm text-slate-300 font-semibold mt-0.5 text-shadow-strong">+254 712 345 678</p>
+                        </div>
+                        <div class="bg-slate-700/50 rounded-lg p-1.5">
+                            <img src="https://yt3.googleusercontent.com/hJD-YRx93VUY4VZG7sG0PjCh8iiBInbgY0S21liCJk0HLMeQhQmQKjcMrzUpKr22MGDr6YM0=s900-c-k-c0x00ffffff-no-rj"
+                                 class="h-9 w-auto">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Scrolling Ticker -->
+            <div class="mt-2 w-full bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 py-1.5 overflow-hidden border-t border-slate-600/40">
+                <div class="ticker-scroll flex whitespace-nowrap">
+                    <span class="mx-10 text-slate-300 text-xs text-shadow-strong">✦ Honoring lives with dignity and respect</span>
+                    <span class="mx-10 text-slate-300 text-xs text-shadow-strong">✦ Professional memorial services</span>
+                    <span class="mx-10 text-slate-300 text-xs text-shadow-strong">✦ Supporting families in their time of need</span>
+                    <span class="mx-10 text-slate-300 text-xs text-shadow-strong">✦ Celebrating memories that last forever</span>
+                    <span class="mx-10 text-slate-300 text-xs text-shadow-strong">✦ Honoring lives with dignity and respect</span>
+                    <span class="mx-10 text-slate-300 text-xs text-shadow-strong">✦ Professional memorial services</span>
+                    <span class="mx-10 text-slate-300 text-xs text-shadow-strong">✦ Supporting families in their time of need</span>
+                    <span class="mx-10 text-slate-300 text-xs text-shadow-strong">✦ Celebrating memories that last forever</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const memorialPhrases = [
+            "Forever in our hearts",
+            "A beautiful soul",
+            "Gone but never forgotten",
+            "Always remembered, deeply missed",
+            "Their memory lives on",
+            "Rest in eternal peace",
+            "Loved beyond words",
+            "A life beautifully lived",
+            "In loving memory",
+            "Forever cherished"
+        ];
+
+        let phraseIdx = 0;
+
+        function cyclePhrase() {
+            const phrase = document.getElementById('memorialPhrase');
+
+            phrase.style.opacity = '0';
+            phrase.style.transform = 'scale(0.9)';
+
+            setTimeout(() => {
+                phraseIdx = (phraseIdx + 1) % memorialPhrases.length;
+                phrase.textContent = memorialPhrases[phraseIdx];
+
+                setTimeout(() => {
+                    phrase.style.opacity = '1';
+                    phrase.style.transform = 'scale(1)';
+                }, 50);
+            }, 500);
+        }
+
+        setInterval(cyclePhrase, 5000);
+    </script>
+</body>
+</html>

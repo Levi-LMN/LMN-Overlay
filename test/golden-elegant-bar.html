@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Golden Elegant Bar</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: transparent;
+            font-family: 'Cormorant Garamond', 'Georgia', serif;
+            overflow: hidden;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes photoFloat {
+            from {
+                transform: translateY(50px) scale(0.8);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0) scale(1);
+                opacity: 1;
+            }
+        }
+
+        @keyframes shimmer {
+            0% {
+                background-position: -200% center;
+            }
+            100% {
+                background-position: 200% center;
+            }
+        }
+
+        @keyframes textSlideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes goldGlow {
+            0%, 100% {
+                box-shadow: 0 0 20px rgba(251, 191, 36, 0.4),
+                            0 0 40px rgba(251, 191, 36, 0.2);
+            }
+            50% {
+                box-shadow: 0 0 30px rgba(251, 191, 36, 0.6),
+                            0 0 60px rgba(251, 191, 36, 0.3);
+            }
+        }
+
+        @keyframes tickerScroll {
+            from { transform: translateX(0); }
+            to { transform: translateX(-50%); }
+        }
+
+        .slide-up {
+            animation: slideUp 1s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        .photo-float {
+            animation: photoFloat 0.9s cubic-bezier(0.68, -0.55, 0.265, 1.55) 0.5s both,
+                       goldGlow 3s ease-in-out infinite 1.5s;
+        }
+
+        .shimmer-bar {
+            background: linear-gradient(90deg,
+                transparent,
+                rgba(251, 191, 36, 0.1),
+                transparent);
+            background-size: 200% 100%;
+            animation: shimmer 3s infinite;
+        }
+
+        .text-slide-1 { animation: textSlideIn 0.6s ease-out 0.8s both; }
+        .text-slide-2 { animation: textSlideIn 0.6s ease-out 1s both; }
+        .text-slide-3 { animation: textSlideIn 0.6s ease-out 1.2s both; }
+
+        .ticker-scroll { animation: tickerScroll 35s linear infinite; }
+
+        .text-shadow-strong {
+            text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.9),
+                         0 0 20px rgba(0, 0, 0, 0.7);
+        }
+
+        .text-transition {
+            transition: all 0.5s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="fixed bottom-0 left-0 right-0">
+        <!-- Main Bar -->
+        <div class="slide-up relative bg-gradient-to-r from-amber-950 via-amber-900 to-yellow-900 shadow-2xl border-t-4 border-amber-500/60">
+
+            <!-- Shimmer Overlay -->
+            <div class="shimmer-bar absolute inset-0 pointer-events-none"></div>
+
+            <div class="relative px-10 py-3">
+                <div class="flex items-center justify-between gap-8">
+
+                    <!-- Left: Photo and Text -->
+                    <div class="flex items-center gap-6 flex-1">
+                        <!-- Photo -->
+                        <div class="photo-float relative flex-shrink-0">
+                            <div class="w-20 h-20 rounded-lg bg-gradient-to-br from-amber-400 to-amber-700 p-1.5 shadow-2xl transform -rotate-3">
+                                <div class="w-full h-full rounded-lg overflow-hidden border-2 border-amber-200/50 transform rotate-3">
+                                    <img src="https://img.freepik.com/free-photo/man-s-white-sweater-psd-mockup-casual-apparel-close-up_53876-148045.jpg?semt=ais_hybrid&w=740&q=80"
+                                         class="w-full h-full object-cover"
+                                         style="object-position: center;">
+                                </div>
+                            </div>
+                            <!-- Corner Ornaments -->
+                            <div class="absolute -top-1 -left-1 text-amber-400 text-lg">✦</div>
+                            <div class="absolute -bottom-1 -right-1 text-amber-400 text-lg">✦</div>
+                        </div>
+
+                        <!-- Text Content -->
+                        <div class="space-y-1">
+                            <div class="text-slide-1">
+                                <h2 class="text-2xl font-bold text-amber-100 tracking-wide text-shadow-strong">
+                                    John Michael Smith
+                                </h2>
+                            </div>
+
+                            <div class="flex items-center gap-3">
+                                <div class="w-16 h-0.5 bg-amber-400/60"></div>
+                                <span class="text-amber-400 text-sm">◆</span>
+                                <div class="flex-1 h-0.5 bg-gradient-to-r from-amber-400/60 to-transparent"></div>
+                            </div>
+
+                            <div class="text-slide-2">
+                                <p class="text-base text-amber-200 italic font-light text-shadow-strong">
+                                    Forever in our hearts
+                                </p>
+                            </div>
+
+                            <div class="text-slide-3 flex items-center gap-4 text-xs text-amber-300 uppercase tracking-widest text-shadow-strong">
+                                <span>Born: January 15, 1950</span>
+                                <span class="text-amber-400">•</span>
+                                <span>Died: December 20, 2024</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Ornamental Divider -->
+                    <div class="flex flex-col items-center gap-2">
+                        <div class="w-px h-8 bg-gradient-to-b from-transparent via-amber-400 to-transparent"></div>
+                        <div class="text-amber-400 text-lg">✦</div>
+                        <div class="w-px h-8 bg-gradient-to-t from-transparent via-amber-400 to-transparent"></div>
+                    </div>
+
+                    <!-- Right: Company Info -->
+                    <div class="flex items-center gap-4 bg-amber-900/40 rounded-2xl px-5 py-2.5 border border-amber-600/30">
+                        <div class="text-right">
+                            <h3 class="text-lg font-bold text-amber-100 tracking-wider text-shadow-strong">WAMONIC</h3>
+                            <p class="text-xs text-amber-400 tracking-wide text-shadow-strong">Memorial Services</p>
+                            <div class="mt-1 pt-1 border-t border-amber-700/50">
+                                <p class="text-sm font-semibold text-amber-200 text-shadow-strong">+254 712 345 678</p>
+                                <p class="text-xs text-amber-400 mt-0.5 text-shadow-strong">24/7 Care</p>
+                            </div>
+                        </div>
+                        <div class="bg-amber-800/50 rounded-xl p-1.5">
+                            <img src="https://yt3.googleusercontent.com/hJD-YRx93VUY4VZG7sG0PjCh8iiBInbgY0S21liCJk0HLMeQhQmQKjcMrzUpKr22MGDr6YM0=s900-c-k-c0x00ffffff-no-rj"
+                                 class="h-10 w-auto">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bottom Decorative Border -->
+            <div class="h-1 bg-gradient-to-r from-amber-600 via-amber-400 to-amber-600"></div>
+        </div>
+
+        <!-- Scrolling Ticker -->
+        <div class="bg-gradient-to-r from-amber-950 via-amber-900 to-amber-950 py-1.5 overflow-hidden border-t border-amber-600/50">
+            <div class="ticker-scroll flex whitespace-nowrap">
+                <span class="mx-12 text-amber-200 text-xs text-shadow-strong">✦ Honoring lives with dignity and respect</span>
+                <span class="mx-12 text-amber-200 text-xs text-shadow-strong">✦ Professional memorial services</span>
+                <span class="mx-12 text-amber-200 text-xs text-shadow-strong">✦ Supporting families in their time of need</span>
+                <span class="mx-12 text-amber-200 text-xs text-shadow-strong">✦ Celebrating memories that last forever</span>
+                <span class="mx-12 text-amber-200 text-xs text-shadow-strong">✦ Honoring lives with dignity and respect</span>
+                <span class="mx-12 text-amber-200 text-xs text-shadow-strong">✦ Professional memorial services</span>
+                <span class="mx-12 text-amber-200 text-xs text-shadow-strong">✦ Supporting families in their time of need</span>
+                <span class="mx-12 text-amber-200 text-xs text-shadow-strong">✦ Celebrating memories that last forever</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const memorialPhrases = [
+            "Forever in our hearts",
+            "A beautiful soul",
+            "Gone but never forgotten",
+            "Always remembered, deeply missed",
+            "Their memory lives on",
+            "Rest in eternal peace",
+            "Loved beyond words",
+            "A life beautifully lived",
+            "In loving memory",
+            "Forever cherished"
+        ];
+
+        let phraseIdx = 0;
+
+        function cyclePhrase() {
+            const phrase = document.getElementById('memorialPhrase');
+
+            phrase.style.opacity = '0';
+            phrase.style.transform = 'translateX(-20px)';
+
+            setTimeout(() => {
+                phraseIdx = (phraseIdx + 1) % memorialPhrases.length;
+                phrase.textContent = memorialPhrases[phraseIdx];
+
+                setTimeout(() => {
+                    phrase.style.opacity = '1';
+                    phrase.style.transform = 'translateX(0)';
+                }, 50);
+            }, 500);
+        }
+
+        setInterval(cyclePhrase, 5000);
+    </script>
+</body>
+</html>

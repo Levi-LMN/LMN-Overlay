@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Design 9 - Open Book</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: transparent;
+            font-family: 'Georgia', serif;
+        }
+
+        @keyframes bookOpen {
+            0% {
+                transform: perspective(1000px) rotateX(-90deg);
+                opacity: 0;
+            }
+            100% {
+                transform: perspective(1000px) rotateX(0deg);
+                opacity: 1;
+            }
+        }
+
+        @keyframes pageFlip {
+            from {
+                transform: perspective(800px) rotateY(-30deg);
+                opacity: 0;
+            }
+            to {
+                transform: perspective(800px) rotateY(0deg);
+                opacity: 1;
+            }
+        }
+
+        @keyframes photoFade {
+            from {
+                opacity: 0;
+                filter: sepia(1) contrast(0.8);
+            }
+            to {
+                opacity: 1;
+                filter: sepia(0.3) contrast(1);
+            }
+        }
+
+        @keyframes inkWrite {
+            from {
+                width: 0;
+                opacity: 0;
+            }
+            to {
+                width: 100%;
+                opacity: 1;
+            }
+        }
+
+        @keyframes scroll {
+            from { transform: translateX(0); }
+            to { transform: translateX(-50%); }
+        }
+
+        .book-container {
+            animation: bookOpen 1.2s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            transform-style: preserve-3d;
+        }
+
+        .left-page {
+            animation: pageFlip 1s ease-out 0.5s both;
+        }
+
+        .right-page {
+            animation: pageFlip 1s ease-out 0.7s both;
+        }
+
+        .photo-vintage {
+            animation: photoFade 1.5s ease-out 1s both;
+        }
+
+        .text-write {
+            animation: inkWrite 1.5s ease-out 1.2s both;
+            overflow: hidden;
+        }
+
+        .ticker-scroll {
+            animation: scroll 32s linear infinite;
+        }
+
+        #mainText, #subText {
+            transition: all 0.6s ease;
+        }
+
+        .page-line {
+            background: repeating-linear-gradient(
+                transparent,
+                transparent 24px,
+                rgba(139, 92, 46, 0.1) 24px,
+                rgba(139, 92, 46, 0.1) 25px
+            );
+        }
+
+        .bookmark {
+            position: absolute;
+            top: -10px;
+            right: 30%;
+            width: 40px;
+            height: 80px;
+            background: linear-gradient(180deg, #7c2d12, #991b1b);
+            clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 85%, 0 100%);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="fixed bottom-0 left-0 w-full">
+        <!-- Open Book Design -->
+        <div class="book-container relative px-12 pt-8 pb-2">
+            <div class="relative bg-gradient-to-b from-amber-100 to-yellow-50 rounded-t-xl shadow-2xl border-4 border-amber-900/40"
+                 style="padding: 20px;">
+
+                <!-- Bookmark -->
+                <div class="bookmark"></div>
+
+                <!-- Center Spine -->
+                <div class="absolute top-0 bottom-0 left-1/2 -translate-x-1/2 w-2 bg-gradient-to-b from-amber-900 to-amber-950 shadow-lg"></div>
+
+                <div class="grid grid-cols-2 gap-8">
+                    <!-- Left Page -->
+                    <div class="left-page relative page-line rounded-lg p-6 bg-amber-50/50">
+                        <!-- Vintage Photo -->
+                        <div class="photo-vintage mb-4 mx-auto" style="width: 140px;">
+                            <div class="relative">
+                                <div class="absolute inset-0 bg-amber-900/10 rounded"></div>
+                                <img src="https://img.freepik.com/free-photo/man-s-white-sweater-psd-mockup-casual-apparel-close-up_53876-148045.jpg?semt=ais_hybrid&w=740&q=80"
+                                     class="w-full rounded border-4 border-white shadow-lg"
+                                     style="filter: sepia(0.3) contrast(1.1);">
+                                <!-- Photo corners -->
+                                <div class="absolute -top-1 -left-1 w-4 h-4 border-l-2 border-t-2 border-amber-700"></div>
+                                <div class="absolute -top-1 -right-1 w-4 h-4 border-r-2 border-t-2 border-amber-700"></div>
+                                <div class="absolute -bottom-1 -left-1 w-4 h-4 border-l-2 border-b-2 border-amber-700"></div>
+                                <div class="absolute -bottom-1 -right-1 w-4 h-4 border-r-2 border-b-2 border-amber-700"></div>
+                            </div>
+                        </div>
+
+                        <!-- Handwritten Style Date -->
+                        <div class="text-center text-amber-800 text-sm italic mb-3" style="font-family: 'Brush Script MT', cursive;">
+                            Chapter of Life
+                        </div>
+
+                        <!-- Logo Stamp -->
+                        <div class="mt-6 flex justify-center">
+                            <div class="bg-amber-900/10 rounded-full p-3 border-2 border-amber-800/30">
+                                <img src="https://yt3.googleusercontent.com/hJD-YRx93VUY4VZG7sG0PjCh8iiBInbgY0S21liCJk0HLMeQhQmQKjcMrzUpKr22MGDr6YM0=s900-c-k-c0x00ffffff-no-rj"
+                                     class="h-12 w-auto opacity-80">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Page -->
+                    <div class="right-page page-line rounded-lg p-6 bg-amber-50/50">
+                        <!-- Written Text -->
+                        <div class="text-write mb-6">
+                            <h2 id="mainText" class="text-3xl font-serif text-amber-900 mb-4 leading-relaxed">
+                                A Story Written in Love
+                            </h2>
+                        </div>
+
+                        <div class="text-write">
+                            <p id="subText" class="text-lg text-amber-800 leading-loose italic">
+                                Every page a cherished memory, every word a testament to a life beautifully lived.
+                            </p>
+                        </div>
+
+                        <!-- Decorative Flourish -->
+                        <div class="mt-6 flex justify-center">
+                            <div class="text-4xl text-amber-700" style="font-family: 'Zapfino', cursive;">~</div>
+                        </div>
+
+                        <!-- Page Number -->
+                        <div class="absolute bottom-4 right-6 text-amber-700 text-sm">∞</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ticker -->
+        <div class="bg-gradient-to-r from-amber-900 via-yellow-900 to-amber-900 py-2 overflow-hidden border-t-2 border-amber-700">
+            <div class="ticker-scroll flex whitespace-nowrap">
+                <span class="mx-10 text-amber-100 text-sm">📖 Every life is a story worth telling</span>
+                <span class="mx-10 text-amber-100 text-sm">📖 Pages filled with love and memories</span>
+                <span class="mx-10 text-amber-100 text-sm">📖 A chapter closed, a legacy eternal</span>
+                <span class="mx-10 text-amber-100 text-sm">📖 Written in the book of our hearts</span>
+                <span class="mx-10 text-amber-100 text-sm">📖 Every life is a story worth telling</span>
+                <span class="mx-10 text-amber-100 text-sm">📖 Pages filled with love and memories</span>
+                <span class="mx-10 text-amber-100 text-sm">📖 A chapter closed, a legacy eternal</span>
+                <span class="mx-10 text-amber-100 text-sm">📖 Written in the book of our hearts</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const primaryTexts = [
+            "A Story Written in Love",
+            "Chapters of Grace",
+            "The Book of Their Life",
+            "Pages of Memories",
+            "An Eternal Narrative"
+        ];
+
+        const secondaryTexts = [
+            "Every page a cherished memory, every word a testament to a life beautifully lived.",
+            "Each chapter filled with moments that shaped a remarkable journey.",
+            "A story of love, laughter, and lasting impact on all who knew them.",
+            "Words cannot capture the depth of their spirit, but we remember.",
+            "Their story continues in the hearts of those they touched."
+        ];
+
+        let idx = 0;
+
+        function cycleText() {
+            const mainEl = document.getElementById('mainText');
+            const subEl = document.getElementById('subText');
+
+            mainEl.style.opacity = '0';
+            subEl.style.opacity = '0';
+
+            setTimeout(() => {
+                idx = (idx + 1) % primaryTexts.length;
+                mainEl.textContent = primaryTexts[idx];
+                subEl.textContent = secondaryTexts[idx];
+
+                setTimeout(() => {
+                    mainEl.style.opacity = '1';
+                    subEl.style.opacity = '1';
+                }, 50);
+            }, 600);
+        }
+
+        setInterval(cycleText, 8000);
+    </script>
+</body>
+</html>

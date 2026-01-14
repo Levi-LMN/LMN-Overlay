@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Elegant Side Panel Memorial</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: transparent;
+            font-family: 'Georgia', serif;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(-100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(255, 215, 0, 0.3); }
+            50% { box-shadow: 0 0 40px rgba(255, 215, 0, 0.5); }
+        }
+
+        .main-panel {
+            animation: slideIn 1s ease-out;
+        }
+
+        .photo-frame {
+            animation: fadeIn 0.8s ease-out 0.5s both, glow 3s ease-in-out infinite 1.5s;
+        }
+
+        .content-fade {
+            animation: fadeIn 0.6s ease-out 0.8s both;
+        }
+
+        .ticker {
+            animation: scroll 40s linear infinite;
+        }
+
+        @keyframes scroll {
+            from { transform: translateX(0); }
+            to { transform: translateX(-50%); }
+        }
+
+        .text-transition {
+            transition: all 0.6s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="fixed left-0 top-0 h-full flex items-center">
+        <!-- Main Vertical Panel -->
+        <div class="main-panel relative bg-gradient-to-b from-amber-950 via-amber-900 to-amber-950 w-80 h-full shadow-2xl border-r-4 border-amber-600/50">
+
+            <!-- Ornamental Top -->
+            <div class="absolute top-0 left-0 right-0 h-20 bg-gradient-to-b from-amber-800/50 to-transparent flex items-center justify-center">
+                <div class="text-amber-300 text-4xl">✦</div>
+            </div>
+
+            <!-- Content Container -->
+            <div class="h-full flex flex-col justify-center items-center px-8 space-y-6">
+
+                <!-- Photo Frame -->
+                <div class="photo-frame">
+                    <div class="relative">
+                        <div class="absolute -inset-3 bg-gradient-to-br from-amber-400 via-yellow-500 to-amber-600 rounded-full opacity-30 blur-md"></div>
+                        <div class="relative w-48 h-48 rounded-full bg-gradient-to-br from-amber-600 to-amber-800 p-2">
+                            <div class="w-full h-full rounded-full overflow-hidden border-4 border-amber-200/40">
+                                <img src="https://img.freepik.com/free-photo/man-s-white-sweater-psd-mockup-casual-apparel-close-up_53876-148045.jpg?semt=ais_hybrid&w=740&q=80"
+                                     class="w-full h-full object-cover">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Divider -->
+                <div class="flex items-center gap-3 w-full justify-center">
+                    <div class="w-16 h-px bg-amber-400/60"></div>
+                    <div class="text-amber-400 text-xl">❖</div>
+                    <div class="w-16 h-px bg-amber-400/60"></div>
+                </div>
+
+                <!-- Text Content -->
+                <div class="content-fade text-center space-y-4">
+                    <h2 id="mainText" class="text-transition text-2xl font-bold text-amber-100 tracking-wider">
+                        IN LOVING MEMORY
+                    </h2>
+                    <p id="subText" class="text-transition text-lg text-amber-200 italic">
+                        Forever in our hearts
+                    </p>
+                    <p id="tagline" class="text-transition text-sm text-amber-300 uppercase tracking-widest">
+                        A life celebrated
+                    </p>
+                </div>
+
+                <!-- Divider -->
+                <div class="flex items-center gap-3 w-full justify-center">
+                    <div class="w-16 h-px bg-amber-400/60"></div>
+                    <div class="text-amber-400 text-xl">❖</div>
+                    <div class="w-16 h-px bg-amber-400/60"></div>
+                </div>
+
+                <!-- Company Info -->
+                <div class="content-fade text-center space-y-3">
+                    <div class="bg-amber-800/40 rounded-lg p-3 inline-block">
+                        <img src="https://yt3.googleusercontent.com/hJD-YRx93VUY4VZG7sG0PjCh8iiBInbgY0S21liCJk0HLMeQhQmQKjcMrzUpKr22MGDr6YM0=s900-c-k-c0x00ffffff-no-rj"
+                             class="h-12 w-auto">
+                    </div>
+                    <h3 class="text-xl font-bold text-amber-100">WAMONIC</h3>
+                    <p class="text-xs text-amber-300">Memorial Services</p>
+                    <div class="text-amber-200 text-sm mt-2">
+                        <p class="font-semibold">+254 712 345 678</p>
+                        <p class="text-xs text-amber-300 mt-1">Available 24/7</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ornamental Bottom -->
+            <div class="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-amber-800/50 to-transparent flex items-center justify-center">
+                <div class="text-amber-300 text-4xl">✦</div>
+            </div>
+        </div>
+
+        <!-- Ticker Bar -->
+        <div class="absolute bottom-0 left-80 right-0 bg-gradient-to-r from-amber-950 via-amber-900 to-transparent py-3 overflow-hidden border-t-2 border-amber-600/50">
+            <div class="ticker flex whitespace-nowrap">
+                <span class="mx-8 text-amber-200 text-sm">✦ Honoring lives with dignity ✦</span>
+                <span class="mx-8 text-amber-200 text-sm">✦ Professional memorial services ✦</span>
+                <span class="mx-8 text-amber-200 text-sm">✦ Supporting families ✦</span>
+                <span class="mx-8 text-amber-200 text-sm">✦ Celebrating memories ✦</span>
+                <span class="mx-8 text-amber-200 text-sm">✦ Honoring lives with dignity ✦</span>
+                <span class="mx-8 text-amber-200 text-sm">✦ Professional memorial services ✦</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const mainTexts = [
+            "IN LOVING MEMORY",
+            "CELEBRATING A LIFE",
+            "FOREVER REMEMBERED",
+            "REST IN PEACE",
+            "ETERNAL LEGACY"
+        ];
+
+        const subTexts = [
+            "Forever in our hearts",
+            "A beautiful soul",
+            "Gone but never forgotten",
+            "May they find peace",
+            "Their memory lives on"
+        ];
+
+        const taglines = [
+            "A life celebrated",
+            "Cherished always",
+            "Loved beyond measure",
+            "Always in our thoughts",
+            "Forever with us"
+        ];
+
+        let idx = 0;
+
+        function cycleText() {
+            const mainEl = document.getElementById('mainText');
+            const subEl = document.getElementById('subText');
+            const tagEl = document.getElementById('tagline');
+
+            mainEl.style.opacity = '0';
+            subEl.style.opacity = '0';
+            tagEl.style.opacity = '0';
+
+            setTimeout(() => {
+                idx = (idx + 1) % mainTexts.length;
+                mainEl.textContent = mainTexts[idx];
+                subEl.textContent = subTexts[idx];
+                tagEl.textContent = taglines[idx];
+
+                setTimeout(() => {
+                    mainEl.style.opacity = '1';
+                    subEl.style.opacity = '1';
+                    tagEl.style.opacity = '1';
+                }, 50);
+            }, 600);
+        }
+
+        setInterval(cycleText, 6000);
+    </script>
+</body>
+</html>

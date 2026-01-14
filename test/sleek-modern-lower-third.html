@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sleek Modern Lower Third</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: transparent;
+            font-family: 'Inter', 'Segoe UI', sans-serif;
+        }
+
+        @keyframes slideInLeft {
+            from {
+                transform: translateX(-100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                box-shadow: 0 0 15px rgba(59, 130, 246, 0.4);
+            }
+            50% {
+                box-shadow: 0 0 25px rgba(59, 130, 246, 0.6);
+            }
+        }
+
+        .slide-left {
+            animation: slideInLeft 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        .slide-right {
+            animation: slideInRight 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55) 0.3s both;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.6s ease-out 0.8s both;
+        }
+
+        .pulse-glow {
+            animation: pulse 2s ease-in-out infinite 1s;
+        }
+
+        .text-transition {
+            transition: all 0.5s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="fixed bottom-0 left-0 right-0 flex items-end justify-between px-8 pb-6">
+
+        <!-- Left Section: Main Info -->
+        <div class="slide-left flex items-center gap-4">
+            <!-- Photo Circle -->
+            <div class="relative pulse-glow">
+                <div class="w-24 h-24 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 p-1 shadow-2xl">
+                    <div class="w-full h-full rounded-full overflow-hidden border-2 border-blue-300/40">
+                        <img src="https://img.freepik.com/free-photo/man-s-white-sweater-psd-mockup-casual-apparel-close-up_53876-148045.jpg?semt=ais_hybrid&w=740&q=80"
+                             class="w-full h-full object-cover">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Info Bar -->
+            <div class="bg-gradient-to-r from-slate-900/95 via-slate-800/95 to-transparent backdrop-blur-md rounded-r-2xl pl-6 pr-20 py-4 shadow-xl border-l-4 border-blue-500">
+                <div class="space-y-1">
+                    <h2 id="mainText" class="text-transition text-2xl font-bold text-blue-50 tracking-wide">
+                        IN LOVING MEMORY
+                    </h2>
+                    <p id="subText" class="text-transition text-sm text-blue-200 italic">
+                        Forever in our hearts
+                    </p>
+                    <p id="tagText" class="text-transition text-xs text-blue-300 uppercase tracking-wider">
+                        A life celebrated
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Section: Company Badge -->
+        <div class="slide-right">
+            <div class="bg-gradient-to-l from-slate-900/95 via-slate-800/95 to-transparent backdrop-blur-md rounded-l-2xl pl-20 pr-6 py-4 shadow-xl border-r-4 border-blue-500">
+                <div class="flex items-center gap-4">
+                    <div class="text-right">
+                        <h3 class="text-lg font-bold text-blue-100 tracking-wider">WAMONIC</h3>
+                        <p class="text-xs text-blue-300">Memorial Services</p>
+                        <p class="text-sm text-blue-200 font-semibold mt-1">+254 712 345 678</p>
+                    </div>
+                    <div class="bg-slate-700/50 rounded-lg p-2">
+                        <img src="https://yt3.googleusercontent.com/hJD-YRx93VUY4VZG7sG0PjCh8iiBInbgY0S21liCJk0HLMeQhQmQKjcMrzUpKr22MGDr6YM0=s900-c-k-c0x00ffffff-no-rj"
+                             class="h-10 w-auto">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Accent Line -->
+    <div class="fade-in fixed bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-600 via-blue-500 to-blue-600"></div>
+
+    <script>
+        const mainTexts = [
+            "IN LOVING MEMORY",
+            "CELEBRATING A LIFE",
+            "FOREVER REMEMBERED",
+            "REST IN PEACE",
+            "ETERNAL LEGACY"
+        ];
+
+        const subTexts = [
+            "Forever in our hearts",
+            "A beautiful soul",
+            "Gone but never forgotten",
+            "May they find peace",
+            "Their memory lives on"
+        ];
+
+        const tagTexts = [
+            "A life celebrated",
+            "Cherished always",
+            "Loved beyond measure",
+            "Always in our thoughts",
+            "Forever with us"
+        ];
+
+        let idx = 0;
+
+        function cycleText() {
+            const main = document.getElementById('mainText');
+            const sub = document.getElementById('subText');
+            const tag = document.getElementById('tagText');
+
+            main.style.opacity = '0';
+            sub.style.opacity = '0';
+            tag.style.opacity = '0';
+
+            setTimeout(() => {
+                idx = (idx + 1) % mainTexts.length;
+                main.textContent = mainTexts[idx];
+                sub.textContent = subTexts[idx];
+                tag.textContent = tagTexts[idx];
+
+                setTimeout(() => {
+                    main.style.opacity = '1';
+                    sub.style.opacity = '1';
+                    tag.style.opacity = '1';
+                }, 50);
+            }, 500);
+        }
+
+        setInterval(cycleText, 6000);
+    </script>
+</body>
+</html>

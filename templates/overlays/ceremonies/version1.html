@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Professional Blue - Ceremony Overlay</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: transparent; font-family: 'Montserrat', 'Arial', sans-serif; overflow: hidden; }
+
+        @keyframes expandCenter { from { transform: scaleX(0); opacity: 0; } to { transform: scaleX(1); opacity: 1; } }
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes subtlePulse { 0%, 100% { box-shadow: 0 0 15px rgba(59, 130, 246, 0.3); } 50% { box-shadow: 0 0 25px rgba(59, 130, 246, 0.5); } }
+        @keyframes tickerScroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+    </style>
+</head>
+<body>
+    <div id="main-overlay" class="fixed bottom-0 left-0 right-0" style="display: none;">
+        <div class="flex flex-col items-center pb-3">
+            <div id="overlay-container" class="relative bg-gradient-to-r from-blue-950 via-blue-900 to-blue-950 rounded-full shadow-2xl border border-blue-600/40" style="max-width: 1100px; transform-origin: center;">
+                <div class="flex items-center px-8 py-3.5 gap-6">
+
+                    <!-- Company Logo -->
+                    <div id="company-logo-section" class="relative flex-shrink-0" style="display: none;">
+                        <div class="w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 p-1 shadow-xl" style="animation: subtlePulse 3s ease-in-out infinite;">
+                            <div class="w-full h-full rounded-full overflow-hidden border-2 border-blue-400/30">
+                                <img id="company-logo" src="" class="w-full h-full object-cover">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Speaker Info -->
+                    <div id="speaker-section" class="flex-1 text-center space-y-1 min-w-0" style="display: none;">
+                        <h3 id="speaker-name" class="text-lg font-bold text-blue-100 tracking-wide" style="text-shadow: 2px 2px 8px rgba(0,0,0,0.9);"></h3>
+                        <p id="speaker-title" class="text-sm text-blue-300" style="text-shadow: 1px 1px 4px rgba(0,0,0,0.8);"></p>
+                    </div>
+
+                    <!-- Event Info -->
+                    <div id="event-section" class="flex-1 text-center space-y-1 min-w-0">
+                        <h2 id="event-title" class="text-xl font-bold text-blue-100 tracking-wide" style="text-shadow: 2px 2px 8px rgba(0,0,0,0.9);"></h2>
+                        <div class="flex items-center justify-center gap-2">
+                            <div class="w-8 h-px bg-blue-500"></div>
+                            <span class="text-blue-400 text-xs">●</span>
+                            <div class="w-8 h-px bg-blue-500"></div>
+                        </div>
+                        <p id="event-date" class="text-sm text-blue-300" style="text-shadow: 1px 1px 4px rgba(0,0,0,0.8);"></p>
+                        <p id="custom-text" class="text-xs text-blue-400" style="text-shadow: 1px 1px 4px rgba(0,0,0,0.8);"></p>
+                    </div>
+
+                    <!-- Company Info -->
+                    <div id="company-info" class="flex items-center gap-3 flex-shrink-0" style="display: none;">
+                        <div class="text-right">
+                            <h3 id="company-name" class="text-base font-bold text-blue-100" style="text-shadow: 2px 2px 8px rgba(0,0,0,0.9);"></h3>
+                            <p id="company-tagline" class="text-xs text-blue-400" style="text-shadow: 1px 1px 4px rgba(0,0,0,0.8);"></p>
+                            <p id="company-phone" class="text-sm text-blue-300 font-semibold mt-0.5" style="text-shadow: 1px 1px 4px rgba(0,0,0,0.8);"></p>
+                        </div>
+                        <div id="company-badge" class="bg-blue-700/50 rounded-lg p-1.5" style="display: none;">
+                            <img id="company-logo-badge" src="" class="h-9 w-auto">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ticker -->
+            <div id="ticker-section" class="mt-2 w-full bg-gradient-to-r from-blue-950 via-blue-900 to-blue-950 py-1.5 overflow-hidden border-t border-blue-600/40" style="display: none;">
+                <div id="ticker-content" class="flex whitespace-nowrap"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const socket = io();
+        const overlayId = '{{ overlay_id }}';
+        let overlayData = {};
+
+        socket.on('connect', () => {
+            socket.emit('join', {overlay_id: overlayId});
+            loadOverlayData();
+        });
+
+        socket.on('overlay_update', (data) => {
+            overlayData = {...overlayData, ...data};
+            updateDisplay();
+        });
+
+        async function loadOverlayData() {
+            try {
+                const response = await fetch(`/api/overlay/${overlayId}`);
+                if (response.ok) {
+                    overlayData = await response.json();
+                    updateDisplay();
+                }
+            } catch (error) {
+                console.error('Error loading overlay data:', error);
+            }
+        }
+
+        function updateDisplay() {
+            const mainOverlay = document.getElementById('main-overlay');
+            const container = document.getElementById('overlay-container');
+
+            // Apply animation
+            if (overlayData.container_animation && overlayData.container_animation !== 'none') {
+                container.style.animation = `expandCenter 1s ease-out`;
+            }
+
+            // Show/hide sections
+            const speakerSection = document.getElementById('speaker-section');
+            if (overlayData.show_speaker === 'true') {
+                speakerSection.style.display = 'block';
+                if (overlayData.speaker_name) document.getElementById('speaker-name').textContent = overlayData.speaker_name;
+                if (overlayData.speaker_title) document.getElementById('speaker-title').textContent = overlayData.speaker_title;
+            } else {
+                speakerSection.style.display = 'none';
+            }
+
+            // Show company logo if available
+            const logoSection = document.getElementById('company-logo-section');
+            {% if overlay.logo_path %}
+            if (overlayData.show_logo === 'true') {
+                logoSection.style.display = 'block';
+                document.getElementById('company-logo').src = '/static/{{ overlay.logo_path }}';
+            } else {
+                logoSection.style.display = 'none';
+            }
+            {% else %}
+            logoSection.style.display = 'none';
+            {% endif %}
+
+            // Update event info
+            if (overlayData.custom_text) {
+                document.getElementById('event-title').textContent = overlayData.custom_text;
+            } else {
+                document.getElementById('event-title').textContent = '{{ overlay.name }}';
+            }
+
+            if (overlayData.event_date) {
+                document.getElementById('event-date').textContent = formatDate(overlayData.event_date);
+            }
+
+            // Update company info
+            const companyInfo = document.getElementById('company-info');
+            {% if overlay.show_company_info %}
+            companyInfo.style.display = 'flex';
+            {% if overlay.company_name %}
+            document.getElementById('company-name').textContent = '{{ overlay.company_name }}';
+            {% endif %}
+            {% if overlay.company_phone %}
+            document.getElementById('company-phone').textContent = '{{ overlay.company_phone }}';
+            {% endif %}
+            {% if overlay.company_tagline %}
+            document.getElementById('company-tagline').textContent = '{{ overlay.company_tagline }}';
+            {% endif %}
+            {% if overlay.logo_path %}
+            document.getElementById('company-badge').style.display = 'block';
+            document.getElementById('company-logo-badge').src = '/static/{{ overlay.logo_path }}';
+            {% endif %}
+            {% else %}
+            companyInfo.style.display = 'none';
+            {% endif %}
+
+            // Update ticker
+            const tickerSection = document.getElementById('ticker-section');
+            const tickerContent = document.getElementById('ticker-content');
+            if (overlayData.show_ticker === 'true' && overlayData.ticker_text) {
+                tickerSection.style.display = 'block';
+                tickerContent.innerHTML = `
+                    <span class="mx-10 text-blue-300 text-xs" style="text-shadow: 1px 1px 4px rgba(0,0,0,0.8);">● ${overlayData.ticker_text}</span>
+                    <span class="mx-10 text-blue-300 text-xs" style="text-shadow: 1px 1px 4px rgba(0,0,0,0.8);">● ${overlayData.ticker_text}</span>
+                `;
+                tickerContent.style.animation = 'tickerScroll 35s linear infinite';
+            } else {
+                tickerSection.style.display = 'none';
+            }
+
+            // Apply colors
+            if (overlayData.primary_color) {
+                container.style.background = `linear-gradient(to right, ${overlayData.primary_color}ee, ${overlayData.primary_color}dd, ${overlayData.primary_color}ee)`;
+            }
+
+            mainOverlay.style.display = 'block';
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr) return '';
+            const date = new Date(dateStr);
+            return date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+        }
+    </script>
+</body>
+</html>

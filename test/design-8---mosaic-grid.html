@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Design 8 - Mosaic Grid</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: transparent;
+            font-family: 'Georgia', serif;
+        }
+
+        @keyframes tileReveal1 {
+            from {
+                transform: scale(0) rotate(180deg);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1) rotate(0deg);
+                opacity: 1;
+            }
+        }
+
+        @keyframes tileReveal2 {
+            from {
+                transform: translateX(-100px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes tileReveal3 {
+            from {
+                transform: translateY(100px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes tileReveal4 {
+            from {
+                transform: translateX(100px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes scroll {
+            from { transform: translateX(0); }
+            to { transform: translateX(-50%); }
+        }
+
+        @keyframes tilePulse {
+            0%, 100% { box-shadow: 0 0 20px rgba(136, 19, 55, 0.3); }
+            50% { box-shadow: 0 0 40px rgba(136, 19, 55, 0.6); }
+        }
+
+        .tile-1 { animation: tileReveal1 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55) 0.1s both; }
+        .tile-2 { animation: tileReveal2 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55) 0.3s both; }
+        .tile-3 { animation: tileReveal3 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55) 0.5s both; }
+        .tile-4 { animation: tileReveal4 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55) 0.7s both; }
+
+        .photo-tile {
+            animation: tilePulse 3s ease-in-out infinite 1.5s;
+        }
+
+        .ticker-scroll {
+            animation: scroll 30s linear infinite;
+        }
+
+        #mainText, #subText {
+            transition: all 0.6s ease;
+        }
+
+        .ornate-corner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(244, 114, 182, 0.6);
+            position: absolute;
+        }
+
+        .corner-tl { top: 5px; left: 5px; border-right: none; border-bottom: none; }
+        .corner-tr { top: 5px; right: 5px; border-left: none; border-bottom: none; }
+        .corner-bl { bottom: 5px; left: 5px; border-right: none; border-top: none; }
+        .corner-br { bottom: 5px; right: 5px; border-left: none; border-top: none; }
+    </style>
+</head>
+<body>
+    <div class="fixed bottom-0 left-0 w-full">
+        <!-- Mosaic Grid Layout -->
+        <div class="relative px-8 pb-2 pt-6">
+            <div class="grid grid-cols-12 gap-3">
+
+                <!-- Tile 1: Photo -->
+                <div class="tile-1 col-span-2 photo-tile relative bg-gradient-to-br from-pink-900 to-rose-950 rounded-xl p-2 shadow-2xl">
+                    <div class="ornate-corner corner-tl"></div>
+                    <div class="ornate-corner corner-br"></div>
+                    <div class="w-full aspect-square rounded-lg overflow-hidden border-2 border-pink-400/30">
+                        <img src="https://img.freepik.com/free-photo/man-s-white-sweater-psd-mockup-casual-apparel-close-up_53876-148045.jpg?semt=ais_hybrid&w=740&q=80"
+                             class="w-full h-full object-cover">
+                    </div>
+                    <div class="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-rose-700 px-2 py-0.5 text-white text-xs rounded">♱</div>
+                </div>
+
+                <!-- Tile 2: Main Text -->
+                <div class="tile-2 col-span-6 relative bg-gradient-to-br from-rose-900 via-pink-900 to-fuchsia-950 rounded-xl px-8 py-5 shadow-2xl border border-pink-600/30">
+                    <div class="ornate-corner corner-tl"></div>
+                    <div class="ornate-corner corner-tr"></div>
+                    <div class="ornate-corner corner-bl"></div>
+                    <div class="ornate-corner corner-br"></div>
+
+                    <div class="text-center">
+                        <h2 id="mainText" class="text-3xl font-bold text-pink-100 mb-3 tracking-wide">
+                            A BEAUTIFUL MOSAIC
+                        </h2>
+                        <div class="flex items-center justify-center gap-2 mb-3">
+                            <div class="w-3 h-3 bg-pink-400 rotate-45"></div>
+                            <div class="w-16 h-px bg-pink-400"></div>
+                            <div class="w-3 h-3 bg-pink-400 rotate-45"></div>
+                        </div>
+                        <p id="subText" class="text-lg text-pink-200">
+                            Every piece tells a story of love
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Tile 3: Decorative -->
+                <div class="tile-3 col-span-2 bg-gradient-to-br from-fuchsia-900 to-pink-950 rounded-xl p-4 shadow-2xl border border-pink-500/30 flex items-center justify-center">
+                    <div class="text-center">
+                        <div class="text-5xl text-pink-300 mb-2">✤</div>
+                        <div class="text-pink-200 text-xs uppercase tracking-widest">In Memory</div>
+                    </div>
+                </div>
+
+                <!-- Tile 4: Logo -->
+                <div class="tile-4 col-span-2 bg-gradient-to-br from-rose-950 to-pink-950 rounded-xl p-4 shadow-2xl border border-pink-600/30 flex items-center justify-center">
+                    <img src="https://yt3.googleusercontent.com/hJD-YRx93VUY4VZG7sG0PjCh8iiBInbgY0S21liCJk0HLMeQhQmQKjcMrzUpKr22MGDr6YM0=s900-c-k-c0x00ffffff-no-rj"
+                         class="h-16 w-auto opacity-90">
+                </div>
+            </div>
+        </div>
+
+        <!-- Ticker -->
+        <div class="bg-gradient-to-r from-pink-950 via-rose-950 to-pink-950 py-2 overflow-hidden border-t border-pink-600/40">
+            <div class="ticker-scroll flex whitespace-nowrap">
+                <span class="mx-10 text-pink-200 text-sm">✦ Each memory a precious tile in life's mosaic</span>
+                <span class="mx-10 text-pink-200 text-sm">✦ Patterns of love woven together</span>
+                <span class="mx-10 text-pink-200 text-sm">✦ A masterpiece of a life well lived</span>
+                <span class="mx-10 text-pink-200 text-sm">✦ Forever pieced together in our hearts</span>
+                <span class="mx-10 text-pink-200 text-sm">✦ Each memory a precious tile in life's mosaic</span>
+                <span class="mx-10 text-pink-200 text-sm">✦ Patterns of love woven together</span>
+                <span class="mx-10 text-pink-200 text-sm">✦ A masterpiece of a life well lived</span>
+                <span class="mx-10 text-pink-200 text-sm">✦ Forever pieced together in our hearts</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const primaryTexts = [
+            "A BEAUTIFUL MOSAIC",
+            "PIECES OF GRACE",
+            "LIFE'S TAPESTRY",
+            "FRAGMENTS OF LOVE",
+            "ETERNAL PATTERNS"
+        ];
+
+        const secondaryTexts = [
+            "Every piece tells a story of love",
+            "Each moment a treasured fragment",
+            "Woven together in perfect harmony",
+            "Memories forming a beautiful whole",
+            "A life artfully composed"
+        ];
+
+        let idx = 0;
+
+        function cycleText() {
+            const mainEl = document.getElementById('mainText');
+            const subEl = document.getElementById('subText');
+
+            mainEl.style.opacity = '0';
+            subEl.style.opacity = '0';
+
+            setTimeout(() => {
+                idx = (idx + 1) % primaryTexts.length;
+                mainEl.textContent = primaryTexts[idx];
+                subEl.textContent = secondaryTexts[idx];
+
+                setTimeout(() => {
+                    mainEl.style.opacity = '1';
+                    subEl.style.opacity = '1';
+                }, 50);
+            }, 600);
+        }
+
+        setInterval(cycleText, 7000);
+    </script>
+</body>
+</html>

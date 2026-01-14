@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Elegant Hearts - Wedding Overlay</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: transparent; font-family: 'Dancing Script', 'Brush Script MT', cursive; overflow: hidden; }
+
+        @keyframes heartBeat { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+        @keyframes slideFromRight { from { transform: translateX(120%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes sparkle { 0%, 100% { opacity: 0.5; transform: scale(0.8) rotate(0deg); } 50% { opacity: 1; transform: scale(1.2) rotate(180deg); } }
+        @keyframes tickerSlide { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+        @keyframes roseGlow { 0%, 100% { box-shadow: 0 0 20px rgba(236, 72, 153, 0.4); } 50% { box-shadow: 0 0 35px rgba(236, 72, 153, 0.6); } }
+
+        .heart-shape { clip-path: path('M12,21.35L10.55,20.03C5.4,15.36 2,12.27 2,8.5C2,5.41 4.42,3 7.5,3C9.24,3 10.91,3.81 12,5.08C13.09,3.81 14.76,3 16.5,3C19.58,3 22,5.41 22,8.5C22,12.27 18.6,15.36 13.45,20.03L12,21.35Z'); }
+    </style>
+</head>
+<body>
+    <div id="main-overlay" class="fixed bottom-0 right-0 w-full" style="display: none;">
+        <div class="flex justify-end px-8" style="padding-bottom: 2.5rem; padding-top: 1rem;">
+            <div id="overlay-container" class="flex items-center bg-gradient-to-l from-rose-950 via-pink-900 to-rose-900 shadow-2xl border-2 border-rose-400/40" style="border-radius: 0 80px 80px 0; max-width: 1100px;">
+
+                <!-- Company Info Section -->
+                <div id="company-info" class="relative px-5" style="width: 200px; height: 90px; display: none;">
+                    <div class="flex flex-col items-center justify-center text-center h-full">
+                        <div id="company-logo-container" class="bg-rose-800/60 rounded-2xl p-2.5 mb-1.5 border border-rose-600/40" style="display: none;">
+                            <img id="company-logo" src="" class="h-10 w-auto">
+                        </div>
+                        <h3 id="company-name" class="text-base font-bold text-rose-100 tracking-wider" style="text-shadow: 2px 2px 8px rgba(0,0,0,0.8);"></h3>
+                        <p id="company-tagline" class="text-xs text-rose-400 mt-0.5" style="text-shadow: 1px 1px 4px rgba(0,0,0,0.8);"></p>
+                        <div class="mt-1 pt-1 border-t border-rose-700/50 w-full">
+                            <p id="company-phone" class="text-sm font-semibold text-rose-200" style="text-shadow: 1px 1px 4px rgba(0,0,0,0.8);"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Decorative Divider -->
+                <div class="flex flex-col items-center gap-1.5 mx-3">
+                    <div class="w-px h-10 bg-gradient-to-b from-transparent via-rose-400/60 to-rose-400/30"></div>
+                    <div class="text-rose-400 text-lg">❤️</div>
+                    <div class="w-px h-10 bg-gradient-to-t from-transparent via-rose-400/60 to-rose-400/30"></div>
+                </div>
+
+                <!-- Main Content Section -->
+                <div class="flex-1 px-10 py-3">
+                    <div class="space-y-1 text-center">
+                        <h2 id="couple-names" class="text-2xl font-bold text-rose-50 tracking-wide" style="text-shadow: 2px 2px 10px rgba(0,0,0,0.9), 0 0 20px rgba(0,0,0,0.8); font-family: 'Great Vibes', cursive;"></h2>
+
+                        <div class="flex items-center justify-center gap-3">
+                            <div class="w-14 h-0.5 bg-rose-400/70"></div>
+                            <span class="text-rose-300 text-base">💕</span>
+                            <div class="w-14 h-0.5 bg-rose-400/70"></div>
+                        </div>
+
+                        <p id="event-date" class="text-sm text-rose-200 italic font-light" style="text-shadow: 2px 2px 8px rgba(0,0,0,0.9);"></p>
+
+                        <p id="custom-text" class="text-xs text-rose-300 pt-0.5" style="text-shadow: 1px 1px 6px rgba(0,0,0,0.8);"></p>
+                    </div>
+                </div>
+
+                <!-- Decorative Divider -->
+                <div class="flex flex-col items-center gap-1.5 mx-3">
+                    <div class="w-px h-10 bg-gradient-to-b from-transparent via-rose-400/60 to-rose-400/30"></div>
+                    <div class="text-rose-400 text-lg">💐</div>
+                    <div class="w-px h-10 bg-gradient-to-t from-transparent via-rose-400/60 to-rose-400/30"></div>
+                </div>
+
+                <!-- Photo/Decoration Section -->
+                <div id="photo-section" class="relative flex-shrink-0 mr-5" style="display: none;">
+                    <div class="relative">
+                        <div class="w-24 h-24 rounded-full bg-gradient-to-br from-rose-400 to-pink-600 p-2 shadow-2xl" style="animation: roseGlow 3s ease-in-out infinite;">
+                            <div class="w-full h-full rounded-full overflow-hidden border-2 border-rose-200/50">
+                                <img id="wedding-photo" src="" class="w-full h-full object-cover">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="absolute -bottom-2 left-1/2 transform -translate-x-1/2 bg-rose-900 rounded-full px-2.5 py-1 border-2 border-rose-400/60 shadow-xl">
+                        <span class="text-rose-200 text-sm">💍</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ticker -->
+        <div id="ticker-section" class="absolute bottom-0 left-0 right-0 bg-gradient-to-r from-rose-950 via-pink-950 to-rose-950 py-1.5 overflow-hidden border-t-2 border-rose-600/50" style="display: none;">
+            <div id="ticker-content" class="flex whitespace-nowrap"></div>
+        </div>
+    </div>
+
+    <script>
+        const socket = io();
+        const overlayId = '{{ overlay_id }}';
+        let overlayData = {};
+
+        socket.on('connect', () => {
+            socket.emit('join', {overlay_id: overlayId});
+            loadOverlayData();
+        });
+
+        socket.on('overlay_update', (data) => {
+            overlayData = {...overlayData, ...data};
+            updateDisplay();
+        });
+
+        async function loadOverlayData() {
+            try {
+                const response = await fetch(`/api/overlay/${overlayId}`);
+                if (response.ok) {
+                    overlayData = await response.json();
+                    updateDisplay();
+                }
+            } catch (error) {
+                console.error('Error loading overlay data:', error);
+            }
+        }
+
+        function updateDisplay() {
+            const mainOverlay = document.getElementById('main-overlay');
+            const container = document.getElementById('overlay-container');
+
+            // Apply container animation
+            if (overlayData.container_animation && overlayData.container_animation !== 'none') {
+                container.style.animation = `${overlayData.container_animation} 1.2s ease-out`;
+            }
+
+            // Show/hide sections
+            document.getElementById('photo-section').style.display = overlayData.show_logo === 'true' ? 'block' : 'none';
+            document.getElementById('company-info').style.display = {% if overlay.show_company_info %}overlayData.show_speaker === 'true' ? 'block' : 'none'{% else %}'none'{% endif %};
+
+            // Update photo
+            if (overlayData.photo_path) {
+                document.getElementById('wedding-photo').src = `/static/${overlayData.photo_path}`;
+            }
+
+            // Update text content
+            if (overlayData.couple_names) {
+                document.getElementById('couple-names').textContent = overlayData.couple_names;
+            }
+
+            if (overlayData.event_date) {
+                document.getElementById('event-date').textContent = formatDate(overlayData.event_date);
+            }
+
+            if (overlayData.custom_text) {
+                document.getElementById('custom-text').textContent = overlayData.custom_text;
+            }
+
+            // Update company info
+            {% if overlay.logo_path %}
+            document.getElementById('company-logo').src = '/static/{{ overlay.logo_path }}';
+            document.getElementById('company-logo-container').style.display = 'block';
+            {% endif %}
+            {% if overlay.company_name %}
+            document.getElementById('company-name').textContent = '{{ overlay.company_name }}';
+            {% endif %}
+            {% if overlay.company_phone %}
+            document.getElementById('company-phone').textContent = '{{ overlay.company_phone }}';
+            {% endif %}
+            {% if overlay.company_tagline %}
+            document.getElementById('company-tagline').textContent = '{{ overlay.company_tagline }}';
+            {% endif %}
+
+            // Update ticker
+            const tickerSection = document.getElementById('ticker-section');
+            const tickerContent = document.getElementById('ticker-content');
+            if (overlayData.show_ticker === 'true' && overlayData.ticker_text) {
+                tickerSection.style.display = 'block';
+                tickerContent.innerHTML = `
+                    <span class="mx-12 text-rose-200 text-xs" style="text-shadow: 1px 1px 4px rgba(0,0,0,0.8);">✦ ${overlayData.ticker_text}</span>
+                    <span class="mx-12 text-rose-200 text-xs" style="text-shadow: 1px 1px 4px rgba(0,0,0,0.8);">✦ ${overlayData.ticker_text}</span>
+                `;
+                tickerContent.style.animation = 'tickerSlide 40s linear infinite';
+            } else {
+                tickerSection.style.display = 'none';
+            }
+
+            // Apply colors
+            if (overlayData.primary_color) {
+                container.style.background = `linear-gradient(to left, ${overlayData.primary_color}ee, ${overlayData.primary_color}dd, ${overlayData.primary_color}dd)`;
+            }
+
+            mainOverlay.style.display = 'block';
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr) return '';
+            const date = new Date(dateStr);
+            return date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+        }
+    </script>
+</body>
+</html>

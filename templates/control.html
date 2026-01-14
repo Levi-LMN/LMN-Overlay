@@ -1,0 +1,586 @@
+{% extends "base.html" %}
+
+{% block title %}Control Overlay - {{ overlay['name'] }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .control-section {
+        background: white;
+        border-radius: 0.5rem;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+    }
+    .preview-frame {
+        border: 2px solid #e5e7eb;
+        border-radius: 0.5rem;
+        background: #000;
+        width: 100%;
+        height: 0;
+        padding-bottom: 56.25%;
+        position: relative;
+        overflow: hidden;
+    }
+    .preview-frame iframe {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        transform: scale(0.5);
+        transform-origin: 0 0;
+        width: 200%;
+        height: 200%;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="mb-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <h2 class="text-2xl font-bold text-gray-900">{{ overlay['name'] }}</h2>
+                <p class="text-sm text-gray-500 capitalize">{{ overlay['event_type'] }} - {{ overlay['template_version'] }}</p>
+            </div>
+            <a href="{{ url_for('dashboard') }}" class="text-sm text-indigo-600 hover:text-indigo-900">
+                <i class="fas fa-arrow-left mr-1"></i> Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Controls Column -->
+        <div class="lg:col-span-2 space-y-4">
+            <!-- Display URL -->
+            <div class="control-section">
+                <h3 class="text-lg font-medium text-gray-900 mb-3">
+                    <i class="fas fa-link text-indigo-600 mr-2"></i>OBS Display URL
+                </h3>
+                <div class="flex items-center space-x-2">
+                    <input type="text" value="{{ display_url }}" readonly id="display-url"
+                           class="flex-1 border border-gray-300 rounded-md py-2 px-3 text-sm bg-gray-50">
+                    <button onclick="copyUrl()"
+                            class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 text-sm">
+                        <i class="fas fa-copy"></i> Copy
+                    </button>
+                </div>
+                <p class="text-xs text-gray-500 mt-2">Add this URL as a Browser Source in OBS</p>
+            </div>
+
+            <!-- Template Switcher -->
+            <div class="control-section">
+                <h3 class="text-lg font-medium text-gray-900 mb-3">
+                    <i class="fas fa-palette text-indigo-600 mr-2"></i>Change Template Design
+                </h3>
+                <select id="template-switcher" class="w-full border border-gray-300 rounded-md py-2 px-3 text-sm">
+                    <option value="">Select a template design...</option>
+                </select>
+                <p class="text-xs text-gray-500 mt-2">Switch between different design versions</p>
+            </div>
+
+            <!-- Master Visibility Control -->
+            <div class="control-section">
+                <h3 class="text-lg font-medium text-gray-900 mb-3">
+                    <i class="fas fa-eye-slash text-indigo-600 mr-2"></i>Master Control
+                </h3>
+                <div class="grid grid-cols-2 gap-3">
+                    <button onclick="hideAll()" id="btn-hide-all"
+                            class="px-4 py-3 bg-red-600 text-white rounded-md hover:bg-red-700 text-sm font-medium">
+                        <i class="fas fa-eye-slash mr-2"></i>Hide All
+                    </button>
+                    <button onclick="showAll()" id="btn-show-all"
+                            class="px-4 py-3 bg-green-600 text-white rounded-md hover:bg-green-700 text-sm font-medium">
+                        <i class="fas fa-eye mr-2"></i>Show All
+                    </button>
+                </div>
+            </div>
+
+            <!-- Visibility Controls -->
+            <div class="control-section">
+                <h3 class="text-lg font-medium text-gray-900 mb-3">
+                    <i class="fas fa-eye text-indigo-600 mr-2"></i>Visibility
+                </h3>
+                <div class="grid grid-cols-2 gap-3">
+                    <button onclick="toggleElement('logo')" id="btn-logo"
+                            class="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 text-sm transition-colors">
+                        <i class="fas fa-image mr-2"></i>Photo/Logo
+                    </button>
+                    <button onclick="toggleElement('speaker')" id="btn-speaker"
+                            class="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 text-sm transition-colors">
+                        <i class="fas fa-user mr-2"></i>Speaker/Name
+                    </button>
+                    <button onclick="toggleElement('event_info')" id="btn-event_info"
+                            class="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 text-sm transition-colors">
+                        <i class="fas fa-info-circle mr-2"></i>Event Info
+                    </button>
+                    <button onclick="toggleElement('ticker')" id="btn-ticker"
+                            class="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 text-sm transition-colors">
+                        <i class="fas fa-comment mr-2"></i>Ticker
+                    </button>
+                    <button onclick="toggleElement('company')" id="btn-company"
+                            class="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 text-sm transition-colors">
+                        <i class="fas fa-building mr-2"></i>Company Info
+                    </button>
+                </div>
+            </div>
+
+            <!-- Animations Control -->
+            <div class="control-section">
+                <h3 class="text-lg font-medium text-gray-900 mb-3">
+                    <i class="fas fa-magic text-indigo-600 mr-2"></i>Animations
+                </h3>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Container Animation (Entry)</label>
+                        <select id="container_animation" class="w-full border border-gray-300 rounded-md py-2 px-3 text-sm">
+                            <option value="none">None</option>
+                            <option value="fade">Fade In</option>
+                            <option value="slide-left">Slide from Left</option>
+                            <option value="slide-right">Slide from Right</option>
+                            <option value="slide-up">Slide Up</option>
+                            <option value="slide-down">Slide Down</option>
+                            <option value="zoom">Zoom In</option>
+                            <option value="bounce">Bounce In</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Text Animation</label>
+                        <select id="text_animation" class="w-full border border-gray-300 rounded-md py-2 px-3 text-sm">
+                            <option value="none">None</option>
+                            <option value="fade-text">Fade In</option>
+                            <option value="typewriter">Typewriter</option>
+                            <option value="slide-text">Slide In</option>
+                            <option value="word-by-word">Word by Word</option>
+                        </select>
+                    </div>
+
+                    <button onclick="updateAnimations()"
+                            class="w-full px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 text-sm">
+                        Apply Animations
+                    </button>
+                </div>
+            </div>
+
+            <!-- Event-Specific Information -->
+            <div class="control-section">
+                <h3 class="text-lg font-medium text-gray-900 mb-3">
+                    <i class="fas fa-calendar text-indigo-600 mr-2"></i>Event Information
+                </h3>
+                <div class="space-y-3">
+                    {% if overlay['event_type'] == 'funerals' %}
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Deceased Name</label>
+                        <input type="text" id="deceased_name"
+                               class="w-full border border-gray-300 rounded-md py-2 px-3 text-sm">
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Date of Birth</label>
+                            <input type="date" id="birth_date"
+                                   class="w-full border border-gray-300 rounded-md py-2 px-3 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Date of Death</label>
+                            <input type="date" id="death_date"
+                                   class="w-full border border-gray-300 rounded-md py-2 px-3 text-sm">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Memorial Message</label>
+                        <input type="text" id="memorial_message"
+                               class="w-full border border-gray-300 rounded-md py-2 px-3 text-sm"
+                               placeholder="Forever in our hearts">
+                    </div>
+                    {% elif overlay['event_type'] == 'weddings' %}
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Couple Names</label>
+                        <input type="text" id="couple_names"
+                               class="w-full border border-gray-300 rounded-md py-2 px-3 text-sm"
+                               placeholder="John & Jane">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Wedding Date</label>
+                        <input type="date" id="event_date"
+                               class="w-full border border-gray-300 rounded-md py-2 px-3 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Wedding Message</label>
+                        <input type="text" id="wedding_message"
+                               class="w-full border border-gray-300 rounded-md py-2 px-3 text-sm"
+                               placeholder="Celebrating love">
+                    </div>
+                    {% elif overlay['event_type'] == 'ceremonies' %}
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Event Title</label>
+                        <input type="text" id="event_title"
+                               class="w-full border border-gray-300 rounded-md py-2 px-3 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Event Date</label>
+                        <input type="date" id="event_date"
+                               class="w-full border border-gray-300 rounded-md py-2 px-3 text-sm">
+                    </div>
+                    {% elif overlay['event_type'] == 'corporate' %}
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Speaker Name</label>
+                        <input type="text" id="speaker_name"
+                               class="w-full border border-gray-300 rounded-md py-2 px-3 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Speaker Title</label>
+                        <input type="text" id="speaker_title"
+                               class="w-full border border-gray-300 rounded-md py-2 px-3 text-sm">
+                    </div>
+                    {% endif %}
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Photo</label>
+                        <input type="file" id="photo_upload" accept="image/*"
+                               class="w-full border border-gray-300 rounded-md py-2 px-3 text-sm"
+                               onchange="uploadPhoto()">
+                    </div>
+                    <button onclick="updateEventInfo()"
+                            class="w-full px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 text-sm">
+                        Update Event Info
+                    </button>
+                </div>
+            </div>
+
+            <!-- Styling -->
+            <div class="control-section">
+                <h3 class="text-lg font-medium text-gray-900 mb-3">
+                    <i class="fas fa-palette text-indigo-600 mr-2"></i>Styling
+                </h3>
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Primary Color</label>
+                        <input type="color" id="primary_color" value="#4f46e5"
+                               class="w-full h-10 border border-gray-300 rounded-md">
+                    </div>
+                    <button onclick="updateStyles()"
+                            class="w-full px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 text-sm">
+                        Apply Styles
+                    </button>
+                </div>
+            </div>
+
+            <!-- Ticker Text -->
+            <div class="control-section">
+                <h3 class="text-lg font-medium text-gray-900 mb-3">
+                    <i class="fas fa-scroll text-indigo-600 mr-2"></i>Scrolling Ticker
+                </h3>
+                <div class="space-y-3">
+                    <textarea id="ticker_text" rows="2"
+                              class="w-full border border-gray-300 rounded-md py-2 px-3 text-sm"
+                              placeholder="Enter scrolling text..."></textarea>
+                    <button onclick="updateTicker()"
+                            class="w-full px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 text-sm">
+                        Update Ticker
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Preview Column -->
+        <div class="lg:col-span-1">
+            <div class="control-section sticky top-4">
+                <h3 class="text-lg font-medium text-gray-900 mb-3">
+                    <i class="fas fa-desktop text-indigo-600 mr-2"></i>Live Preview
+                </h3>
+                <div class="preview-frame">
+                    <iframe id="preview-iframe"
+                            src="{{ url_for('display', overlay_id=overlay['overlay_id']) }}"
+                            class="w-full h-full rounded border-0"
+                            allow="autoplay"
+                            sandbox="allow-same-origin allow-scripts"></iframe>
+                </div>
+                <p class="text-xs text-gray-500 mt-2">This preview updates in real-time</p>
+                <button onclick="refreshPreview()" class="mt-2 w-full px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200 rounded-md">
+                    <i class="fas fa-sync-alt mr-2"></i>Refresh Preview
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const socket = io();
+    const overlayId = '{{ overlay["overlay_id"] }}';
+    const eventType = '{{ overlay["event_type"] }}';
+
+    socket.on('connect', () => {
+        socket.emit('join', {overlay_id: overlayId});
+    });
+
+    // Load available templates
+    const templates = {{ templates|tojson }};
+    const templateSelect = document.getElementById('template-switcher');
+
+    if (templates[eventType]) {
+        templates[eventType].forEach(template => {
+            const option = document.createElement('option');
+            option.value = template.file;
+            option.textContent = template.title;
+            if (template.file === '{{ overlay["template_version"] }}') {
+                option.selected = true;
+            }
+            templateSelect.appendChild(option);
+        });
+    }
+
+    templateSelect.addEventListener('change', async function() {
+        if (this.value && confirm('Switch to this template design? Your current settings will be preserved.')) {
+            try {
+                const response = await fetch(`/api/overlay/${overlayId}/change-template`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    credentials: 'same-origin',
+                    body: JSON.stringify({template_version: this.value})
+                });
+
+                if (response.ok) {
+                    showNotification('Template changed successfully! Reloading...', 'success');
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    showNotification('Failed to change template', 'error');
+                }
+            } catch (error) {
+                showNotification('Error changing template', 'error');
+            }
+        }
+    });
+
+    function copyUrl() {
+        const url = document.getElementById('display-url');
+        url.select();
+        document.execCommand('copy');
+        showNotification('URL copied to clipboard!', 'success');
+    }
+
+    const visibilityState = {
+        logo: false,
+        speaker: false,
+        event_info: false,
+        ticker: false,
+        company: false
+    };
+
+    function hideAll() {
+        Object.keys(visibilityState).forEach(key => {
+            visibilityState[key] = false;
+            const btn = document.getElementById(`btn-${key}`);
+            if (btn) {
+                btn.classList.remove('bg-indigo-600', 'text-white');
+                btn.classList.add('border-gray-300');
+            }
+        });
+
+        updateOverlay({
+            show_logo: false,
+            show_speaker: false,
+            show_event_info: false,
+            show_ticker: false,
+            show_company: false
+        });
+
+        showNotification('All elements hidden', 'success');
+    }
+
+    function showAll() {
+        Object.keys(visibilityState).forEach(key => {
+            visibilityState[key] = true;
+            const btn = document.getElementById(`btn-${key}`);
+            if (btn) {
+                btn.classList.add('bg-indigo-600', 'text-white');
+                btn.classList.remove('border-gray-300');
+            }
+        });
+
+        updateOverlay({
+            show_logo: true,
+            show_speaker: true,
+            show_event_info: true,
+            show_ticker: true,
+            show_company: true
+        });
+
+        showNotification('All elements shown', 'success');
+    }
+
+    function toggleElement(element) {
+        visibilityState[element] = !visibilityState[element];
+        const btn = document.getElementById(`btn-${element}`);
+
+        if (visibilityState[element]) {
+            btn.classList.add('bg-indigo-600', 'text-white');
+            btn.classList.remove('border-gray-300');
+        } else {
+            btn.classList.remove('bg-indigo-600', 'text-white');
+            btn.classList.add('border-gray-300');
+        }
+
+        updateOverlay({[`show_${element}`]: visibilityState[element]});
+    }
+
+    function updateEventInfo() {
+        const data = {};
+
+        {% if overlay['event_type'] == 'funerals' %}
+        data.deceased_name = document.getElementById('deceased_name').value;
+        data.birth_date = document.getElementById('birth_date').value;
+        data.death_date = document.getElementById('death_date').value;
+        data.memorial_message = document.getElementById('memorial_message').value;
+        {% elif overlay['event_type'] == 'weddings' %}
+        data.couple_names = document.getElementById('couple_names').value;
+        data.event_date = document.getElementById('event_date').value;
+        data.wedding_message = document.getElementById('wedding_message').value;
+        {% elif overlay['event_type'] == 'ceremonies' %}
+        data.event_title = document.getElementById('event_title').value;
+        data.event_date = document.getElementById('event_date').value;
+        {% elif overlay['event_type'] == 'corporate' %}
+        data.speaker_name = document.getElementById('speaker_name').value;
+        data.speaker_title = document.getElementById('speaker_title').value;
+        {% endif %}
+
+        updateOverlay(data);
+    }
+
+    function updateAnimations() {
+        const data = {
+            container_animation: document.getElementById('container_animation').value,
+            text_animation: document.getElementById('text_animation').value
+        };
+        updateOverlay(data);
+    }
+
+    function updateStyles() {
+        const data = {
+            primary_color: document.getElementById('primary_color').value
+        };
+        updateOverlay(data);
+    }
+
+    function updateTicker() {
+        const data = {
+            ticker_text: document.getElementById('ticker_text').value
+        };
+        updateOverlay(data);
+    }
+
+    async function uploadPhoto() {
+        const file = document.getElementById('photo_upload').files[0];
+        if (!file) return;
+
+        const formData = new FormData();
+        formData.append('file', file);
+
+        showNotification('Uploading photo...', 'success');
+
+        try {
+            const response = await fetch('/upload/photo', {
+                method: 'POST',
+                credentials: 'same-origin',
+                body: formData
+            });
+            const result = await response.json();
+            if (result.success) {
+                updateOverlay({photo_path: result.path});
+                showNotification('Photo uploaded successfully!', 'success');
+            } else {
+                showNotification('Upload failed: ' + (result.error || 'Unknown error'), 'error');
+            }
+        } catch (error) {
+            showNotification('Upload failed. Please try again.', 'error');
+        }
+    }
+
+    async function updateOverlay(data) {
+        try {
+            const response = await fetch(`/api/overlay/${overlayId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'same-origin',
+                body: JSON.stringify(data)
+            });
+
+            if (response.ok) {
+                showNotification('Updated successfully!', 'success');
+            } else {
+                showNotification('Update failed', 'error');
+            }
+        } catch (error) {
+            showNotification('Connection error', 'error');
+        }
+    }
+
+    function showNotification(message, type) {
+        const notification = document.createElement('div');
+        notification.className = `fixed top-4 right-4 px-6 py-3 rounded-lg shadow-lg z-50 ${
+            type === 'success' ? 'bg-green-500' : 'bg-red-500'
+        } text-white`;
+        notification.textContent = message;
+        document.body.appendChild(notification);
+        setTimeout(() => notification.remove(), 3000);
+    }
+
+    async function loadInitialState() {
+        try {
+            const response = await fetch(`/api/overlay/${overlayId}`, { credentials: 'same-origin' });
+            if (response.ok) {
+                const data = await response.json();
+
+                // Set visibility states
+                ['logo', 'speaker', 'event_info', 'ticker', 'company'].forEach(element => {
+                    if (data[`show_${element}`] === 'true') {
+                        toggleButtonState(element, true);
+                    }
+                });
+
+                // Populate form fields
+                if (data.ticker_text) document.getElementById('ticker_text').value = data.ticker_text;
+                if (data.primary_color) document.getElementById('primary_color').value = data.primary_color;
+                if (data.container_animation) document.getElementById('container_animation').value = data.container_animation;
+                if (data.text_animation) document.getElementById('text_animation').value = data.text_animation;
+
+                {% if overlay['event_type'] == 'funerals' %}
+                if (data.deceased_name) document.getElementById('deceased_name').value = data.deceased_name;
+                if (data.birth_date) document.getElementById('birth_date').value = data.birth_date;
+                if (data.death_date) document.getElementById('death_date').value = data.death_date;
+                if (data.memorial_message) document.getElementById('memorial_message').value = data.memorial_message;
+                {% elif overlay['event_type'] == 'weddings' %}
+                if (data.couple_names) document.getElementById('couple_names').value = data.couple_names;
+                if (data.event_date) document.getElementById('event_date').value = data.event_date;
+                if (data.wedding_message) document.getElementById('wedding_message').value = data.wedding_message;
+                {% elif overlay['event_type'] == 'ceremonies' %}
+                if (data.event_title) document.getElementById('event_title').value = data.event_title;
+                if (data.event_date) document.getElementById('event_date').value = data.event_date;
+                {% elif overlay['event_type'] == 'corporate' %}
+                if (data.speaker_name) document.getElementById('speaker_name').value = data.speaker_name;
+                if (data.speaker_title) document.getElementById('speaker_title').value = data.speaker_title;
+                {% endif %}
+            }
+        } catch (error) {
+            console.error('Error loading initial state:', error);
+        }
+    }
+
+    function toggleButtonState(element, isActive) {
+        visibilityState[element] = isActive;
+        const btn = document.getElementById(`btn-${element}`);
+        if (btn && isActive) {
+            btn.classList.add('bg-indigo-600', 'text-white');
+            btn.classList.remove('border-gray-300');
+        }
+    }
+
+    function refreshPreview() {
+        const iframe = document.getElementById('preview-iframe');
+        iframe.src = iframe.src;
+    }
+
+    document.addEventListener('DOMContentLoaded', loadInitialState);
+</script>
+{% endblock %}

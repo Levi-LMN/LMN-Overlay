@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Octagon Capsule Design</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: transparent;
+            font-family: 'Didot', 'Georgia', serif;
+            overflow: hidden;
+        }
+
+        @keyframes capsuleExpand {
+            from {
+                transform: scale(0.3);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        @keyframes octagonSpin {
+            from {
+                transform: rotate(22.5deg) scale(0);
+                opacity: 0;
+            }
+            to {
+                transform: rotate(22.5deg) scale(1);
+                opacity: 1;
+            }
+        }
+
+        @keyframes textPop {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        @keyframes brandCycle {
+            0%, 45% {
+                opacity: 1;
+                transform: scale(1);
+                visibility: visible;
+            }
+            48% {
+                opacity: 0;
+                transform: scale(0.85);
+                visibility: visible;
+            }
+            50% {
+                opacity: 0;
+                transform: scale(0.85);
+                visibility: hidden;
+            }
+            52%, 100% {
+                opacity: 0;
+                transform: scale(0.85);
+                visibility: hidden;
+            }
+        }
+
+        @keyframes infoCycle {
+            0%, 48% {
+                opacity: 0;
+                transform: scale(0.85);
+                visibility: hidden;
+            }
+            50% {
+                opacity: 0;
+                transform: scale(0.85);
+                visibility: visible;
+            }
+            52% {
+                opacity: 1;
+                transform: scale(1);
+                visibility: visible;
+            }
+            95% {
+                opacity: 1;
+                transform: scale(1);
+                visibility: visible;
+            }
+            98% {
+                opacity: 0;
+                transform: scale(0.85);
+                visibility: visible;
+            }
+            100% {
+                opacity: 0;
+                transform: scale(0.85);
+                visibility: hidden;
+            }
+        }
+
+        @keyframes tickerMove {
+            from { transform: translateX(0); }
+            to { transform: translateX(-50%); }
+        }
+
+        @keyframes prismGlow {
+            0%, 100% {
+                filter: drop-shadow(0 0 20px rgba(234, 179, 8, 0.5))
+                        drop-shadow(0 5px 35px rgba(234, 179, 8, 0.3));
+            }
+            50% {
+                filter: drop-shadow(0 0 35px rgba(234, 179, 8, 0.7))
+                        drop-shadow(0 5px 50px rgba(234, 179, 8, 0.4));
+            }
+        }
+
+        .capsule-expand {
+            animation: capsuleExpand 1.2s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        .octagon-spin {
+            animation: octagonSpin 1s cubic-bezier(0.68, -0.55, 0.265, 1.55) 0.3s both,
+                       prismGlow 3s ease-in-out infinite 1.5s;
+        }
+
+        .text-pop-1 { animation: textPop 0.7s ease-out 0.9s both; }
+        .text-pop-2 { animation: textPop 0.7s ease-out 1.1s both; }
+        .text-pop-3 { animation: textPop 0.7s ease-out 1.3s both; }
+
+        .brand-cycle { animation: brandCycle 8s ease-in-out infinite; }
+        .info-cycle { animation: infoCycle 8s ease-in-out infinite; }
+
+        .ticker-move { animation: tickerMove 40s linear infinite; }
+
+        .text-shadow-strong {
+            text-shadow: 2px 2px 10px rgba(0, 0, 0, 0.9),
+                         0 0 20px rgba(0, 0, 0, 0.8);
+        }
+
+        .text-transition {
+            transition: all 0.5s ease;
+        }
+
+        /* Octagon clip path */
+        .octagon-clip {
+            clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%);
+        }
+    </style>
+</head>
+<body>
+    <div class="fixed bottom-0 left-0 w-full flex justify-center">
+        <!-- Main capsule container with spacing from ticker -->
+        <div class="px-8 w-full max-w-7xl" style="padding-bottom: 2.5rem;">
+            <!-- Unified Octagon-Capsule Shape -->
+            <div class="capsule-expand flex items-center bg-gradient-to-r from-yellow-900 via-amber-900 to-yellow-900 shadow-2xl border-2 border-yellow-600/40" style="border-radius: 80px;">
+
+                <!-- Left: Octagon Photo -->
+                <div class="octagon-spin relative flex-shrink-0 ml-8 my-5">
+                    <div class="octagon-clip bg-gradient-to-br from-yellow-500 to-amber-700 shadow-2xl" style="width: 90px; height: 90px; transform: rotate(22.5deg);">
+                        <div class="w-full h-full octagon-clip overflow-hidden" style="padding: 3px;">
+                            <img src="https://img.freepik.com/free-photo/man-s-white-sweater-psd-mockup-casual-apparel-close-up_53876-148045.jpg?semt=ais_hybrid&w=740&q=80"
+                                 class="w-full h-full object-cover transform -rotate-[22.5deg] scale-125"
+                                 style="object-position: center;">
+                        </div>
+                    </div>
+                    <!-- Candle ornament -->
+                    <div class="absolute -bottom-1.5 left-1/2 transform -translate-x-1/2 -rotate-[22.5deg] bg-yellow-900 rounded-full px-2.5 py-1 border-2 border-yellow-300/60 shadow-xl">
+                        <span class="text-yellow-200 text-sm">🕯️</span>
+                    </div>
+                </div>
+
+                <!-- Center: Text Content -->
+                <div class="flex-1 px-12 py-3">
+                    <div class="space-y-1">
+                        <div class="text-pop-1">
+                            <h2 class="text-2xl font-bold text-yellow-50 tracking-wide text-shadow-strong">
+                                John Michael Smith
+                            </h2>
+                        </div>
+
+                        <div class="flex items-center gap-3">
+                            <div class="w-20 h-0.5 bg-yellow-400/70"></div>
+                            <span class="text-yellow-300 text-base">◆</span>
+                            <div class="flex-1 h-0.5 bg-gradient-to-r from-yellow-400/70 to-transparent"></div>
+                        </div>
+
+                        <div class="text-pop-2">
+                            <p id="memorialPhrase" class="text-transition text-base text-yellow-200 italic font-light text-shadow-strong">
+                                Forever in our hearts
+                            </p>
+                        </div>
+
+                        <div class="text-pop-3 flex items-center gap-3 text-xs text-yellow-300 text-shadow-strong pt-0.5">
+                            <span>Born: January 15, 1950</span>
+                            <span>•</span>
+                            <span>Died: December 20, 2024</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Ornamental Separator -->
+                <div class="flex flex-col items-center gap-1.5 mx-5">
+                    <div class="w-px h-12 bg-gradient-to-b from-transparent via-yellow-400/70 to-yellow-400/40"></div>
+                    <div class="w-2.5 h-2.5 bg-yellow-400 transform rotate-45"></div>
+                    <div class="w-px h-12 bg-gradient-to-t from-transparent via-yellow-400/70 to-yellow-400/40"></div>
+                </div>
+
+                <!-- Right: Company Information -->
+                <div class="relative mr-10" style="width: 200px; height: 85px;">
+                    <!-- Brand Identity -->
+                    <div class="brand-cycle absolute inset-0 flex flex-col items-center justify-center text-center">
+                        <div class="bg-yellow-800/60 rounded-2xl p-2.5 mb-1.5 border border-yellow-600/40">
+                            <img src="https://yt3.googleusercontent.com/hJD-YRx93VUY4VZG7sG0PjCh8iiBInbgY0S21liCJk0HLMeQhQmQKjcMrzUpKr22MGDr6YM0=s900-c-k-c0x00ffffff-no-rj"
+                                 class="h-10 w-auto">
+                        </div>
+                        <h3 class="text-lg font-bold text-yellow-100 tracking-wider text-shadow-strong">WAMONIC</h3>
+                        <p class="text-xs text-yellow-400 mt-0.5 tracking-wide text-shadow-strong">Memorial Services</p>
+                    </div>
+
+                    <!-- Contact Information -->
+                    <div class="info-cycle absolute inset-0 flex flex-col items-center justify-center text-center">
+                        <div class="space-y-1">
+                            <div class="text-3xl">☎️</div>
+                            <p class="text-sm font-semibold text-yellow-200 tracking-wide text-shadow-strong">Contact Us</p>
+                            <p class="text-lg font-bold text-yellow-100 text-shadow-strong">+254 712 345 678</p>
+                            <p class="text-xs text-yellow-400 mt-1 text-shadow-strong">24/7 Support</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Scrolling Ticker -->
+        <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-r from-yellow-950 via-amber-950 to-yellow-950 py-1.5 overflow-hidden border-t-2 border-yellow-600/50">
+            <div class="ticker-move flex whitespace-nowrap">
+                <span class="mx-12 text-yellow-200 text-xs text-shadow-strong">✦ Honoring lives with dignity and respect</span>
+                <span class="mx-12 text-yellow-200 text-xs text-shadow-strong">✦ Professional memorial services</span>
+                <span class="mx-12 text-yellow-200 text-xs text-shadow-strong">✦ Supporting families in their time of need</span>
+                <span class="mx-12 text-yellow-200 text-xs text-shadow-strong">✦ Celebrating memories that last forever</span>
+                <span class="mx-12 text-yellow-200 text-xs text-shadow-strong">✦ Honoring lives with dignity and respect</span>
+                <span class="mx-12 text-yellow-200 text-xs text-shadow-strong">✦ Professional memorial services</span>
+                <span class="mx-12 text-yellow-200 text-xs text-shadow-strong">✦ Supporting families in their time of need</span>
+                <span class="mx-12 text-yellow-200 text-xs text-shadow-strong">✦ Celebrating memories that last forever</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const memorialPhrases = [
+            "Forever in our hearts",
+            "A beautiful soul",
+            "Gone but never forgotten",
+            "Always remembered, deeply missed",
+            "Their memory lives on",
+            "Rest in eternal peace",
+            "Loved beyond words",
+            "A life beautifully lived",
+            "In loving memory",
+            "Forever cherished"
+        ];
+
+        let phraseIdx = 0;
+
+        function cyclePhrase() {
+            const phrase = document.getElementById('memorialPhrase');
+
+            phrase.style.opacity = '0';
+            phrase.style.transform = 'translateY(15px)';
+
+            setTimeout(() => {
+                phraseIdx = (phraseIdx + 1) % memorialPhrases.length;
+                phrase.textContent = memorialPhrases[phraseIdx];
+
+                setTimeout(() => {
+                    phrase.style.opacity = '1';
+                    phrase.style.transform = 'translateY(0)';
+                }, 50);
+            }, 500);
+        }
+
+        setInterval(cyclePhrase, 5000);
+    </script>
+</body>
+</html>

@@ -1,0 +1,212 @@
+{% extends "base.html" %}
+
+{% block title %}Subscription - OBS Overlay Manager{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="text-center mb-8">
+        <h2 class="text-3xl font-bold text-gray-900">Subscription</h2>
+        <p class="mt-2 text-lg text-gray-600">Choose the plan that works for you</p>
+    </div>
+
+    <div class="mb-8 bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <div class="flex items-center">
+            <i class="fas fa-info-circle text-blue-600 text-xl mr-3"></i>
+            <div>
+                <p class="text-sm font-medium text-blue-900">Current Status:
+                    <span class="font-bold">{{ current_user.subscription_status|upper }}</span>
+                </p>
+                {% if current_user.subscription_end %}
+                <p class="text-sm text-blue-800">
+                    {% if current_user.subscription_status == 'trial' %}
+                    Trial ends on {{ current_user.subscription_end }}
+                    {% else %}
+                    Subscription expires on {{ current_user.subscription_end }}
+                    {% endif %}
+                </p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="grid md:grid-cols-2 gap-6 mb-8">
+        <!-- Monthly Plan -->
+        <div class="bg-white rounded-lg shadow-lg overflow-hidden border-2 border-gray-200 hover:border-indigo-500 transition-colors">
+            <div class="bg-gradient-to-r from-indigo-500 to-purple-600 px-6 py-8 text-white text-center">
+                <h3 class="text-2xl font-bold">Monthly</h3>
+                <div class="mt-4">
+                    <span class="text-5xl font-extrabold">KES 1,000</span>
+                    <span class="text-xl">/month</span>
+                </div>
+            </div>
+            <div class="px-6 py-8">
+                <ul class="space-y-4 mb-8">
+                    <li class="flex items-center">
+                        <i class="fas fa-check text-green-500 mr-3"></i>
+                        <span class="text-gray-700">Unlimited Overlays</span>
+                    </li>
+                    <li class="flex items-center">
+                        <i class="fas fa-check text-green-500 mr-3"></i>
+                        <span class="text-gray-700">Real-time Control</span>
+                    </li>
+                    <li class="flex items-center">
+                        <i class="fas fa-check text-green-500 mr-3"></i>
+                        <span class="text-gray-700">All Event Templates</span>
+                    </li>
+                    <li class="flex items-center">
+                        <i class="fas fa-check text-green-500 mr-3"></i>
+                        <span class="text-gray-700">Custom Branding</span>
+                    </li>
+                    <li class="flex items-center">
+                        <i class="fas fa-check text-green-500 mr-3"></i>
+                        <span class="text-gray-700">Email Support</span>
+                    </li>
+                </ul>
+                <button onclick="initiatePayment('monthly', 1000)"
+                        class="w-full bg-indigo-600 text-white py-3 rounded-lg font-medium hover:bg-indigo-700 transition-colors">
+                    Subscribe Monthly
+                </button>
+            </div>
+        </div>
+
+        <!-- Yearly Plan -->
+        <div class="bg-white rounded-lg shadow-lg overflow-hidden border-2 border-indigo-500 relative">
+            <div class="absolute top-0 right-0 bg-red-500 text-white px-3 py-1 text-xs font-bold rounded-bl-lg">
+                SAVE 17%
+            </div>
+            <div class="bg-gradient-to-r from-purple-600 to-pink-600 px-6 py-8 text-white text-center">
+                <h3 class="text-2xl font-bold">Yearly</h3>
+                <div class="mt-4">
+                    <span class="text-5xl font-extrabold">KES 10,000</span>
+                    <span class="text-xl">/year</span>
+                </div>
+                <p class="mt-2 text-sm">Save KES 2,000 per year</p>
+            </div>
+            <div class="px-6 py-8">
+                <ul class="space-y-4 mb-8">
+                    <li class="flex items-center">
+                        <i class="fas fa-check text-green-500 mr-3"></i>
+                        <span class="text-gray-700">Unlimited Overlays</span>
+                    </li>
+                    <li class="flex items-center">
+                        <i class="fas fa-check text-green-500 mr-3"></i>
+                        <span class="text-gray-700">Real-time Control</span>
+                    </li>
+                    <li class="flex items-center">
+                        <i class="fas fa-check text-green-500 mr-3"></i>
+                        <span class="text-gray-700">All Event Templates</span>
+                    </li>
+                    <li class="flex items-center">
+                        <i class="fas fa-check text-green-500 mr-3"></i>
+                        <span class="text-gray-700">Custom Branding</span>
+                    </li>
+                    <li class="flex items-center">
+                        <i class="fas fa-check text-green-500 mr-3"></i>
+                        <span class="text-gray-700">Priority Support</span>
+                    </li>
+                    <li class="flex items-center">
+                        <i class="fas fa-check text-green-500 mr-3"></i>
+                        <span class="text-gray-700 font-medium">2 Months Free</span>
+                    </li>
+                </ul>
+                <button onclick="initiatePayment('yearly', 10000)"
+                        class="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 rounded-lg font-medium hover:from-purple-700 hover:to-pink-700 transition-colors">
+                    Subscribe Yearly
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment Modal -->
+    <div id="payment-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg p-8 max-w-md w-full mx-4">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold text-gray-900">Complete Payment</h3>
+                <button onclick="closePaymentModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700 mb-2">M-Pesa Phone Number</label>
+                <input type="tel" id="phone-number" placeholder="254712345678"
+                       class="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <p class="text-xs text-gray-500 mt-1">Enter your M-Pesa number (format: 254XXXXXXXXX)</p>
+            </div>
+            <div class="mb-6 bg-gray-50 p-4 rounded-lg">
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-700">Plan:</span>
+                    <span id="selected-plan" class="font-medium text-gray-900"></span>
+                </div>
+                <div class="flex justify-between items-center mt-2">
+                    <span class="text-gray-700">Amount:</span>
+                    <span id="selected-amount" class="font-bold text-gray-900"></span>
+                </div>
+            </div>
+            <button onclick="submitPayment()"
+                    class="w-full bg-green-600 text-white py-3 rounded-lg font-medium hover:bg-green-700 transition-colors">
+                <i class="fas fa-mobile-alt mr-2"></i>
+                Pay with M-Pesa
+            </button>
+            <p class="text-xs text-gray-500 text-center mt-4">
+                You will receive an M-Pesa prompt on your phone
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let selectedPlan = null;
+    let selectedAmount = 0;
+
+    function initiatePayment(plan, amount) {
+        selectedPlan = plan;
+        selectedAmount = amount;
+
+        document.getElementById('selected-plan').textContent = plan.charAt(0).toUpperCase() + plan.slice(1);
+        document.getElementById('selected-amount').textContent = `KES ${amount.toLocaleString()}`;
+        document.getElementById('payment-modal').classList.remove('hidden');
+    }
+
+    function closePaymentModal() {
+        document.getElementById('payment-modal').classList.add('hidden');
+        document.getElementById('phone-number').value = '';
+    }
+
+    async function submitPayment() {
+        const phoneNumber = document.getElementById('phone-number').value;
+
+        if (!phoneNumber) {
+            alert('Please enter your M-Pesa phone number');
+            return;
+        }
+
+        if (!/^254\d{9}$/.test(phoneNumber)) {
+            alert('Please enter a valid M-Pesa number (format: 254XXXXXXXXX)');
+            return;
+        }
+
+        try {
+            const response = await fetch('/initiate-payment', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    phone_number: phoneNumber,
+                    plan_type: selectedPlan
+                })
+            });
+
+            if (response.ok) {
+                alert('Payment request sent! Please check your phone for the M-Pesa prompt.');
+                closePaymentModal();
+            } else {
+                const error = await response.json();
+                alert('Payment failed: ' + (error.error || 'Unknown error'));
+            }
+        } catch (error) {
+            alert('Payment failed: ' + error.message);
+        }
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Design 3 - Vertical Teal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: transparent;
+            font-family: 'Georgia', serif;
+        }
+
+        @keyframes slideInLeft {
+            from { transform: translateX(-100%); }
+            to { transform: translateX(0); }
+        }
+
+        @keyframes slideInRight {
+            from { transform: translateX(100%); }
+            to { transform: translateX(0); }
+        }
+
+        @keyframes photoFadeIn {
+            from { opacity: 0; transform: scale(0.8) translateY(20px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        @keyframes logoReveal {
+            from { opacity: 0; transform: scale(0.5); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        @keyframes scroll {
+            from { transform: translateX(0); }
+            to { transform: translateX(-50%); }
+        }
+
+        @keyframes sparkle {
+            0%, 100% { opacity: 1; transform: scale(1) rotate(0deg); }
+            50% { opacity: 0.5; transform: scale(1.2) rotate(180deg); }
+        }
+
+        .vertical-section {
+            animation: slideInLeft 1s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        .vertical-section .photo-box {
+            animation: photoFadeIn 1s ease-out 0.5s both;
+        }
+
+        .vertical-section .logo-box {
+            animation: logoReveal 0.8s ease-out 0.8s both;
+        }
+
+        .horizontal-bar {
+            animation: slideInRight 0.8s ease-out 0.4s both;
+        }
+
+        .sparkle-icon {
+            animation: sparkle 3s ease-in-out infinite;
+        }
+
+        .ticker-scroll {
+            animation: scroll 35s linear infinite;
+        }
+
+        #mainText, #subText {
+            transition: all 0.6s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="fixed bottom-0 left-0 w-full">
+        <div class="flex items-end gap-0">
+            <!-- Vertical Left Section -->
+            <div class="vertical-section bg-gradient-to-b from-teal-800 to-teal-950 flex flex-col items-center py-6 px-4" style="width: 140px;">
+                <div class="photo-box w-24 h-24 rounded-lg overflow-hidden border-2 border-teal-300/50 shadow-lg mb-3">
+                    <img src="https://img.freepik.com/free-photo/man-s-white-sweater-psd-mockup-casual-apparel-close-up_53876-148045.jpg?semt=ais_hybrid&w=740&q=80"
+                         class="w-full h-full object-cover">
+                </div>
+                <div class="text-center">
+                    <div class="w-12 h-0.5 bg-teal-300 mx-auto mb-2"></div>
+                    <div class="logo-box bg-teal-700/50 rounded px-2 py-1">
+                        <img src="https://yt3.googleusercontent.com/hJD-YRx93VUY4VZG7sG0PjCh8iiBInbgY0S21liCJk0HLMeQhQmQKjcMrzUpKr22MGDr6YM0=s900-c-k-c0x00ffffff-no-rj"
+                             class="h-10 w-auto opacity-90">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Horizontal Bar -->
+            <div class="horizontal-bar flex-1 bg-gradient-to-r from-teal-900 to-gray-900 px-10 py-5">
+                <div class="flex items-center gap-4">
+                    <div class="sparkle-icon text-teal-300 text-4xl">✦</div>
+                    <div class="flex-1">
+                        <h2 id="mainText" class="text-2xl font-bold text-teal-50 mb-1">IN SACRED MEMORY</h2>
+                        <p id="subText" class="text-base text-teal-200 italic">A cherished life remembered</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ticker -->
+        <div class="bg-teal-950 py-2 overflow-hidden border-t border-teal-700/50">
+            <div class="ticker-scroll flex whitespace-nowrap">
+                <span class="mx-8 text-teal-200 text-sm">✧ Gone but never forgotten</span>
+                <span class="mx-8 text-teal-200 text-sm">✧ Their spirit lives on</span>
+                <span class="mx-8 text-teal-200 text-sm">✧ Eternal rest grant unto them</span>
+                <span class="mx-8 text-teal-200 text-sm">✧ May light perpetual shine</span>
+                <span class="mx-8 text-teal-200 text-sm">✧ Gone but never forgotten</span>
+                <span class="mx-8 text-teal-200 text-sm">✧ Their spirit lives on</span>
+                <span class="mx-8 text-teal-200 text-sm">✧ Eternal rest grant unto them</span>
+                <span class="mx-8 text-teal-200 text-sm">✧ May light perpetual shine</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const primaryTexts = [
+            "IN SACRED MEMORY",
+            "FOREVER IN OUR HEARTS",
+            "A LIFE WELL LIVED",
+            "REST IN PEACE",
+            "CELEBRATING THEIR JOURNEY"
+        ];
+
+        const secondaryTexts = [
+            "A cherished life remembered",
+            "Your memory is a treasure",
+            "Gone from sight, never from heart",
+            "May angels lead you home",
+            "Forever loved and missed"
+        ];
+
+        let idx = 0;
+
+        function cycleText() {
+            const mainEl = document.getElementById('mainText');
+            const subEl = document.getElementById('subText');
+
+            mainEl.style.opacity = '0';
+            subEl.style.opacity = '0';
+
+            setTimeout(() => {
+                idx = (idx + 1) % primaryTexts.length;
+                mainEl.textContent = primaryTexts[idx];
+                subEl.textContent = secondaryTexts[idx];
+
+                setTimeout(() => {
+                    mainEl.style.opacity = '1';
+                    subEl.style.opacity = '1';
+                }, 50);
+            }, 600);
+        }
+
+        setInterval(cycleText, 6000);
+    </script>
+</body>
+</html>

@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seamless Circle-Rectangle Flow</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: transparent;
+            font-family: 'Cinzel', 'Georgia', serif;
+        }
+
+        @keyframes flowIn {
+            from {
+                transform: translateX(-120%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes textStagger1 {
+            from { opacity: 0; transform: translateX(-15px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        @keyframes textStagger2 {
+            from { opacity: 0; transform: translateX(-15px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        @keyframes textStagger3 {
+            from { opacity: 0; transform: translateX(-15px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        @keyframes companyRotate {
+            0%, 45% { opacity: 1; transform: rotateX(0deg); }
+            50% { opacity: 0; transform: rotateX(90deg); }
+            55% { opacity: 0; transform: rotateX(-90deg); }
+            60%, 100% { opacity: 1; transform: rotateX(0deg); }
+        }
+
+        @keyframes contactRotate {
+            0%, 45% { opacity: 0; transform: rotateX(-90deg); }
+            50% { opacity: 0; transform: rotateX(90deg); }
+            55% { opacity: 1; transform: rotateX(0deg); }
+            60%, 95% { opacity: 1; transform: rotateX(0deg); }
+            100% { opacity: 0; transform: rotateX(-90deg); }
+        }
+
+        @keyframes tickerFlow {
+            from { transform: translateX(0); }
+            to { transform: translateX(-50%); }
+        }
+
+        @keyframes shimmerGlow {
+            0%, 100% {
+                box-shadow: 0 0 25px rgba(217, 119, 6, 0.4),
+                            0 5px 40px rgba(217, 119, 6, 0.2),
+                            inset 0 0 20px rgba(217, 119, 6, 0.1);
+            }
+            50% {
+                box-shadow: 0 0 40px rgba(217, 119, 6, 0.6),
+                            0 5px 60px rgba(217, 119, 6, 0.3),
+                            inset 0 0 30px rgba(217, 119, 6, 0.2);
+            }
+        }
+
+        .flow-in {
+            animation: flowIn 1.2s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        .text-stagger-1 { animation: textStagger1 0.6s ease-out 0.8s both; }
+        .text-stagger-2 { animation: textStagger2 0.6s ease-out 1s both; }
+        .text-stagger-3 { animation: textStagger3 0.6s ease-out 1.2s both; }
+
+        .company-rotate { animation: companyRotate 8s ease-in-out infinite; }
+        .contact-rotate { animation: contactRotate 8s ease-in-out infinite; }
+
+        .ticker-flow { animation: tickerFlow 40s linear infinite; }
+
+        .photo-glow {
+            animation: shimmerGlow 3s ease-in-out infinite 1.5s;
+        }
+
+        .text-transition {
+            transition: all 0.6s ease;
+        }
+
+        /* Create seamless connection between circle and rectangle */
+        .unified-shape {
+            display: flex;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="fixed bottom-0 left-0 w-full">
+        <!-- Main Unified Shape -->
+        <div class="px-8 py-6">
+            <div class="flow-in unified-shape bg-gradient-to-r from-amber-900/98 via-orange-900/98 to-amber-800/98 backdrop-blur-lg shadow-2xl border-2 border-amber-600/40" style="border-radius: 100px; max-width: 1200px;">
+
+                <!-- Left: Circle with Photo (seamlessly part of the shape) -->
+                <div class="photo-glow relative flex-shrink-0" style="width: 140px; height: 140px; margin: -2px;">
+                    <div class="w-full h-full rounded-full bg-gradient-to-br from-amber-500 to-orange-700 p-2">
+                        <div class="w-full h-full rounded-full overflow-hidden border-4 border-amber-200/50">
+                            <img src="https://img.freepik.com/free-photo/man-s-white-sweater-psd-mockup-casual-apparel-close-up_53876-148045.jpg?semt=ais_hybrid&w=740&q=80"
+                                 class="w-full h-full object-cover">
+                        </div>
+                    </div>
+                    <!-- Cross ornament on photo -->
+                    <div class="absolute top-2 right-2 bg-amber-900/90 rounded-full p-1.5 border-2 border-amber-300/60 shadow-lg">
+                        <span class="text-amber-200 text-sm">✟</span>
+                    </div>
+                </div>
+
+                <!-- Right: Rectangle Content (continues from circle) -->
+                <div class="flex-1 flex items-center gap-6 px-8 py-4">
+
+                    <!-- Text Section -->
+                    <div class="flex-1 space-y-2">
+                        <div class="text-stagger-1">
+                            <h2 id="mainText" class="text-transition text-3xl font-bold text-amber-50 tracking-wide">
+                                IN LOVING MEMORY
+                            </h2>
+                        </div>
+
+                        <div class="flex items-center gap-2">
+                            <div class="w-16 h-px bg-amber-400/70"></div>
+                            <div class="w-1.5 h-1.5 bg-amber-400 rounded-full"></div>
+                            <div class="w-1.5 h-1.5 bg-amber-400 rounded-full"></div>
+                            <div class="w-1.5 h-1.5 bg-amber-400 rounded-full"></div>
+                            <div class="flex-1 h-px bg-gradient-to-r from-amber-400/70 to-transparent"></div>
+                        </div>
+
+                        <div class="text-stagger-2">
+                            <p id="subText" class="text-transition text-lg text-amber-200 italic">
+                                Forever in our hearts
+                            </p>
+                        </div>
+
+                        <div class="text-stagger-3">
+                            <p id="tagText" class="text-transition text-xs text-amber-300 uppercase tracking-widest">
+                                A life celebrated
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Decorative Divider -->
+                    <div class="flex flex-col items-center gap-1.5">
+                        <div class="w-px h-10 bg-gradient-to-b from-transparent via-amber-400/60 to-transparent"></div>
+                        <div class="w-2 h-2 bg-amber-400 rounded-full transform rotate-45"></div>
+                        <div class="w-px h-10 bg-gradient-to-t from-transparent via-amber-400/60 to-transparent"></div>
+                    </div>
+
+                    <!-- Company Section (Alternates) -->
+                    <div class="relative" style="width: 200px; height: 100px;">
+                        <!-- Company Name & Logo -->
+                        <div class="company-rotate absolute inset-0 flex flex-col items-center justify-center text-center perspective-1000">
+                            <div class="bg-amber-800/50 rounded-xl p-2.5 mb-2 backdrop-blur-sm">
+                                <img src="https://yt3.googleusercontent.com/hJD-YRx93VUY4VZG7sG0PjCh8iiBInbgY0S21liCJk0HLMeQhQmQKjcMrzUpKr22MGDr6YM0=s900-c-k-c0x00ffffff-no-rj"
+                                     class="h-12 w-auto">
+                            </div>
+                            <h3 class="text-xl font-bold text-amber-100 tracking-wider">WAMONIC</h3>
+                            <p class="text-xs text-amber-400 tracking-wide mt-0.5">Memorial Services</p>
+                        </div>
+
+                        <!-- Contact Details -->
+                        <div class="contact-rotate absolute inset-0 flex flex-col items-center justify-center text-center opacity-0 perspective-1000">
+                            <div class="text-amber-100 space-y-1.5">
+                                <div class="text-3xl">📞</div>
+                                <p class="text-sm font-semibold tracking-wide">Call Us</p>
+                                <p class="text-lg font-bold">+254 712 345 678</p>
+                                <div class="flex items-center justify-center gap-2 text-xs text-amber-400 mt-2">
+                                    <span>24/7</span>
+                                    <span>•</span>
+                                    <span>Always Here</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Scrolling Ticker -->
+        <div class="bg-gradient-to-r from-amber-950/98 via-orange-950/98 to-amber-950/98 backdrop-blur-sm py-3 overflow-hidden border-t-2 border-amber-600/50">
+            <div class="ticker-flow flex whitespace-nowrap">
+                <span class="mx-12 text-amber-200 text-sm font-light">✦ Honoring lives with dignity and respect</span>
+                <span class="mx-12 text-amber-200 text-sm font-light">✦ Professional memorial services</span>
+                <span class="mx-12 text-amber-200 text-sm font-light">✦ Supporting families in their time of need</span>
+                <span class="mx-12 text-amber-200 text-sm font-light">✦ Celebrating memories that last forever</span>
+                <span class="mx-12 text-amber-200 text-sm font-light">✦ Honoring lives with dignity and respect</span>
+                <span class="mx-12 text-amber-200 text-sm font-light">✦ Professional memorial services</span>
+                <span class="mx-12 text-amber-200 text-sm font-light">✦ Supporting families in their time of need</span>
+                <span class="mx-12 text-amber-200 text-sm font-light">✦ Celebrating memories that last forever</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const mainTexts = [
+            "IN LOVING MEMORY",
+            "CELEBRATING A LIFE",
+            "FOREVER REMEMBERED",
+            "REST IN PEACE",
+            "ETERNAL LEGACY"
+        ];
+
+        const subTexts = [
+            "Forever in our hearts",
+            "A beautiful soul",
+            "Gone but never forgotten",
+            "May they find peace",
+            "Their memory lives on"
+        ];
+
+        const tagTexts = [
+            "A life celebrated",
+            "Cherished always",
+            "Loved beyond measure",
+            "Always in our thoughts",
+            "Forever with us"
+        ];
+
+        let idx = 0;
+
+        function cycleText() {
+            const main = document.getElementById('mainText');
+            const sub = document.getElementById('subText');
+            const tag = document.getElementById('tagText');
+
+            main.style.opacity = '0';
+            sub.style.opacity = '0';
+            tag.style.opacity = '0';
+
+            setTimeout(() => {
+                idx = (idx + 1) % mainTexts.length;
+                main.textContent = mainTexts[idx];
+                sub.textContent = subTexts[idx];
+                tag.textContent = tagTexts[idx];
+
+                setTimeout(() => {
+                    main.style.opacity = '1';
+                    sub.style.opacity = '1';
+                    tag.style.opacity = '1';
+                }, 50);
+            }, 600);
+        }
+
+        setInterval(cycleText, 6000);
+    </script>
+</body>
+</html>

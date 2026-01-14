@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - OBS Overlay Manager{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="md:flex md:items-center md:justify-between mb-8">
+        <div class="flex-1 min-w-0">
+            <h2 class="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:truncate">
+                My Overlays
+            </h2>
+        </div>
+        <div class="mt-4 flex md:mt-0 md:ml-4">
+            <a href="{{ url_for('create_overlay') }}"
+               class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                <i class="fas fa-plus mr-2"></i>
+                Create New Overlay
+            </a>
+        </div>
+    </div>
+
+    {% if overlays %}
+    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        {% for overlay in overlays %}
+        <div class="bg-white overflow-hidden shadow rounded-lg hover:shadow-lg transition-shadow">
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0 bg-indigo-100 rounded-md p-3">
+                            <i class="fas fa-tv text-indigo-600 text-xl"></i>
+                        </div>
+                        <div class="ml-4">
+                            <h3 class="text-lg font-medium text-gray-900">
+                                {{ overlay['name'] }}
+                            </h3>
+                            <p class="text-sm text-gray-500 capitalize">
+                                {{ overlay['event_type'] }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <p class="text-xs text-gray-500 mb-2">
+                        Created {{ overlay['created_at'] }}
+                    </p>
+                    <div class="flex space-x-2">
+                        <a href="{{ url_for('control', overlay_id=overlay['overlay_id']) }}"
+                           class="flex-1 inline-flex justify-center items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            <i class="fas fa-sliders-h mr-2"></i>
+                            Control
+                        </a>
+                        <a href="{{ url_for('display', overlay_id=overlay['overlay_id']) }}"
+                           target="_blank"
+                           class="flex-1 inline-flex justify-center items-center px-3 py-2 border border-gray-300 text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            <i class="fas fa-external-link-alt mr-2"></i>
+                            View
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-12">
+        <i class="fas fa-tv text-gray-400 text-6xl mb-4"></i>
+        <h3 class="mt-2 text-sm font-medium text-gray-900">No overlays</h3>
+        <p class="mt-1 text-sm text-gray-500">Get started by creating a new overlay.</p>
+        <div class="mt-6">
+            <a href="{{ url_for('create_overlay') }}"
+               class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                <i class="fas fa-plus mr-2"></i>
+                Create Overlay
+            </a>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

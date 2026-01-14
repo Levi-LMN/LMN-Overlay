@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wamonic Connected Design</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: transparent;
+            font-family: 'Georgia', serif;
+        }
+
+        @keyframes circleZoom {
+            from {
+                transform: scale(0) rotate(-180deg);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1) rotate(0deg);
+                opacity: 1;
+            }
+        }
+
+        @keyframes rectangleSlide {
+            from {
+                transform: translateX(-100px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes textFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes companySwitch {
+            0%, 45% { opacity: 1; transform: translateX(0); }
+            50%, 95% { opacity: 0; transform: translateX(-20px); }
+            100% { opacity: 1; transform: translateX(0); }
+        }
+
+        @keyframes detailsSwitch {
+            0%, 45% { opacity: 0; transform: translateX(20px); }
+            50%, 95% { opacity: 1; transform: translateX(0); }
+            100% { opacity: 0; transform: translateX(20px); }
+        }
+
+        @keyframes scroll {
+            from { transform: translateX(0); }
+            to { transform: translateX(-50%); }
+        }
+
+        @keyframes pulseGlow {
+            0%, 100% {
+                box-shadow: 0 0 20px rgba(139, 92, 246, 0.4),
+                            0 0 40px rgba(139, 92, 246, 0.2);
+            }
+            50% {
+                box-shadow: 0 0 30px rgba(139, 92, 246, 0.6),
+                            0 0 60px rgba(139, 92, 246, 0.3);
+            }
+        }
+
+        .photo-circle {
+            animation: circleZoom 1s cubic-bezier(0.68, -0.55, 0.265, 1.55),
+                       pulseGlow 3s ease-in-out infinite 2s;
+        }
+
+        .content-rectangle {
+            animation: rectangleSlide 0.8s ease-out 0.3s both;
+        }
+
+        .text-section-1 {
+            animation: textFadeIn 0.6s ease-out 0.8s both;
+        }
+
+        .text-section-2 {
+            animation: textFadeIn 0.6s ease-out 1s both;
+        }
+
+        .text-section-3 {
+            animation: textFadeIn 0.6s ease-out 1.2s both;
+        }
+
+        .company-name {
+            animation: companySwitch 8s ease-in-out infinite;
+        }
+
+        .company-details {
+            animation: detailsSwitch 8s ease-in-out infinite;
+        }
+
+        .ticker-scroll {
+            animation: scroll 35s linear infinite;
+        }
+
+        .connecting-line {
+            position: absolute;
+            right: -30px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 30px;
+            height: 4px;
+            background: linear-gradient(90deg, rgba(139, 92, 246, 0.8), rgba(139, 92, 246, 0));
+        }
+
+        #primaryText, #secondaryText, #tertiaryText {
+            transition: all 0.6s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="fixed bottom-0 left-0 w-full">
+        <!-- Main Content -->
+        <div class="flex items-center px-10 py-4 gap-0">
+
+            <!-- Circular Photo -->
+            <div class="photo-circle relative flex-shrink-0" style="width: 130px; height: 130px;">
+                <div class="w-full h-full rounded-full bg-gradient-to-br from-violet-600 to-purple-800 p-1.5">
+                    <div class="w-full h-full rounded-full overflow-hidden border-4 border-violet-300/30">
+                        <img src="https://img.freepik.com/free-photo/man-s-white-sweater-psd-mockup-casual-apparel-close-up_53876-148045.jpg?semt=ais_hybrid&w=740&q=80"
+                             class="w-full h-full object-cover">
+                    </div>
+                </div>
+                <div class="connecting-line"></div>
+            </div>
+
+            <!-- Connected Rectangle Content -->
+            <div class="content-rectangle relative flex-1 bg-gradient-to-r from-violet-900 via-purple-900 to-violet-950 rounded-3xl px-10 py-5 ml-8 shadow-2xl border border-violet-500/30">
+
+                <div class="flex items-stretch gap-8">
+                    <!-- Text Content Section -->
+                    <div class="flex-1 space-y-3">
+                        <!-- Primary Text -->
+                        <div class="text-section-1 overflow-hidden" style="height: 32px;">
+                            <h2 id="primaryText" class="text-2xl font-bold text-violet-100 tracking-wide">
+                                IN LOVING MEMORY
+                            </h2>
+                        </div>
+
+                        <!-- Divider -->
+                        <div class="flex items-center gap-2">
+                            <div class="w-20 h-px bg-violet-400"></div>
+                            <div class="w-2 h-2 bg-violet-400 rounded-full"></div>
+                            <div class="w-20 h-px bg-violet-400"></div>
+                        </div>
+
+                        <!-- Secondary Text -->
+                        <div class="text-section-2 overflow-hidden" style="height: 24px;">
+                            <p id="secondaryText" class="text-lg text-violet-200 italic">
+                                Forever in our hearts
+                            </p>
+                        </div>
+
+                        <!-- Tertiary Text -->
+                        <div class="text-section-3 overflow-hidden" style="height: 20px;">
+                            <p id="tertiaryText" class="text-sm text-violet-300 uppercase tracking-widest">
+                                A life celebrated
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Vertical Divider -->
+                    <div class="w-px bg-gradient-to-b from-transparent via-violet-400 to-transparent"></div>
+
+                    <!-- Company Section (Switches between name and details) -->
+                    <div class="flex-shrink-0 flex items-center justify-center relative" style="width: 180px;">
+
+                        <!-- Company Name & Logo (Shows first) -->
+                        <div class="company-name absolute inset-0 flex flex-col items-center justify-center text-center">
+                            <div class="bg-violet-800/50 rounded-xl p-3 mb-2">
+                                <img src="https://yt3.googleusercontent.com/hJD-YRx93VUY4VZG7sG0PjCh8iiBInbgY0S21liCJk0HLMeQhQmQKjcMrzUpKr22MGDr6YM0=s900-c-k-c0x00ffffff-no-rj"
+                                     class="h-14 w-auto">
+                            </div>
+                            <h3 class="text-xl font-bold text-violet-100 tracking-wider">WAMONIC</h3>
+                            <p class="text-xs text-violet-300 tracking-wide mt-1">Memorial Services</p>
+                        </div>
+
+                        <!-- Company Details (Shows after) -->
+                        <div class="company-details absolute inset-0 flex flex-col items-center justify-center text-center opacity-0">
+                            <div class="text-violet-100 mb-3">
+                                <div class="text-2xl mb-2">📞</div>
+                                <p class="text-sm font-semibold tracking-wide mb-1">Call Us</p>
+                                <p class="text-lg font-bold">+254 712 345 678</p>
+                            </div>
+                            <div class="text-xs text-violet-300 mt-2 leading-relaxed">
+                                <p>Available 24/7</p>
+                                <p>Compassionate Care</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Scrolling Ticker -->
+        <div class="bg-gradient-to-r from-violet-950 via-purple-950 to-violet-950 py-2.5 overflow-hidden border-t border-violet-600/40">
+            <div class="ticker-scroll flex whitespace-nowrap">
+                <span class="mx-10 text-violet-200 text-sm">✦ Honoring lives with dignity and respect</span>
+                <span class="mx-10 text-violet-200 text-sm">✦ Professional memorial services</span>
+                <span class="mx-10 text-violet-200 text-sm">✦ Supporting families in their time of need</span>
+                <span class="mx-10 text-violet-200 text-sm">✦ Celebrating memories that last forever</span>
+                <span class="mx-10 text-violet-200 text-sm">✦ Honoring lives with dignity and respect</span>
+                <span class="mx-10 text-violet-200 text-sm">✦ Professional memorial services</span>
+                <span class="mx-10 text-violet-200 text-sm">✦ Supporting families in their time of need</span>
+                <span class="mx-10 text-violet-200 text-sm">✦ Celebrating memories that last forever</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const primaryTexts = [
+            "IN LOVING MEMORY",
+            "CELEBRATING A LIFE",
+            "FOREVER REMEMBERED",
+            "REST IN PEACE",
+            "ETERNAL LEGACY"
+        ];
+
+        const secondaryTexts = [
+            "Forever in our hearts",
+            "A beautiful soul",
+            "Gone but never forgotten",
+            "May they find peace",
+            "Their memory lives on"
+        ];
+
+        const tertiaryTexts = [
+            "A life celebrated",
+            "Cherished always",
+            "Loved beyond measure",
+            "Always in our thoughts",
+            "Forever with us"
+        ];
+
+        let idx = 0;
+
+        function cycleText() {
+            const primaryEl = document.getElementById('primaryText');
+            const secondaryEl = document.getElementById('secondaryText');
+            const tertiaryEl = document.getElementById('tertiaryText');
+
+            primaryEl.style.opacity = '0';
+            secondaryEl.style.opacity = '0';
+            tertiaryEl.style.opacity = '0';
+
+            setTimeout(() => {
+                idx = (idx + 1) % primaryTexts.length;
+                primaryEl.textContent = primaryTexts[idx];
+                secondaryEl.textContent = secondaryTexts[idx];
+                tertiaryEl.textContent = tertiaryTexts[idx];
+
+                setTimeout(() => {
+                    primaryEl.style.opacity = '1';
+                    secondaryEl.style.opacity = '1';
+                    tertiaryEl.style.opacity = '1';
+                }, 50);
+            }, 600);
+        }
+
+        setInterval(cycleText, 6000);
+    </script>
+</body>
+</html>

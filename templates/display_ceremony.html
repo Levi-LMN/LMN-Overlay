@@ -1,0 +1,675 @@
+<!-- templates/display_ceremony.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=1920, initial-scale=1.0">
+    <title>Ceremony Overlay Display</title>
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            width: 1920px;
+            height: 1080px;
+            overflow: hidden;
+            background: transparent;
+            font-family: {{ settings.font_family }};
+        }
+
+        #overlay-container {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            transition: opacity 0.5s ease;
+            opacity: {% if settings.is_visible %}1{% else %}0{% endif %};
+            pointer-events: none;
+        }
+
+        #overlay-container.hidden {
+            opacity: 0;
+        }
+
+        .logo-standalone {
+            position: fixed;
+            top: 25px;
+            right: 30px;
+            z-index: 100;
+            width: {{ settings.logo_size }}px;
+            height: {{ settings.logo_size }}px;
+            object-fit: contain;
+            filter: drop-shadow(0 6px 15px {{ settings.accent_color }}60);
+            {% if not settings.company_logo %}
+            display: none;
+            {% endif %}
+            transition: all 0.3s ease;
+        }
+
+        .lower-third {
+            position: relative;
+            width: fit-content;
+            min-width: 600px;
+            max-width: 80%;
+            padding: 40px 60px 40px 50px;
+            display: flex;
+            align-items: center;
+            gap: 40px;
+        }
+
+        .lower-third-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, {{ settings.bg_color }}f5 0%, {{ settings.bg_color }}e0 80%, {{ settings.bg_color }}aa 95%, transparent 100%);
+            opacity: {{ settings.opacity }};
+            clip-path: polygon(0 0, 98% 0, 100% 100%, 0 100%);
+            box-shadow: 0 8px 40px rgba(0,0,0,0.5);
+            backdrop-filter: blur(8px);
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .corner-accent {
+            position: absolute;
+            width: 70px;
+            height: 70px;
+            {% if settings.show_decorative_elements %}display: block;{% else %}display: none;{% endif %}
+            transition: all 0.3s ease;
+        }
+
+        .corner-accent::before,
+        .corner-accent::after {
+            content: "";
+            position: absolute;
+            background: {{ settings.accent_color }};
+            transition: background 0.3s ease;
+        }
+
+        .corner-accent.top-left {
+            top: 25px;
+            left: 25px;
+        }
+
+        .corner-accent.top-left::before {
+            width: 40px;
+            height: 3px;
+            top: 0;
+            left: 0;
+        }
+
+        .corner-accent.top-left::after {
+            width: 3px;
+            height: 40px;
+            top: 0;
+            left: 0;
+        }
+
+        .corner-accent.bottom-right {
+            bottom: 25px;
+            right: 25px;
+        }
+
+        .corner-accent.bottom-right::before {
+            width: 40px;
+            height: 3px;
+            bottom: 0;
+            right: 0;
+        }
+
+        .corner-accent.bottom-right::after {
+            width: 3px;
+            height: 40px;
+            bottom: 0;
+            right: 0;
+        }
+
+        .accent-stripe {
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 6px;
+            height: 70%;
+            background: linear-gradient(180deg, transparent 0%, {{ settings.accent_color }} 20%, {{ settings.accent_color }} 80%, transparent 100%);
+            {% if settings.show_decorative_elements %}display: block;{% else %}display: none;{% endif %}
+            transition: all 0.3s ease;
+        }
+
+        @keyframes slide-left {
+            from { transform: translateX(-100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slide-right {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slide-up {
+            from { transform: translateY(100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes fade-in {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes zoom-in {
+            from { transform: scale(0); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        @keyframes scale-in {
+            from { transform: scale(0); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        @keyframes rotate-in {
+            from { transform: rotate(-180deg) scale(0); opacity: 0; }
+            to { transform: rotate(0) scale(1); opacity: 1; }
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            25% { transform: translateY(-20px); }
+            50% { transform: translateY(0); }
+            75% { transform: translateY(-10px); }
+        }
+
+        @keyframes flip {
+            from { transform: rotateY(90deg); opacity: 0; }
+            to { transform: rotateY(0); opacity: 1; }
+        }
+
+        @keyframes expand {
+            from { height: 0; opacity: 0; }
+            to { height: 80px; opacity: 1; }
+        }
+
+        @keyframes scroll-left {
+            0% { transform: translateX(100%); }
+            100% { transform: translateX(-100%); }
+        }
+
+        @keyframes typewriter-blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+
+        .category-image {
+            position: relative;
+            z-index: 2;
+            width: 210px;
+            height: 210px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 5px solid {{ settings.accent_color }};
+            box-shadow: 0 10px 35px {{ settings.accent_color }}40;
+            {% if not settings.show_category_image or not settings.category_image %}
+            display: none;
+            {% endif %}
+            transition: all 0.3s ease;
+        }
+
+        .content-wrapper {
+            position: relative;
+            z-index: 2;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .text-content {
+            flex: 1;
+        }
+
+        .main-text {
+            color: {{ settings.text_color }};
+            font-size: {{ settings.main_font_size }}px;
+            font-weight: 800;
+            letter-spacing: 3px;
+            margin-bottom: 12px;
+            text-shadow: 3px 3px 8px rgba(0,0,0,0.7), 0 0 15px {{ settings.accent_color }}30;
+            text-transform: uppercase;
+            transition: all 0.3s ease;
+            min-height: {{ settings.main_font_size * 1.2 }}px;
+            white-space: pre-wrap;
+        }
+
+        .main-text span {
+            display: inline;
+        }
+
+        .typewriter-cursor {
+            display: inline-block;
+            width: 3px;
+            height: 1em;
+            background-color: {{ settings.text_color }};
+            margin-left: 3px;
+            animation: typewriter-blink 0.7s infinite;
+            vertical-align: text-bottom;
+        }
+
+        .secondary-text {
+            color: {{ settings.accent_color }};
+            font-size: {{ settings.secondary_font_size }}px;
+            font-weight: 600;
+            opacity: 0.95;
+            text-shadow: 2px 2px 6px rgba(0,0,0,0.6);
+            letter-spacing: 2px;
+            transition: all 0.3s ease;
+            min-height: {{ settings.secondary_font_size * 1.2 }}px;
+            white-space: pre-wrap;
+        }
+
+        .company-name {
+            color: {{ settings.text_color }};
+            font-size: {{ settings.secondary_font_size * 0.7 }}px;
+            opacity: 0.75;
+            text-shadow: 1px 1px 4px rgba(0,0,0,0.5);
+            margin-top: 8px;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+            white-space: pre-wrap;
+        }
+
+        .ticker-container {
+            position: relative;
+            width: 100%;
+            height: 80px;
+            background: linear-gradient(90deg, {{ settings.bg_color }}f5 0%, {{ settings.bg_color }}dd 50%, {{ settings.bg_color }}f5 100%);
+            opacity: {{ settings.opacity }};
+            overflow: hidden;
+            margin-top: 10px;
+            border-top: 4px solid {{ settings.accent_color }};
+            border-bottom: 4px solid {{ settings.accent_color }};
+            box-shadow: 0 0 25px {{ settings.accent_color }}25;
+            transition: all 0.3s ease;
+        }
+
+        .ticker-text {
+            position: absolute;
+            white-space: nowrap;
+            color: {{ settings.text_color }};
+            font-size: {{ settings.ticker_font_size }}px;
+            line-height: 80px;
+            padding: 0 60px;
+            animation: scroll-left linear infinite;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.7);
+            letter-spacing: 2px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    {% if settings.company_logo %}
+    <img id="company-logo"
+         src="{{ url_for('static', filename=settings.company_logo) }}"
+         alt="Company Logo"
+         class="logo-standalone">
+    {% endif %}
+
+    <div id="overlay-container">
+        <div class="lower-third">
+            <div class="lower-third-bg">
+                <div class="accent-stripe"></div>
+                <div class="corner-accent top-left"></div>
+                <div class="corner-accent bottom-right"></div>
+            </div>
+
+            {% if settings.category_image and settings.show_category_image %}
+            <img id="category-image"
+                 src="{{ url_for('static', filename=settings.category_image) }}"
+                 alt="Ceremony Image"
+                 class="category-image">
+            {% endif %}
+
+            <div class="content-wrapper">
+                <div class="text-content">
+                    <div id="main-text" class="main-text"></div>
+                    <div id="secondary-text" class="secondary-text"></div>
+                    <div id="company-name" class="company-name"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="ticker-container">
+            <div id="ticker-text" class="ticker-text">
+                {{ settings.ticker_text or 'Welcome to this prestigious ceremony. We are honored to have you with us today.' }}
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const socket = io();
+        const category = '{{ category }}';
+        const container = document.getElementById('overlay-container');
+        const tickerText = document.getElementById('ticker-text');
+        const lowerThird = document.querySelector('.lower-third');
+        const categoryImage = document.getElementById('category-image');
+        const companyLogo = document.getElementById('company-logo');
+        const tickerContainer = document.querySelector('.ticker-container');
+        const mainTextEl = document.getElementById('main-text');
+        const secondaryTextEl = document.getElementById('secondary-text');
+        const companyNameEl = document.getElementById('company-name');
+
+        function decodeHTML(html) {
+            const txt = document.createElement('textarea');
+            txt.innerHTML = html;
+            return txt.value;
+        }
+
+        let settings = {
+            entrance_animation: '{{ settings.entrance_animation }}',
+            entrance_duration: {{ settings.entrance_duration }},
+            entrance_delay: {{ settings.entrance_delay }},
+            text_animation: '{{ settings.text_animation }}',
+            text_animation_speed: {{ settings.text_animation_speed }},
+            image_animation: '{{ settings.image_animation }}',
+            image_animation_delay: {{ settings.image_animation_delay }},
+            logo_animation: '{{ settings.logo_animation }}',
+            logo_animation_delay: {{ settings.logo_animation_delay }},
+            ticker_entrance: '{{ settings.ticker_entrance }}',
+            ticker_entrance_delay: {{ settings.ticker_entrance_delay }},
+            ticker_speed: {{ settings.ticker_speed }},
+            main_text: decodeHTML('{{ settings.main_text or "Special Ceremony" }}'),
+            secondary_text: decodeHTML('{{ settings.secondary_text or "A Moment to Remember" }}'),
+            company_name: decodeHTML('{{ settings.company_name or "Event Services" }}')
+        };
+
+        let typewriterTimeouts = [];
+
+        function clearTypewriterTimeouts() {
+            typewriterTimeouts.forEach(timeout => clearTimeout(timeout));
+            typewriterTimeouts = [];
+        }
+
+        function applyEntranceAnimation() {
+            if (settings.entrance_animation !== 'none') {
+                lowerThird.style.animation = `${settings.entrance_animation} ${settings.entrance_duration}s ease-out ${settings.entrance_delay}s both`;
+            }
+        }
+
+        function typewriterEffect(elements) {
+            clearTypewriterTimeouts();
+
+            const baseDelay = (settings.entrance_delay + settings.entrance_duration) * 1000;
+            let currentDelay = baseDelay;
+
+            elements.forEach((item, index) => {
+                const { element, text } = item;
+                element.innerHTML = '';
+
+                if (index === 0) {
+                    const cursor = document.createElement('span');
+                    cursor.className = 'typewriter-cursor';
+                    cursor.id = 'cursor-0';
+                    element.appendChild(cursor);
+                }
+
+                const chars = text.split('');
+                chars.forEach((char, i) => {
+                    const timeout = setTimeout(() => {
+                        const span = document.createElement('span');
+                        span.textContent = char;
+
+                        const cursor = document.getElementById(`cursor-${index}`);
+                        if (cursor) {
+                            element.insertBefore(span, cursor);
+                        } else {
+                            element.appendChild(span);
+                        }
+
+                        if (i === chars.length - 1) {
+                            const oldCursor = document.getElementById(`cursor-${index}`);
+                            if (oldCursor) oldCursor.remove();
+
+                            if (index < elements.length - 1) {
+                                setTimeout(() => {
+                                    const nextElement = elements[index + 1].element;
+                                    const newCursor = document.createElement('span');
+                                    newCursor.className = 'typewriter-cursor';
+                                    newCursor.id = `cursor-${index + 1}`;
+                                    nextElement.appendChild(newCursor);
+                                }, 200);
+                            }
+                        }
+                    }, currentDelay + (i * settings.text_animation_speed * 1000));
+
+                    typewriterTimeouts.push(timeout);
+                });
+
+                currentDelay += chars.length * settings.text_animation_speed * 1000 + 300;
+            });
+        }
+
+        function fadeInWords(element, text) {
+            element.innerHTML = '';
+            const words = text.split(' ');
+            words.forEach((word, i) => {
+                const span = document.createElement('span');
+                span.textContent = word + (i < words.length - 1 ? ' ' : '');
+                span.style.opacity = '0';
+                span.style.animation = 'fade-in 0.5s ease forwards';
+                span.style.animationDelay = `${i * settings.text_animation_speed + settings.entrance_delay + settings.entrance_duration}s`;
+                element.appendChild(span);
+            });
+        }
+
+        function slideInChars(element, text) {
+            element.innerHTML = '';
+            const chars = text.split('');
+            chars.forEach((char, i) => {
+                const span = document.createElement('span');
+                span.textContent = char;
+                span.style.display = 'inline-block';
+                span.style.opacity = '0';
+                span.style.animation = 'fade-in 0.3s ease forwards';
+                span.style.animationDelay = `${i * settings.text_animation_speed + settings.entrance_delay + settings.entrance_duration}s`;
+                element.appendChild(span);
+            });
+        }
+
+        function applyTextAnimation() {
+            if (settings.text_animation === 'typewriter') {
+                typewriterEffect([
+                    { element: mainTextEl, text: settings.main_text },
+                    { element: secondaryTextEl, text: settings.secondary_text },
+                    { element: companyNameEl, text: settings.company_name }
+                ]);
+            } else if (settings.text_animation === 'fade-in-words') {
+                fadeInWords(mainTextEl, settings.main_text);
+                fadeInWords(secondaryTextEl, settings.secondary_text);
+                fadeInWords(companyNameEl, settings.company_name);
+            } else if (settings.text_animation === 'slide-in-chars') {
+                slideInChars(mainTextEl, settings.main_text);
+                slideInChars(secondaryTextEl, settings.secondary_text);
+                slideInChars(companyNameEl, settings.company_name);
+            } else {
+                mainTextEl.textContent = settings.main_text;
+                secondaryTextEl.textContent = settings.secondary_text;
+                companyNameEl.textContent = settings.company_name;
+            }
+        }
+
+        function applyImageAnimation() {
+            if (categoryImage && settings.image_animation !== 'none') {
+                categoryImage.style.animation = `${settings.image_animation} 0.8s ease-out ${settings.entrance_delay + settings.entrance_duration + settings.image_animation_delay}s both`;
+            }
+        }
+
+        function applyLogoAnimation() {
+            if (companyLogo && settings.logo_animation !== 'none') {
+                companyLogo.style.animation = `${settings.logo_animation} 0.8s ease-out ${settings.entrance_delay + settings.entrance_duration + settings.logo_animation_delay}s both`;
+            }
+        }
+
+        function applyTickerAnimation() {
+            if (settings.ticker_entrance !== 'none') {
+                tickerContainer.style.animation = `${settings.ticker_entrance} 0.6s ease-out ${settings.entrance_delay + settings.entrance_duration + settings.ticker_entrance_delay}s both`;
+            }
+        }
+
+        function updateTickerSpeed(speed) {
+            const textWidth = tickerText.offsetWidth;
+            const duration = textWidth / speed;
+            tickerText.style.animationDuration = `${duration}s`;
+        }
+
+        function initializeAnimations() {
+            applyEntranceAnimation();
+            applyTextAnimation();
+            applyImageAnimation();
+            applyLogoAnimation();
+            applyTickerAnimation();
+            updateTickerSpeed(settings.ticker_speed);
+        }
+
+        function replayAnimations() {
+            clearTypewriterTimeouts();
+            const elements = [lowerThird, categoryImage, companyLogo, tickerContainer];
+            elements.forEach(el => {
+                if (el) {
+                    el.style.animation = 'none';
+                    void el.offsetWidth;
+                }
+            });
+
+            setTimeout(() => {
+                initializeAnimations();
+            }, 50);
+        }
+
+        setTimeout(initializeAnimations, 100);
+
+        socket.on('settings_update', (data) => {
+            if (data.category !== category) return;
+
+            const s = data.settings;
+
+            if (s.entrance_animation !== undefined) settings.entrance_animation = s.entrance_animation;
+            if (s.entrance_duration !== undefined) settings.entrance_duration = s.entrance_duration;
+            if (s.entrance_delay !== undefined) settings.entrance_delay = s.entrance_delay;
+            if (s.text_animation !== undefined) settings.text_animation = s.text_animation;
+            if (s.text_animation_speed !== undefined) settings.text_animation_speed = s.text_animation_speed;
+            if (s.image_animation !== undefined) settings.image_animation = s.image_animation;
+            if (s.image_animation_delay !== undefined) settings.image_animation_delay = s.image_animation_delay;
+            if (s.logo_animation !== undefined) settings.logo_animation = s.logo_animation;
+            if (s.logo_animation_delay !== undefined) settings.logo_animation_delay = s.logo_animation_delay;
+            if (s.ticker_entrance !== undefined) settings.ticker_entrance = s.ticker_entrance;
+            if (s.ticker_entrance_delay !== undefined) settings.ticker_entrance_delay = s.ticker_entrance_delay;
+
+            if (s.main_text !== undefined) settings.main_text = decodeHTML(s.main_text);
+            if (s.secondary_text !== undefined) settings.secondary_text = decodeHTML(s.secondary_text);
+            if (s.company_name !== undefined) settings.company_name = decodeHTML(s.company_name);
+
+            if (s.main_text !== undefined || s.secondary_text !== undefined || s.company_name !== undefined) {
+                applyTextAnimation();
+            }
+
+            if (s.ticker_text !== undefined) {
+                tickerText.textContent = decodeHTML(s.ticker_text);
+                updateTickerSpeed(s.ticker_speed || settings.ticker_speed);
+            }
+
+            if (s.bg_color !== undefined) {
+                document.querySelector('.lower-third-bg').style.background = `linear-gradient(90deg, ${s.bg_color}f5 0%, ${s.bg_color}e0 80%, ${s.bg_color}aa 95%, transparent 100%)`;
+                document.querySelector('.ticker-container').style.background = `linear-gradient(90deg, ${s.bg_color}f5 0%, ${s.bg_color}dd 50%, ${s.bg_color}f5 100%)`;
+            }
+            if (s.accent_color !== undefined) {
+                const style = document.createElement('style');
+                style.textContent = `.corner-accent::before, .corner-accent::after { background: ${s.accent_color} !important; }`;
+                document.head.appendChild(style);
+                document.querySelector('.accent-stripe').style.background = `linear-gradient(180deg, transparent 0%, ${s.accent_color} 20%, ${s.accent_color} 80%, transparent 100%)`;
+                document.querySelector('.ticker-container').style.borderTopColor = s.accent_color;
+                document.querySelector('.ticker-container').style.borderBottomColor = s.accent_color;
+                secondaryTextEl.style.color = s.accent_color;
+                if (categoryImage) categoryImage.style.borderColor = s.accent_color;
+            }
+            if (s.text_color !== undefined) {
+                mainTextEl.style.color = s.text_color;
+                companyNameEl.style.color = s.text_color;
+                tickerText.style.color = s.text_color;
+                document.querySelectorAll('.typewriter-cursor').forEach(cursor => {
+                    cursor.style.backgroundColor = s.text_color;
+                });
+            }
+
+            if (s.main_font_size !== undefined) {
+                mainTextEl.style.fontSize = `${s.main_font_size}px`;
+                mainTextEl.style.minHeight = `${s.main_font_size * 1.2}px`;
+            }
+            if (s.secondary_font_size !== undefined) {
+                secondaryTextEl.style.fontSize = `${s.secondary_font_size}px`;
+                secondaryTextEl.style.minHeight = `${s.secondary_font_size * 1.2}px`;
+                companyNameEl.style.fontSize = `${s.secondary_font_size * 0.7}px`;
+            }
+            if (s.ticker_font_size !== undefined) {
+                tickerText.style.fontSize = `${s.ticker_font_size}px`;
+            }
+
+            if (s.border_radius !== undefined) {
+                if (categoryImage) categoryImage.style.borderRadius = '8px';
+            }
+
+            if (s.font_family !== undefined) {
+                document.body.style.fontFamily = s.font_family;
+            }
+
+            if (s.ticker_speed !== undefined) {
+                settings.ticker_speed = s.ticker_speed;
+                updateTickerSpeed(s.ticker_speed);
+            }
+
+            if (s.logo_size !== undefined && companyLogo) {
+                companyLogo.style.width = `${s.logo_size}px`;
+                companyLogo.style.height = `${s.logo_size}px`;
+            }
+
+            if (s.opacity !== undefined) {
+                document.querySelector('.lower-third-bg').style.opacity = s.opacity;
+                document.querySelector('.ticker-container').style.opacity = s.opacity;
+            }
+
+            if (s.show_decorative_elements !== undefined) {
+                const display = s.show_decorative_elements ? 'block' : 'none';
+                document.querySelectorAll('.corner-accent, .accent-stripe').forEach(el => {
+                    el.style.display = display;
+                });
+            }
+
+            if (s.company_logo !== undefined || s.category_image !== undefined || s.show_category_image !== undefined) {
+                setTimeout(() => location.reload(), 500);
+            }
+        });
+
+        socket.on('visibility_update', (data) => {
+            if (data.category !== category) return;
+
+            if (data.visible) {
+                container.classList.remove('hidden');
+                setTimeout(() => replayAnimations(), 100);
+            } else {
+                container.classList.add('hidden');
+            }
+        });
+
+        socket.on('connect', () => console.log('Connected to server'));
+        socket.on('disconnect', () => console.log('Disconnected from server'));
+
+        tickerText.addEventListener('animationiteration', () => {
+            updateTickerSpeed(settings.ticker_speed);
+        });
+    </script>
+</body>
+</html>

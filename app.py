@@ -1,6 +1,6 @@
 """
-Flask OBS Lower-Third Overlay System with Advanced Animations
-A complete web application for managing dynamic OBS overlays with real-time updates and animations.
+Flask OBS Lower-Third Overlay System with Category-Specific Designs
+Each category (funeral, wedding, ceremony) has its own unique design template.
 """
 
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify
@@ -18,7 +18,7 @@ app.config['SECRET_KEY'] = 'your-secret-key-change-in-production'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///overlays.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
-app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 
 # Google OAuth Configuration
 app.config['GOOGLE_CLIENT_ID'] = os.environ.get('GOOGLE_CLIENT_ID', 'your-google-client-id')
@@ -28,7 +28,6 @@ db = SQLAlchemy(app)
 socketio = SocketIO(app, cors_allowed_origins="*")
 oauth = OAuth(app)
 
-# Configure Google OAuth
 google = oauth.register(
     name='google',
     client_id=app.config['GOOGLE_CLIENT_ID'],
@@ -37,7 +36,6 @@ google = oauth.register(
     client_kwargs={'scope': 'openid email profile'}
 )
 
-# Ensure upload folder exists
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
 # Database Models
@@ -54,6 +52,7 @@ class OverlaySettings(db.Model):
 
     # Content
     main_text = db.Column(db.String(200))
+    secondary_text = db.Column(db.String(200))
     ticker_text = db.Column(db.String(500))
     company_name = db.Column(db.String(100))
     company_logo = db.Column(db.String(200))
@@ -62,13 +61,20 @@ class OverlaySettings(db.Model):
 
     # Styling
     bg_color = db.Column(db.String(7), default='#000000')
+    accent_color = db.Column(db.String(7), default='#FFD700')
     text_color = db.Column(db.String(7), default='#FFFFFF')
     main_font_size = db.Column(db.Integer, default=32)
+    secondary_font_size = db.Column(db.Integer, default=24)
     ticker_font_size = db.Column(db.Integer, default=18)
     border_radius = db.Column(db.Integer, default=10)
     font_family = db.Column(db.String(100), default='Arial, sans-serif')
     ticker_speed = db.Column(db.Integer, default=50)
     logo_size = db.Column(db.Integer, default=80)
+
+    # Layout specific settings
+    layout_style = db.Column(db.String(50), default='default')
+    show_decorative_elements = db.Column(db.Boolean, default=True)
+    opacity = db.Column(db.Float, default=0.9)
 
     # Animation Settings
     entrance_animation = db.Column(db.String(50), default='slide-left')
@@ -92,7 +98,6 @@ class OverlaySettings(db.Model):
 
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-# Authentication decorator
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -101,12 +106,10 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
-# Initialize database and seed admin user
 def init_db():
     with app.app_context():
         db.create_all()
 
-        # Seed admin user with lowercase email
         admin_email = 'admin@zearom.com'
         admin = User.query.filter(User.email.ilike(admin_email)).first()
         if not admin:
@@ -116,16 +119,47 @@ def init_db():
             )
             db.session.add(admin)
 
-        # Create default overlay settings for each category
-        for category in ['funeral', 'wedding', 'ceremony']:
+        # Create default settings with category-specific defaults
+        category_defaults = {
+            'funeral': {
+                'main_text': 'In Loving Memory',
+                'secondary_text': 'Celebrating a Life Well Lived',
+                'ticker_text': 'We gather today to honor and remember.',
+                'company_name': 'Zearom Funeral Services',
+                'bg_color': '#1a1a1a',
+                'accent_color': '#8B7355',
+                'text_color': '#E8E8E8',
+                'layout_style': 'elegant'
+            },
+            'wedding': {
+                'main_text': 'Together Forever',
+                'secondary_text': 'Celebrating Love & Unity',
+                'ticker_text': 'Join us as we celebrate this beautiful union.',
+                'company_name': 'Zearom Wedding Services',
+                'bg_color': '#FFE4E1',
+                'accent_color': '#FF1493',
+                'text_color': '#8B008B',
+                'layout_style': 'romantic'
+            },
+            'ceremony': {
+                'main_text': 'Special Ceremony',
+                'secondary_text': 'A Moment to Remember',
+                'ticker_text': 'Welcome to this special occasion.',
+                'company_name': 'Zearom Event Services',
+                'bg_color': '#000080',
+                'accent_color': '#FFD700',
+                'text_color': '#FFFFFF',
+                'layout_style': 'formal'
+            }
+        }
+
+        for category, defaults in category_defaults.items():
             settings = OverlaySettings.query.filter_by(category=category).first()
             if not settings:
                 settings = OverlaySettings(
                     category=category,
-                    main_text=f'{category.capitalize()} Service',
-                    ticker_text='Welcome to our service. Thank you for joining us today.',
-                    company_name='Zearom Productions',
-                    is_visible=False
+                    is_visible=False,
+                    **defaults
                 )
                 db.session.add(settings)
 
@@ -212,7 +246,15 @@ def display():
     if not settings:
         settings = OverlaySettings(category=category)
 
-    return render_template('display.html', settings=settings, category=category)
+    # Route to category-specific template
+    template_map = {
+        'funeral': 'display_funeral.html',
+        'wedding': 'display_wedding.html',
+        'ceremony': 'display_ceremony.html'
+    }
+
+    template = template_map.get(category, 'display_funeral.html')
+    return render_template(template, settings=settings, category=category)
 
 @app.route('/api/settings/<category>', methods=['GET', 'POST'])
 @login_required
@@ -226,63 +268,54 @@ def manage_settings(category):
     if request.method == 'POST':
         data = request.form
 
-        # Update text content
-        if 'main_text' in data:
-            settings.main_text = data['main_text']
-        if 'ticker_text' in data:
-            settings.ticker_text = data['ticker_text']
-        if 'company_name' in data:
-            settings.company_name = data['company_name']
+        # Update all fields
+        fields = [
+            'main_text', 'secondary_text', 'ticker_text', 'company_name',
+            'bg_color', 'accent_color', 'text_color', 'font_family', 'layout_style'
+        ]
 
-        # Update styling
-        if 'bg_color' in data:
-            settings.bg_color = data['bg_color']
-        if 'text_color' in data:
-            settings.text_color = data['text_color']
-        if 'main_font_size' in data:
-            settings.main_font_size = int(data['main_font_size'])
-        if 'ticker_font_size' in data:
-            settings.ticker_font_size = int(data['ticker_font_size'])
-        if 'border_radius' in data:
-            settings.border_radius = int(data['border_radius'])
-        if 'font_family' in data:
-            settings.font_family = data['font_family']
-        if 'ticker_speed' in data:
-            settings.ticker_speed = int(data['ticker_speed'])
-        if 'logo_size' in data:
-            settings.logo_size = int(data['logo_size'])
+        for field in fields:
+            if field in data:
+                setattr(settings, field, data[field])
 
-        # Update animation settings
-        if 'entrance_animation' in data:
-            settings.entrance_animation = data['entrance_animation']
-        if 'entrance_duration' in data:
-            settings.entrance_duration = float(data['entrance_duration'])
-        if 'entrance_delay' in data:
-            settings.entrance_delay = float(data['entrance_delay'])
-        if 'text_animation' in data:
-            settings.text_animation = data['text_animation']
-        if 'text_animation_speed' in data:
-            settings.text_animation_speed = float(data['text_animation_speed'])
-        if 'image_animation' in data:
-            settings.image_animation = data['image_animation']
-        if 'image_animation_delay' in data:
-            settings.image_animation_delay = float(data['image_animation_delay'])
-        if 'logo_animation' in data:
-            settings.logo_animation = data['logo_animation']
-        if 'logo_animation_delay' in data:
-            settings.logo_animation_delay = float(data['logo_animation_delay'])
-        if 'ticker_entrance' in data:
-            settings.ticker_entrance = data['ticker_entrance']
-        if 'ticker_entrance_delay' in data:
-            settings.ticker_entrance_delay = float(data['ticker_entrance_delay'])
+        # Integer fields
+        int_fields = [
+            'main_font_size', 'secondary_font_size', 'ticker_font_size',
+            'border_radius', 'ticker_speed', 'logo_size'
+        ]
 
-        # Update visibility
+        for field in int_fields:
+            if field in data:
+                setattr(settings, field, int(data[field]))
+
+        # Float fields
+        float_fields = [
+            'entrance_duration', 'entrance_delay', 'text_animation_speed',
+            'image_animation_delay', 'logo_animation_delay', 'ticker_entrance_delay', 'opacity'
+        ]
+
+        for field in float_fields:
+            if field in data:
+                setattr(settings, field, float(data[field]))
+
+        # Animation fields
+        animation_fields = [
+            'entrance_animation', 'text_animation', 'image_animation',
+            'logo_animation', 'ticker_entrance'
+        ]
+
+        for field in animation_fields:
+            if field in data:
+                setattr(settings, field, data[field])
+
+        # Boolean fields
         if 'show_category_image' in data:
             settings.show_category_image = data['show_category_image'] == 'true'
+        if 'show_decorative_elements' in data:
+            settings.show_decorative_elements = data['show_decorative_elements'] == 'true'
 
         db.session.commit()
 
-        # Emit update via WebSocket
         socketio.emit('settings_update', {
             'category': category,
             'settings': settings_to_dict(settings)
@@ -354,19 +387,25 @@ def toggle_visibility(category):
 def settings_to_dict(settings):
     return {
         'main_text': settings.main_text,
+        'secondary_text': settings.secondary_text,
         'ticker_text': settings.ticker_text,
         'company_name': settings.company_name,
         'company_logo': settings.company_logo,
         'category_image': settings.category_image,
         'show_category_image': settings.show_category_image,
         'bg_color': settings.bg_color,
+        'accent_color': settings.accent_color,
         'text_color': settings.text_color,
         'main_font_size': settings.main_font_size,
+        'secondary_font_size': settings.secondary_font_size,
         'ticker_font_size': settings.ticker_font_size,
         'border_radius': settings.border_radius,
         'font_family': settings.font_family,
         'ticker_speed': settings.ticker_speed,
         'logo_size': settings.logo_size,
+        'layout_style': settings.layout_style,
+        'show_decorative_elements': settings.show_decorative_elements,
+        'opacity': settings.opacity,
         'is_visible': settings.is_visible,
         'entrance_animation': settings.entrance_animation,
         'entrance_duration': settings.entrance_duration,

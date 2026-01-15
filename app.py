@@ -1,98 +1,78 @@
 """
-Flask OBS Lower-Third Overlay System - NovaHost Optimized
-This version is optimized for shared hosting environments like NovaHost/PythonAnywhere
+Flask OBS Lower-Third Overlay System
+Optimized for NovaHost CloudLinux Passenger - Production Ready
+No .htaccess or passenger_wsgi.py changes required
 """
 
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify, flash
-from flask_socketio import SocketIO, emit
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
-from authlib.integrations.flask_client import OAuth
 from functools import wraps
 import os
+import logging
 from datetime import datetime
 from dotenv import load_dotenv
-import logging
 
-# Configure logging
-logging.basicConfig(level=logging.INFO)
+# Configure logging to be less verbose in production
+logging.basicConfig(
+    level=logging.WARNING,  # Changed from INFO to WARNING
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
 logger = logging.getLogger(__name__)
 
 # Load environment variables
 load_dotenv()
 
+# Initialize Flask app
 app = Flask(__name__)
 
-# Get the absolute path to the application directory
+# Get absolute paths
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 
-# Configuration
-app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'your-secret-key-change-in-production')
+# Essential Configuration
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'zearom-overlay-secret-key-2024')
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get(
     'DATABASE_URL',
     f'sqlite:///{os.path.join(BASE_DIR, "instance", "overlays.db")}'
 )
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-# Optimized database settings for shared hosting
+# Critical: Optimized for shared hosting - minimal connections
 app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
-    'pool_size': 3,  # Reduced from 10
-    'max_overflow': 2,  # Reduced from default
-    'pool_recycle': 300,  # 5 minutes instead of 1 hour
-    'pool_pre_ping': True,
-    'pool_timeout': 30,
-    'connect_args': {'check_same_thread': False} if 'sqlite' in os.environ.get('DATABASE_URL', 'sqlite') else {}
+    'pool_size': 1,  # Single connection pool
+    'pool_recycle': 280,  # Recycle before 5 min timeout
+    'pool_pre_ping': True,  # Check connections before use
+    'max_overflow': 0,  # No overflow connections
+    'connect_args': {
+        'check_same_thread': False,
+        'timeout': 20
+    }
 }
 
-# File upload configuration
+# File upload settings
 app.config['UPLOAD_FOLDER'] = os.path.join(BASE_DIR, 'static', 'uploads')
-app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB
 
-# Company Configuration
+# Company settings
 app.config['COMPANY_NAME'] = os.environ.get('COMPANY_NAME', 'Zearom')
 
-# Google OAuth Configuration
+# Google OAuth (optional)
 app.config['GOOGLE_CLIENT_ID'] = os.environ.get('GOOGLE_CLIENT_ID', '')
 app.config['GOOGLE_CLIENT_SECRET'] = os.environ.get('GOOGLE_CLIENT_SECRET', '')
 
-# Initialize extensions
+# Create directories
+os.makedirs(os.path.join(BASE_DIR, 'instance'), exist_ok=True)
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+
+# Initialize database
 db = SQLAlchemy(app)
 
-# SocketIO configuration optimized for shared hosting
-# Use eventlet or gevent if available, otherwise fall back to threading
+# Optional OAuth (only if credentials provided)
 try:
-    import eventlet
-    eventlet.monkey_patch()
-    async_mode = 'eventlet'
-    logger.info("Using eventlet async mode")
-except ImportError:
-    try:
-        from gevent import monkey
-        monkey.patch_all()
-        async_mode = 'gevent'
-        logger.info("Using gevent async mode")
-    except ImportError:
-        async_mode = 'threading'
-        logger.info("Using threading async mode")
-
-socketio = SocketIO(
-    app,
-    cors_allowed_origins="*",
-    async_mode=async_mode,
-    logger=False,
-    engineio_logger=False,
-    ping_timeout=60,
-    ping_interval=25,
-    max_http_buffer_size=1000000  # 1MB max message size
-)
-
-# OAuth setup (only if credentials are provided)
-oauth = OAuth(app)
-google = None
-
-if app.config['GOOGLE_CLIENT_ID'] and app.config['GOOGLE_CLIENT_SECRET']:
-    try:
+    if app.config['GOOGLE_CLIENT_ID'] and app.config['GOOGLE_CLIENT_SECRET']:
+        from authlib.integrations.flask_client import OAuth
+        oauth = OAuth(app)
         google = oauth.register(
             name='google',
             client_id=app.config['GOOGLE_CLIENT_ID'],
@@ -100,25 +80,21 @@ if app.config['GOOGLE_CLIENT_ID'] and app.config['GOOGLE_CLIENT_SECRET']:
             server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
             client_kwargs={'scope': 'openid email profile'}
         )
-        logger.info("Google OAuth configured successfully")
-    except Exception as e:
-        logger.warning(f"Google OAuth configuration failed: {e}")
-
-# Create necessary directories
-os.makedirs(os.path.join(BASE_DIR, 'instance'), exist_ok=True)
-os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
-
-logger.info(f"Base directory: {BASE_DIR}")
-logger.info(f"Upload folder: {app.config['UPLOAD_FOLDER']}")
+    else:
+        google = None
+except Exception as e:
+    logger.warning(f"OAuth not configured: {e}")
+    google = None
 
 
 # Context processor
 @app.context_processor
-def inject_company_name():
+def inject_globals():
     return dict(company_name=app.config['COMPANY_NAME'])
 
 
-# Database Models
+# ==================== DATABASE MODELS ====================
+
 class User(db.Model):
     __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
@@ -131,14 +107,11 @@ class User(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    def __repr__(self):
-        return f'<User {self.email}>'
-
 
 class OverlaySettings(db.Model):
     __tablename__ = 'overlay_settings'
     id = db.Column(db.Integer, primary_key=True)
-    category = db.Column(db.String(50), nullable=False, index=True)
+    category = db.Column(db.String(50), nullable=False, unique=True, index=True)
 
     # Content
     main_text = db.Column(db.String(200))
@@ -183,55 +156,56 @@ class OverlaySettings(db.Model):
     is_visible = db.Column(db.Boolean, default=True)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    def __repr__(self):
-        return f'<OverlaySettings {self.category}>'
 
+# ==================== DECORATORS ====================
 
-# Decorators
 def login_required(f):
     @wraps(f)
-    def decorated_function(*args, **kwargs):
+    def decorated(*args, **kwargs):
         if 'user_id' not in session:
             return redirect(url_for('login'))
-        user = User.query.get(session['user_id'])
-        if not user or not user.is_active:
+        try:
+            user = db.session.get(User, session['user_id'])
+            if not user or not user.is_active:
+                session.clear()
+                flash('Your account is inactive.', 'error')
+                return redirect(url_for('login'))
+        except:
             session.clear()
-            flash('Your account has been deactivated.', 'error')
             return redirect(url_for('login'))
         return f(*args, **kwargs)
-    return decorated_function
+    return decorated
 
 
 def admin_required(f):
     @wraps(f)
-    def decorated_function(*args, **kwargs):
+    def decorated(*args, **kwargs):
         if 'user_id' not in session:
             return redirect(url_for('login'))
-        user = User.query.get(session['user_id'])
-        if not user or not user.is_active:
-            session.clear()
-            flash('Your account has been deactivated.', 'error')
+        try:
+            user = db.session.get(User, session['user_id'])
+            if not user or not user.is_active or not user.is_admin:
+                flash('Admin access required.', 'error')
+                return redirect(url_for('control'))
+        except:
             return redirect(url_for('login'))
-        if not user.is_admin:
-            flash('You do not have permission to access this page.', 'error')
-            return redirect(url_for('control'))
         return f(*args, **kwargs)
-    return decorated_function
+    return decorated
 
 
-# Database initialization
+# ==================== DATABASE INITIALIZATION ====================
+
 def init_db():
     """Initialize database with default data"""
     with app.app_context():
         try:
             db.create_all()
-            logger.info("Database tables created successfully")
 
-            # Create admin user
+            # Create admin
             admin_email = os.environ.get('ADMIN_EMAIL', 'admin@zearom.com').lower()
             admin_password = os.environ.get('ADMIN_PASSWORD', 'Success@Zearom')
 
-            admin = User.query.filter(User.email.ilike(admin_email)).first()
+            admin = db.session.query(User).filter(User.email.ilike(admin_email)).first()
             if not admin:
                 admin = User(
                     email=admin_email,
@@ -241,10 +215,9 @@ def init_db():
                     full_name='System Administrator'
                 )
                 db.session.add(admin)
-                logger.info(f"Created admin user: {admin_email}")
 
             # Create default settings
-            category_defaults = {
+            categories = {
                 'funeral': {
                     'main_text': 'In Loving Memory',
                     'secondary_text': 'Celebrating a Life Well Lived',
@@ -252,8 +225,7 @@ def init_db():
                     'company_name': f'{app.config["COMPANY_NAME"]} Funeral Services',
                     'bg_color': '#1a1a1a',
                     'accent_color': '#8B7355',
-                    'text_color': '#E8E8E8',
-                    'layout_style': 'elegant'
+                    'text_color': '#E8E8E8'
                 },
                 'wedding': {
                     'main_text': 'Together Forever',
@@ -262,8 +234,7 @@ def init_db():
                     'company_name': f'{app.config["COMPANY_NAME"]} Wedding Services',
                     'bg_color': '#FFE4E1',
                     'accent_color': '#FF1493',
-                    'text_color': '#8B008B',
-                    'layout_style': 'romantic'
+                    'text_color': '#8B008B'
                 },
                 'ceremony': {
                     'main_text': 'Special Ceremony',
@@ -272,67 +243,65 @@ def init_db():
                     'company_name': f'{app.config["COMPANY_NAME"]} Event Services',
                     'bg_color': '#000080',
                     'accent_color': '#FFD700',
-                    'text_color': '#FFFFFF',
-                    'layout_style': 'formal'
+                    'text_color': '#FFFFFF'
                 }
             }
 
-            for category, defaults in category_defaults.items():
-                settings = OverlaySettings.query.filter_by(category=category).first()
+            for cat, defaults in categories.items():
+                settings = db.session.query(OverlaySettings).filter_by(category=cat).first()
                 if not settings:
-                    settings = OverlaySettings(category=category, is_visible=False, **defaults)
+                    settings = OverlaySettings(category=cat, is_visible=False, **defaults)
                     db.session.add(settings)
-                    logger.info(f"Created default settings for category: {category}")
 
             db.session.commit()
-            logger.info("Database initialization completed successfully")
 
         except Exception as e:
-            logger.error(f"Database initialization error: {e}")
+            logger.error(f"Database init error: {e}")
             db.session.rollback()
-            raise
 
 
-# Routes
+# ==================== ROUTES ====================
+
 @app.route('/')
 def index():
-    if 'user_id' in session:
-        return redirect(url_for('control'))
-    return redirect(url_for('login'))
+    return redirect(url_for('control') if 'user_id' in session else url_for('login'))
 
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        email = request.form.get('email', '').strip()
+        email = request.form.get('email', '').strip().lower()
         password = request.form.get('password', '')
 
         if not email or not password:
-            flash('Email and password are required.', 'error')
+            flash('Email and password required.', 'error')
             return render_template('login.html')
 
         try:
-            user = User.query.filter(User.email.ilike(email)).first()
+            user = db.session.query(User).filter(User.email.ilike(email)).first()
 
             if not user:
-                flash('Email not authorized', 'error')
+                flash('Invalid credentials.', 'error')
                 return render_template('login.html')
 
             if not user.is_active:
-                flash('Your account has been deactivated. Please contact an administrator.', 'error')
+                flash('Account deactivated.', 'error')
                 return render_template('login.html')
 
             if user.password_hash and check_password_hash(user.password_hash, password):
+                session.clear()
                 session['user_id'] = user.id
                 session['user_email'] = user.email
                 session['is_admin'] = user.is_admin
+                session.permanent = True
                 flash('Login successful!', 'success')
                 return redirect(url_for('control'))
 
-            flash('Invalid credentials', 'error')
+            flash('Invalid credentials.', 'error')
+
         except Exception as e:
             logger.error(f"Login error: {e}")
-            flash('An error occurred during login. Please try again.', 'error')
+            flash('Login error occurred.', 'error')
 
     return render_template('login.html')
 
@@ -340,16 +309,14 @@ def login():
 @app.route('/login/google')
 def google_login():
     if not google:
-        flash('Google login is not configured.', 'error')
+        flash('Google login not configured.', 'error')
         return redirect(url_for('login'))
-    redirect_uri = url_for('google_callback', _external=True)
-    return google.authorize_redirect(redirect_uri)
+    return google.authorize_redirect(url_for('google_callback', _external=True))
 
 
 @app.route('/login/google/callback')
 def google_callback():
     if not google:
-        flash('Google login is not configured.', 'error')
         return redirect(url_for('login'))
 
     try:
@@ -358,31 +325,24 @@ def google_callback():
 
         if user_info:
             email = user_info['email'].lower()
-            google_id = user_info['sub']
+            user = db.session.query(User).filter(User.email.ilike(email)).first()
 
-            user = User.query.filter(User.email.ilike(email)).first()
+            if user and user.is_active:
+                if not user.google_id:
+                    user.google_id = user_info['sub']
+                    db.session.commit()
 
-            if not user:
-                flash('Email not authorized', 'error')
-                return redirect(url_for('login'))
+                session.clear()
+                session['user_id'] = user.id
+                session['user_email'] = user.email
+                session['is_admin'] = user.is_admin
+                session.permanent = True
+                return redirect(url_for('control'))
 
-            if not user.is_active:
-                flash('Your account has been deactivated.', 'error')
-                return redirect(url_for('login'))
-
-            if not user.google_id:
-                user.google_id = google_id
-                db.session.commit()
-
-            session['user_id'] = user.id
-            session['user_email'] = user.email
-            session['is_admin'] = user.is_admin
-            flash('Login successful!', 'success')
-            return redirect(url_for('control'))
-
+            flash('Email not authorized.', 'error')
     except Exception as e:
         logger.error(f"Google OAuth error: {e}")
-        flash('Google authentication failed', 'error')
+        flash('Authentication failed.', 'error')
 
     return redirect(url_for('login'))
 
@@ -390,7 +350,7 @@ def google_callback():
 @app.route('/logout')
 def logout():
     session.clear()
-    flash('You have been logged out.', 'info')
+    flash('Logged out successfully.', 'info')
     return redirect(url_for('login'))
 
 
@@ -402,18 +362,18 @@ def control():
 
     try:
         for cat in categories:
-            settings[cat] = OverlaySettings.query.filter_by(category=cat).first()
+            settings[cat] = db.session.query(OverlaySettings).filter_by(category=cat).first()
             if not settings[cat]:
                 settings[cat] = OverlaySettings(category=cat)
                 db.session.add(settings[cat])
 
         db.session.commit()
-        current_user = User.query.get(session['user_id'])
+        current_user = db.session.get(User, session['user_id'])
         return render_template('control.html', settings=settings, categories=categories, current_user=current_user)
 
     except Exception as e:
-        logger.error(f"Control panel error: {e}")
-        flash('An error occurred loading the control panel.', 'error')
+        logger.error(f"Control error: {e}")
+        flash('Error loading control panel.', 'error')
         return redirect(url_for('login'))
 
 
@@ -421,12 +381,11 @@ def control():
 @admin_required
 def users():
     try:
-        all_users = User.query.order_by(User.created_at.desc()).all()
-        current_user = User.query.get(session['user_id'])
+        all_users = db.session.query(User).order_by(User.created_at.desc()).all()
+        current_user = db.session.get(User, session['user_id'])
         return render_template('users.html', users=all_users, current_user=current_user)
     except Exception as e:
-        logger.error(f"Users page error: {e}")
-        flash('An error occurred loading users.', 'error')
+        logger.error(f"Users error: {e}")
         return redirect(url_for('control'))
 
 
@@ -440,11 +399,11 @@ def create_user():
         is_admin = request.form.get('is_admin') == 'on'
 
         if not email or not password:
-            flash('Email and password are required.', 'error')
+            flash('Email and password required.', 'error')
             return redirect(url_for('users'))
 
-        if User.query.filter(User.email.ilike(email)).first():
-            flash('A user with this email already exists.', 'error')
+        if db.session.query(User).filter(User.email.ilike(email)).first():
+            flash('Email already exists.', 'error')
             return redirect(url_for('users'))
 
         new_user = User(
@@ -454,15 +413,14 @@ def create_user():
             is_admin=is_admin,
             is_active=True
         )
-
         db.session.add(new_user)
         db.session.commit()
-        flash(f'User {email} created successfully!', 'success')
+        flash(f'User {email} created!', 'success')
 
     except Exception as e:
         logger.error(f"Create user error: {e}")
         db.session.rollback()
-        flash('An error occurred creating the user.', 'error')
+        flash('Error creating user.', 'error')
 
     return redirect(url_for('users'))
 
@@ -471,11 +429,14 @@ def create_user():
 @admin_required
 def edit_user(user_id):
     try:
-        user = User.query.get_or_404(user_id)
-        protected_admin = os.environ.get('ADMIN_EMAIL', 'admin@zearom.com').lower()
+        user = db.session.get(User, user_id)
+        if not user:
+            flash('User not found.', 'error')
+            return redirect(url_for('users'))
 
-        if user.email.lower() == protected_admin:
-            flash(f'The super admin account cannot be modified.', 'error')
+        protected = os.environ.get('ADMIN_EMAIL', 'admin@zearom.com').lower()
+        if user.email.lower() == protected:
+            flash('Cannot modify super admin.', 'error')
             return redirect(url_for('users'))
 
         email = request.form.get('email', '').lower().strip()
@@ -483,11 +444,7 @@ def edit_user(user_id):
         is_admin = request.form.get('is_admin') == 'on'
         password = request.form.get('password', '').strip()
 
-        if not email:
-            flash('Email is required.', 'error')
-            return redirect(url_for('users'))
-
-        if User.query.filter(User.email.ilike(email), User.id != user_id).first():
+        if db.session.query(User).filter(User.email.ilike(email), User.id != user_id).first():
             flash('Email already in use.', 'error')
             return redirect(url_for('users'))
 
@@ -500,12 +457,12 @@ def edit_user(user_id):
             user.password_hash = generate_password_hash(password)
 
         db.session.commit()
-        flash(f'User {email} updated successfully!', 'success')
+        flash(f'User {email} updated!', 'success')
 
     except Exception as e:
         logger.error(f"Edit user error: {e}")
         db.session.rollback()
-        flash('An error occurred updating the user.', 'error')
+        flash('Error updating user.', 'error')
 
     return redirect(url_for('users'))
 
@@ -514,15 +471,12 @@ def edit_user(user_id):
 @admin_required
 def toggle_user_status(user_id):
     try:
-        user = User.query.get_or_404(user_id)
-        protected_admin = os.environ.get('ADMIN_EMAIL', 'admin@zearom.com').lower()
-
-        if user.email.lower() == protected_admin:
-            flash('The super admin account cannot be deactivated.', 'error')
+        user = db.session.get(User, user_id)
+        if not user:
             return redirect(url_for('users'))
 
         if user.id == session['user_id']:
-            flash('You cannot deactivate your own account.', 'error')
+            flash('Cannot deactivate yourself.', 'error')
             return redirect(url_for('users'))
 
         user.is_active = not user.is_active
@@ -530,12 +484,11 @@ def toggle_user_status(user_id):
         db.session.commit()
 
         status = 'activated' if user.is_active else 'deactivated'
-        flash(f'User {user.email} {status} successfully!', 'success')
+        flash(f'User {status}!', 'success')
 
     except Exception as e:
-        logger.error(f"Toggle user status error: {e}")
+        logger.error(f"Toggle status error: {e}")
         db.session.rollback()
-        flash('An error occurred.', 'error')
 
     return redirect(url_for('users'))
 
@@ -544,26 +497,23 @@ def toggle_user_status(user_id):
 @admin_required
 def delete_user(user_id):
     try:
-        user = User.query.get_or_404(user_id)
-        protected_admin = os.environ.get('ADMIN_EMAIL', 'admin@zearom.com').lower()
-
-        if user.email.lower() == protected_admin:
-            flash('The super admin account cannot be deleted.', 'error')
+        user = db.session.get(User, user_id)
+        if not user:
             return redirect(url_for('users'))
 
         if user.id == session['user_id']:
-            flash('You cannot delete your own account.', 'error')
+            flash('Cannot delete yourself.', 'error')
             return redirect(url_for('users'))
 
         email = user.email
         db.session.delete(user)
         db.session.commit()
-        flash(f'User {email} deleted successfully!', 'success')
+        flash(f'User {email} deleted!', 'success')
 
     except Exception as e:
         logger.error(f"Delete user error: {e}")
         db.session.rollback()
-        flash('An error occurred deleting the user.', 'error')
+        flash('Error deleting user.', 'error')
 
     return redirect(url_for('users'))
 
@@ -573,32 +523,32 @@ def display():
     category = request.args.get('category', 'funeral')
 
     try:
-        settings = OverlaySettings.query.filter_by(category=category).first()
+        settings = db.session.query(OverlaySettings).filter_by(category=category).first()
 
         if not settings:
             settings = OverlaySettings(category=category)
             db.session.add(settings)
             db.session.commit()
 
-        template_map = {
+        templates = {
             'funeral': 'display_funeral.html',
             'wedding': 'display_wedding.html',
             'ceremony': 'display_ceremony.html'
         }
 
-        template = template_map.get(category, 'display_funeral.html')
-        return render_template(template, settings=settings, category=category)
+        return render_template(templates.get(category, 'display_funeral.html'),
+                             settings=settings, category=category)
 
     except Exception as e:
-        logger.error(f"Display page error: {e}")
-        return "An error occurred loading the display.", 500
+        logger.error(f"Display error: {e}")
+        return "Display error", 500
 
 
 @app.route('/api/settings/<category>', methods=['GET', 'POST'])
 @login_required
 def manage_settings(category):
     try:
-        settings = OverlaySettings.query.filter_by(category=category).first()
+        settings = db.session.query(OverlaySettings).filter_by(category=category).first()
 
         if not settings:
             settings = OverlaySettings(category=category)
@@ -619,16 +569,17 @@ def manage_settings(category):
                 if field in data:
                     try:
                         setattr(settings, field, int(data[field]))
-                    except ValueError:
+                    except:
                         pass
 
             # Float fields
             for field in ['entrance_duration', 'entrance_delay', 'text_animation_speed',
-                         'image_animation_delay', 'logo_animation_delay', 'ticker_entrance_delay', 'opacity']:
+                         'image_animation_delay', 'logo_animation_delay',
+                         'ticker_entrance_delay', 'opacity']:
                 if field in data:
                     try:
                         setattr(settings, field, float(data[field]))
-                    except ValueError:
+                    except:
                         pass
 
             # Animation fields
@@ -643,51 +594,40 @@ def manage_settings(category):
             if 'show_decorative_elements' in data:
                 settings.show_decorative_elements = data['show_decorative_elements'] == 'true'
 
+            settings.updated_at = datetime.utcnow()
             db.session.commit()
-
-            # Emit socket event (with error handling)
-            try:
-                socketio.emit('settings_update', {
-                    'category': category,
-                    'settings': settings_to_dict(settings)
-                }, broadcast=True)
-            except Exception as e:
-                logger.warning(f"Socket emit failed (non-critical): {e}")
 
             return jsonify({'success': True, 'settings': settings_to_dict(settings)})
 
         return jsonify({'settings': settings_to_dict(settings)})
 
     except Exception as e:
-        logger.error(f"Manage settings error: {e}")
-        return jsonify({'error': 'An error occurred'}), 500
+        logger.error(f"Settings error: {e}")
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
 
 
 @app.route('/api/upload/<category>/<file_type>', methods=['POST'])
 @login_required
 def upload_file(category, file_type):
     if 'file' not in request.files:
-        return jsonify({'error': 'No file provided'}), 400
+        return jsonify({'error': 'No file'}), 400
 
     file = request.files['file']
     if not file or file.filename == '':
         return jsonify({'error': 'No file selected'}), 400
 
     try:
-        # Secure the filename
         filename = secure_filename(file.filename)
         timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
         filename = f"{category}_{file_type}_{timestamp}_{filename}"
 
-        # Save file
         filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
         file.save(filepath)
-        logger.info(f"File saved: {filepath} ({os.path.getsize(filepath)} bytes)")
 
-        # Update database
-        settings = OverlaySettings.query.filter_by(category=category).first()
+        settings = db.session.query(OverlaySettings).filter_by(category=category).first()
         if not settings:
             settings = OverlaySettings(category=category)
             db.session.add(settings)
@@ -699,16 +639,8 @@ def upload_file(category, file_type):
         elif file_type == 'image':
             settings.category_image = relative_path
 
+        settings.updated_at = datetime.utcnow()
         db.session.commit()
-
-        # Emit socket event
-        try:
-            socketio.emit('settings_update', {
-                'category': category,
-                'settings': settings_to_dict(settings)
-            }, broadcast=True)
-        except Exception as e:
-            logger.warning(f"Socket emit failed (non-critical): {e}")
 
         return jsonify({
             'success': True,
@@ -718,7 +650,8 @@ def upload_file(category, file_type):
 
     except Exception as e:
         logger.error(f"Upload error: {e}")
-        return jsonify({'error': f'Upload failed: {str(e)}'}), 500
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
 
 
 @app.route('/api/visibility/<category>', methods=['POST'])
@@ -726,32 +659,27 @@ def upload_file(category, file_type):
 def toggle_visibility(category):
     try:
         data = request.get_json()
-        settings = OverlaySettings.query.filter_by(category=category).first()
+        settings = db.session.query(OverlaySettings).filter_by(category=category).first()
 
         if not settings:
-            return jsonify({'error': 'Settings not found'}), 404
+            return jsonify({'error': 'Not found'}), 404
 
         settings.is_visible = data.get('visible', True)
+        settings.updated_at = datetime.utcnow()
         db.session.commit()
-
-        # Emit socket event
-        try:
-            socketio.emit('visibility_update', {
-                'category': category,
-                'visible': settings.is_visible
-            }, broadcast=True)
-        except Exception as e:
-            logger.warning(f"Socket emit failed (non-critical): {e}")
 
         return jsonify({'success': True, 'visible': settings.is_visible})
 
     except Exception as e:
-        logger.error(f"Toggle visibility error: {e}")
-        return jsonify({'error': 'An error occurred'}), 500
+        logger.error(f"Visibility error: {e}")
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
 
+
+# ==================== HELPER FUNCTIONS ====================
 
 def settings_to_dict(settings):
-    """Convert settings object to dictionary"""
+    """Convert settings to dictionary"""
     return {
         'main_text': settings.main_text,
         'secondary_text': settings.secondary_text,
@@ -788,70 +716,41 @@ def settings_to_dict(settings):
     }
 
 
-# SocketIO event handlers
-@socketio.on('connect')
-def handle_connect():
-    logger.info('Client connected')
+# ==================== ERROR HANDLERS ====================
 
-
-@socketio.on('disconnect')
-def handle_disconnect():
-    logger.info('Client disconnected')
-
-
-# Error handlers
 @app.errorhandler(404)
 def not_found(e):
-    return render_template('login.html'), 404
+    return redirect(url_for('login')), 404
 
 
 @app.errorhandler(500)
 def server_error(e):
     logger.error(f"Server error: {e}")
-    return "An internal error occurred. Please try again later.", 500
+    db.session.rollback()
+    return "Internal error", 500
 
 
-# Health check endpoint
+# ==================== HEALTH CHECK ====================
+
 @app.route('/health')
-def health_check():
+def health():
     return jsonify({
         'status': 'healthy',
         'timestamp': datetime.utcnow().isoformat()
     })
 
 
-# Diagnostic route
-@app.route('/api/debug/paths')
-@login_required
-def debug_paths():
-    """Debug endpoint to check file paths and permissions"""
-    upload_folder = app.config['UPLOAD_FOLDER']
+# ==================== INITIALIZE DATABASE ====================
 
-    info = {
-        'base_dir': BASE_DIR,
-        'upload_folder': upload_folder,
-        'upload_folder_exists': os.path.exists(upload_folder),
-        'upload_folder_writable': os.access(upload_folder, os.W_OK) if os.path.exists(upload_folder) else False,
-        'files_in_upload_folder': []
-    }
-
-    if os.path.exists(upload_folder):
-        try:
-            info['files_in_upload_folder'] = os.listdir(upload_folder)
-        except Exception as e:
-            info['error_listing_files'] = str(e)
-
-    return jsonify(info)
+# Auto-initialize on first import (Passenger compatible)
+try:
+    init_db()
+except:
+    pass  # Silent fail - will retry on first request
 
 
-# Run the application
+# ==================== APPLICATION ENTRY POINT ====================
+
 if __name__ == '__main__':
     init_db()
-
-    # Use different configurations for development vs production
-    if os.environ.get('FLASK_ENV') == 'development':
-        socketio.run(app, debug=True, host='0.0.0.0', port=5000)
-    else:
-        # Production mode - let WSGI server handle it
-        # Don't use socketio.run() in production
-        pass
+    app.run(debug=False, host='0.0.0.0', port=5000)

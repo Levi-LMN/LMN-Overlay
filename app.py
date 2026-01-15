@@ -718,7 +718,7 @@ def handle_connect():
 def handle_disconnect():
     print('Client disconnected')
 
-
+# Run the app
 if __name__ == '__main__':
     init_db()
     socketio.run(app, debug=True, host='0.0.0.0', port=5000)

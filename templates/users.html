@@ -94,6 +94,14 @@
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <div class="flex justify-end gap-2">
+                            {% set is_protected = (user.email.lower() == 'admin@zearom.com') %}
+
+                            {% if is_protected %}
+                            <!-- Protected Super Admin - No Actions -->
+                            <span class="text-xs text-gray-400 px-3 py-2 bg-gray-50 rounded" title="This is the protected super admin account">
+                                Protected Account
+                            </span>
+                            {% else %}
                             <button onclick='openEditModal({{ user.id }}, "{{ user.email }}", "{{ user.full_name or "" }}", {{ user.is_admin|tojson }})'
                                     class="text-blue-600 hover:text-blue-900 p-2 hover:bg-blue-50 rounded transition"
                                     title="Edit">
@@ -130,6 +138,7 @@
                                     </svg>
                                 </button>
                             </form>
+                            {% endif %}
                             {% endif %}
                         </div>
                     </td>

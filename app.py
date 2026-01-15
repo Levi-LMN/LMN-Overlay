@@ -63,10 +63,12 @@ google = oauth.register(
 
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
+
 # Context processor to make company_name available in all templates
 @app.context_processor
 def inject_company_name():
     return dict(company_name=app.config['COMPANY_NAME'])
+
 
 # Database Models
 class User(db.Model):
@@ -83,6 +85,7 @@ class User(db.Model):
 
     def __repr__(self):
         return f'<User {self.email}>'
+
 
 class OverlaySettings(db.Model):
     __tablename__ = 'overlay_settings'
@@ -140,6 +143,7 @@ class OverlaySettings(db.Model):
     def __repr__(self):
         return f'<OverlaySettings {self.category}>'
 
+
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -151,7 +155,9 @@ def login_required(f):
             flash('Your account has been deactivated.', 'error')
             return redirect(url_for('login'))
         return f(*args, **kwargs)
+
     return decorated_function
+
 
 def admin_required(f):
     @wraps(f)
@@ -167,7 +173,9 @@ def admin_required(f):
             flash('You do not have permission to access this page.', 'error')
             return redirect(url_for('control'))
         return f(*args, **kwargs)
+
     return decorated_function
+
 
 def init_db():
     with app.app_context():
@@ -234,12 +242,14 @@ def init_db():
         db.session.commit()
         print(f"Database initialized with admin user: {admin_email}")
 
+
 # Routes
 @app.route('/')
 def index():
     if 'user_id' in session:
         return redirect(url_for('control'))
     return redirect(url_for('login'))
+
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -270,10 +280,12 @@ def login():
 
     return render_template('login.html')
 
+
 @app.route('/login/google')
 def google_login():
     redirect_uri = url_for('google_callback', _external=True)
     return google.authorize_redirect(redirect_uri)
+
 
 @app.route('/login/google/callback')
 def google_callback():
@@ -311,11 +323,13 @@ def google_callback():
 
     return redirect(url_for('login'))
 
+
 @app.route('/logout')
 def logout():
     session.clear()
     flash('You have been logged out.', 'info')
     return redirect(url_for('login'))
+
 
 @app.route('/control')
 @login_required
@@ -333,6 +347,7 @@ def control():
     current_user = User.query.get(session['user_id'])
     return render_template('control.html', settings=settings, categories=categories, current_user=current_user)
 
+
 # User Management Routes
 @app.route('/users')
 @admin_required
@@ -340,6 +355,7 @@ def users():
     all_users = User.query.order_by(User.created_at.desc()).all()
     current_user = User.query.get(session['user_id'])
     return render_template('users.html', users=all_users, current_user=current_user)
+
 
 @app.route('/users/create', methods=['POST'])
 @admin_required
@@ -373,11 +389,20 @@ def create_user():
     flash(f'User {email} created successfully!', 'success')
     return redirect(url_for('users'))
 
+
 @app.route('/users/<int:user_id>/edit', methods=['POST'])
 @admin_required
 def edit_user(user_id):
     user = User.query.get_or_404(user_id)
     data = request.form
+
+    # Get the protected admin email from environment
+    protected_admin_email = os.environ.get('ADMIN_EMAIL', 'admin@zearom.com').lower()
+
+    # Prevent editing the protected super admin account
+    if user.email.lower() == protected_admin_email:
+        flash(f'The super admin account ({protected_admin_email}) cannot be modified.', 'error')
+        return redirect(url_for('users'))
 
     # Prevent editing the last admin
     if user.is_admin and data.get('is_admin') != 'on':
@@ -414,10 +439,19 @@ def edit_user(user_id):
     flash(f'User {email} updated successfully!', 'success')
     return redirect(url_for('users'))
 
+
 @app.route('/users/<int:user_id>/toggle-status', methods=['POST'])
 @admin_required
 def toggle_user_status(user_id):
     user = User.query.get_or_404(user_id)
+
+    # Get the protected admin email from environment
+    protected_admin_email = os.environ.get('ADMIN_EMAIL', 'admin@zearom.com').lower()
+
+    # Prevent modifying the protected super admin account
+    if user.email.lower() == protected_admin_email:
+        flash(f'The super admin account ({protected_admin_email}) cannot be deactivated.', 'error')
+        return redirect(url_for('users'))
 
     # Prevent deactivating yourself
     if user.id == session['user_id']:
@@ -439,10 +473,19 @@ def toggle_user_status(user_id):
     flash(f'User {user.email} {status} successfully!', 'success')
     return redirect(url_for('users'))
 
+
 @app.route('/users/<int:user_id>/delete', methods=['POST'])
 @admin_required
 def delete_user(user_id):
     user = User.query.get_or_404(user_id)
+
+    # Get the protected admin email from environment
+    protected_admin_email = os.environ.get('ADMIN_EMAIL', 'admin@zearom.com').lower()
+
+    # Prevent deleting the protected super admin account
+    if user.email.lower() == protected_admin_email:
+        flash(f'The super admin account ({protected_admin_email}) cannot be deleted.', 'error')
+        return redirect(url_for('users'))
 
     # Prevent deleting yourself
     if user.id == session['user_id']:
@@ -463,6 +506,7 @@ def delete_user(user_id):
     flash(f'User {email} deleted successfully!', 'success')
     return redirect(url_for('users'))
 
+
 @app.route('/display')
 def display():
     category = request.args.get('category', 'funeral')
@@ -482,6 +526,7 @@ def display():
 
     template = template_map.get(category, 'display_funeral.html')
     return render_template(template, settings=settings, category=category)
+
 
 @app.route('/api/settings/<category>', methods=['GET', 'POST'])
 @login_required
@@ -556,6 +601,7 @@ def manage_settings(category):
 
     return jsonify({'settings': settings_to_dict(settings)})
 
+
 @app.route('/api/upload/<category>/<file_type>', methods=['POST'])
 @login_required
 def upload_file(category, file_type):
@@ -600,6 +646,7 @@ def upload_file(category, file_type):
 
     return jsonify({'error': 'Upload failed'}), 500
 
+
 @app.route('/api/visibility/<category>', methods=['POST'])
 @login_required
 def toggle_visibility(category):
@@ -622,6 +669,7 @@ def toggle_visibility(category):
         print(f"Socket emit error: {e}")
 
     return jsonify({'success': True, 'visible': settings.is_visible})
+
 
 def settings_to_dict(settings):
     """Convert settings object to dictionary"""
@@ -660,13 +708,16 @@ def settings_to_dict(settings):
         'ticker_entrance_delay': settings.ticker_entrance_delay
     }
 
+
 @socketio.on('connect')
 def handle_connect():
     print('Client connected')
 
+
 @socketio.on('disconnect')
 def handle_disconnect():
     print('Client disconnected')
+
 
 if __name__ == '__main__':
     init_db()

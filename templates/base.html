@@ -8,6 +8,7 @@
 
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <link rel="icon" href="{{ url_for('static', filename='images/lmn.png') }}" type="image/x-icon">
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
@@ -37,7 +38,6 @@
             box-shadow: 0 12px 20px -6px rgba(15, 23, 42, 0.12);
         }
 
-        /* Buttons */
         .btn-primary {
             background: linear-gradient(135deg, #2563eb, #3b82f6);
             transition: all 0.25s ease;
@@ -58,7 +58,6 @@
             box-shadow: 0 10px 18px -10px rgba(100, 116, 139, 0.4);
         }
 
-        /* Navigation */
         .nav-link {
             position: relative;
             transition: color 0.25s ease;
@@ -80,7 +79,6 @@
             width: 100%;
         }
 
-        /* Inputs */
         input:focus,
         select:focus,
         textarea:focus {
@@ -89,7 +87,6 @@
             box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
         }
 
-        /* Toggle */
         .toggle-switch {
             position: relative;
             width: 48px;
@@ -120,7 +117,6 @@
             transform: translateX(24px);
         }
 
-        /* Status */
         .status-dot {
             width: 8px;
             height: 8px;
@@ -136,7 +132,6 @@
         .status-online { background: #22c55e; }
         .status-offline { background: #ef4444; }
 
-        /* Footer */
         .footer {
             background: linear-gradient(135deg, #0f172a, #1e293b);
         }
@@ -174,6 +169,12 @@
                    class="nav-link px-3 py-2 text-sm font-medium text-slate-600 hover:text-slate-900 {% if request.endpoint == 'control' %}active{% endif %}">
                     Control Panel
                 </a>
+                {% if session.is_admin %}
+                <a href="{{ url_for('users') }}"
+                   class="nav-link px-3 py-2 text-sm font-medium text-slate-600 hover:text-slate-900 {% if request.endpoint == 'users' %}active{% endif %}">
+                    Users
+                </a>
+                {% endif %}
                 <div class="flex items-center space-x-2">
                     <div class="status-dot status-online"></div>
                     <span class="text-xs text-slate-500">Connected</span>
@@ -186,7 +187,7 @@
                 <div class="hidden sm:flex items-center space-x-3">
                     <div class="text-right">
                         <p class="text-sm font-medium text-slate-900">{{ session.user_email }}</p>
-                        <p class="text-xs text-slate-500">Administrator</p>
+                        <p class="text-xs text-slate-500">{% if session.is_admin %}Administrator{% else %}User{% endif %}</p>
                     </div>
                     <div class="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center">
                         <span class="text-white font-semibold text-sm">

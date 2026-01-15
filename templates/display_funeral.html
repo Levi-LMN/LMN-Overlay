@@ -5,7 +5,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=1920, initial-scale=1.0">
     <title>Funeral Overlay Display</title>
-    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -320,7 +319,6 @@
     </div>
 
     <script>
-        const socket = io();
         const category = '{{ category }}';
         const container = document.getElementById('overlay-container');
         const tickerText = document.getElementById('ticker-text');
@@ -353,7 +351,22 @@
             ticker_speed: {{ settings.ticker_speed }},
             main_text: decodeHTML('{{ settings.main_text or "In Loving Memory" }}'),
             secondary_text: decodeHTML('{{ settings.secondary_text or "Forever in Our Hearts" }}'),
-            company_name: decodeHTML('{{ settings.company_name or "Funeral Services" }}')
+            company_name: decodeHTML('{{ settings.company_name or "Funeral Services" }}'),
+            is_visible: {{ 'true' if settings.is_visible else 'false' }},
+            bg_color: '{{ settings.bg_color }}',
+            accent_color: '{{ settings.accent_color }}',
+            text_color: '{{ settings.text_color }}',
+            company_logo: '{{ settings.company_logo or "" }}',
+            category_image: '{{ settings.category_image or "" }}',
+            show_category_image: {{ 'true' if settings.show_category_image else 'false' }},
+            main_font_size: {{ settings.main_font_size }},
+            secondary_font_size: {{ settings.secondary_font_size }},
+            ticker_font_size: {{ settings.ticker_font_size }},
+            font_family: '{{ settings.font_family }}',
+            logo_size: {{ settings.logo_size }},
+            opacity: {{ settings.opacity }},
+            show_decorative_elements: {{ 'true' if settings.show_decorative_elements else 'false' }},
+            border_radius: {{ settings.border_radius }}
         };
 
         let typewriterTimeouts = [];
@@ -371,7 +384,6 @@
 
         function typewriterEffect(elements) {
             clearTypewriterTimeouts();
-
             const baseDelay = (settings.entrance_delay + settings.entrance_duration) * 1000;
             let currentDelay = baseDelay;
 
@@ -519,124 +531,151 @@
             }, 50);
         }
 
+        // Simple polling - NO RELOAD unless images change
+        async function checkForUpdates() {
+            try {
+                const response = await fetch(`/api/settings/${category}`);
+                const data = await response.json();
+
+                if (!data.settings) return;
+
+                const s = data.settings;
+
+                // ONLY reload if images actually changed
+                if ((s.company_logo !== undefined && s.company_logo !== settings.company_logo) ||
+                    (s.category_image !== undefined && s.category_image !== settings.category_image) ||
+                    (s.show_category_image !== undefined && s.show_category_image !== settings.show_category_image)) {
+                    location.reload();
+                    return;
+                }
+
+                // Update text ONLY if it changed
+                let textChanged = false;
+                if (s.main_text !== undefined && s.main_text !== settings.main_text) {
+                    settings.main_text = s.main_text;
+                    textChanged = true;
+                }
+                if (s.secondary_text !== undefined && s.secondary_text !== settings.secondary_text) {
+                    settings.secondary_text = s.secondary_text;
+                    textChanged = true;
+                }
+                if (s.company_name !== undefined && s.company_name !== settings.company_name) {
+                    settings.company_name = s.company_name;
+                    textChanged = true;
+                }
+
+                if (textChanged) {
+                    applyTextAnimation();
+                }
+
+                // Update colors dynamically
+                if (s.bg_color !== undefined && s.bg_color !== settings.bg_color) {
+                    settings.bg_color = s.bg_color;
+                    document.querySelector('.lower-third-bg').style.background = `linear-gradient(135deg, ${s.bg_color}f5 0%, ${s.bg_color}e0 100%)`;
+                    document.querySelector('.ticker-container').style.background = `linear-gradient(90deg, ${s.bg_color}dd 0%, ${s.bg_color} 50%, ${s.bg_color}dd 100%)`;
+                }
+
+                if (s.accent_color !== undefined && s.accent_color !== settings.accent_color) {
+                    settings.accent_color = s.accent_color;
+                    document.querySelectorAll('.corner-decoration').forEach(el => {
+                        el.style.borderColor = s.accent_color;
+                    });
+                    document.querySelector('.divider-line').style.background = `linear-gradient(90deg, transparent, ${s.accent_color}80, transparent)`;
+                    document.querySelector('.ticker-container').style.borderTopColor = s.accent_color;
+                    document.querySelector('.ticker-container').style.borderBottomColor = s.accent_color;
+                    secondaryTextEl.style.color = s.accent_color;
+                    if (categoryImage) categoryImage.style.borderColor = s.accent_color;
+                }
+
+                if (s.text_color !== undefined && s.text_color !== settings.text_color) {
+                    settings.text_color = s.text_color;
+                    mainTextEl.style.color = s.text_color;
+                    companyNameEl.style.color = s.text_color;
+                    tickerText.style.color = s.text_color;
+                    document.querySelectorAll('.typewriter-cursor').forEach(cursor => {
+                        cursor.style.backgroundColor = s.text_color;
+                    });
+                }
+
+                // Update font sizes
+                if (s.main_font_size !== undefined && s.main_font_size !== settings.main_font_size) {
+                    settings.main_font_size = s.main_font_size;
+                    mainTextEl.style.fontSize = `${s.main_font_size}px`;
+                    mainTextEl.style.minHeight = `${s.main_font_size * 1.2}px`;
+                }
+
+                if (s.secondary_font_size !== undefined && s.secondary_font_size !== settings.secondary_font_size) {
+                    settings.secondary_font_size = s.secondary_font_size;
+                    secondaryTextEl.style.fontSize = `${s.secondary_font_size}px`;
+                    secondaryTextEl.style.minHeight = `${s.secondary_font_size * 1.2}px`;
+                    companyNameEl.style.fontSize = `${s.secondary_font_size * 0.7}px`;
+                }
+
+                if (s.ticker_font_size !== undefined && s.ticker_font_size !== settings.ticker_font_size) {
+                    settings.ticker_font_size = s.ticker_font_size;
+                    tickerText.style.fontSize = `${s.ticker_font_size}px`;
+                }
+
+                if (s.ticker_text !== undefined && s.ticker_text !== tickerText.textContent) {
+                    tickerText.textContent = s.ticker_text;
+                }
+
+                if (s.ticker_speed !== undefined && s.ticker_speed !== settings.ticker_speed) {
+                    settings.ticker_speed = s.ticker_speed;
+                    updateTickerSpeed(s.ticker_speed);
+                }
+
+                if (s.font_family !== undefined && s.font_family !== settings.font_family) {
+                    settings.font_family = s.font_family;
+                    document.body.style.fontFamily = s.font_family;
+                }
+
+                if (s.logo_size !== undefined && s.logo_size !== settings.logo_size && companyLogo) {
+                    settings.logo_size = s.logo_size;
+                    companyLogo.style.width = `${s.logo_size}px`;
+                    companyLogo.style.height = `${s.logo_size}px`;
+                }
+
+                if (s.opacity !== undefined && s.opacity !== settings.opacity) {
+                    settings.opacity = s.opacity;
+                    document.querySelector('.lower-third-bg').style.opacity = s.opacity;
+                    document.querySelector('.ticker-container').style.opacity = s.opacity;
+                }
+
+                if (s.border_radius !== undefined && s.border_radius !== settings.border_radius) {
+                    settings.border_radius = s.border_radius;
+                    document.querySelector('.lower-third-bg').style.borderRadius = `${s.border_radius}px`;
+                    document.querySelector('.lower-third-bg').style.borderTopLeftRadius = '0';
+                    document.querySelector('.lower-third-bg').style.borderBottomLeftRadius = '0';
+                }
+
+                if (s.show_decorative_elements !== undefined && s.show_decorative_elements !== settings.show_decorative_elements) {
+                    settings.show_decorative_elements = s.show_decorative_elements;
+                    const display = s.show_decorative_elements ? 'block' : 'none';
+                    document.querySelectorAll('.corner-decoration, .divider-line').forEach(el => {
+                        el.style.display = display;
+                    });
+                }
+
+                if (s.is_visible !== undefined && s.is_visible !== settings.is_visible) {
+                    settings.is_visible = s.is_visible;
+                    if (s.is_visible) {
+                        container.classList.remove('hidden');
+                        setTimeout(() => replayAnimations(), 100);
+                    } else {
+                        container.classList.add('hidden');
+                    }
+                }
+
+            } catch (error) {
+                console.error('Error checking for updates:', error);
+            }
+        }
+
         setTimeout(initializeAnimations, 100);
 
-        socket.on('settings_update', (data) => {
-            if (data.category !== category) return;
-
-            const s = data.settings;
-
-            if (s.entrance_animation !== undefined) settings.entrance_animation = s.entrance_animation;
-            if (s.entrance_duration !== undefined) settings.entrance_duration = s.entrance_duration;
-            if (s.entrance_delay !== undefined) settings.entrance_delay = s.entrance_delay;
-            if (s.text_animation !== undefined) settings.text_animation = s.text_animation;
-            if (s.text_animation_speed !== undefined) settings.text_animation_speed = s.text_animation_speed;
-            if (s.image_animation !== undefined) settings.image_animation = s.image_animation;
-            if (s.image_animation_delay !== undefined) settings.image_animation_delay = s.image_animation_delay;
-            if (s.logo_animation !== undefined) settings.logo_animation = s.logo_animation;
-            if (s.logo_animation_delay !== undefined) settings.logo_animation_delay = s.logo_animation_delay;
-            if (s.ticker_entrance !== undefined) settings.ticker_entrance = s.ticker_entrance;
-            if (s.ticker_entrance_delay !== undefined) settings.ticker_entrance_delay = s.ticker_entrance_delay;
-
-            if (s.main_text !== undefined) settings.main_text = decodeHTML(s.main_text);
-            if (s.secondary_text !== undefined) settings.secondary_text = decodeHTML(s.secondary_text);
-            if (s.company_name !== undefined) settings.company_name = decodeHTML(s.company_name);
-
-            if (s.main_text !== undefined || s.secondary_text !== undefined || s.company_name !== undefined) {
-                applyTextAnimation();
-            }
-
-            if (s.ticker_text !== undefined) {
-                tickerText.textContent = decodeHTML(s.ticker_text);
-                updateTickerSpeed(s.ticker_speed || settings.ticker_speed);
-            }
-
-            if (s.bg_color !== undefined) {
-                document.querySelector('.lower-third-bg').style.background = `linear-gradient(135deg, ${s.bg_color}f5 0%, ${s.bg_color}e0 100%)`;
-                document.querySelector('.ticker-container').style.background = `linear-gradient(90deg, ${s.bg_color}dd 0%, ${s.bg_color} 50%, ${s.bg_color}dd 100%)`;
-            }
-            if (s.accent_color !== undefined) {
-                document.querySelectorAll('.corner-decoration').forEach(el => {
-                    el.style.borderColor = s.accent_color;
-                });
-                document.querySelector('.divider-line').style.background = `linear-gradient(90deg, transparent, ${s.accent_color}80, transparent)`;
-                document.querySelector('.ticker-container').style.borderTopColor = s.accent_color;
-                document.querySelector('.ticker-container').style.borderBottomColor = s.accent_color;
-                secondaryTextEl.style.color = s.accent_color;
-                if (categoryImage) categoryImage.style.borderColor = s.accent_color;
-            }
-            if (s.text_color !== undefined) {
-                mainTextEl.style.color = s.text_color;
-                companyNameEl.style.color = s.text_color;
-                tickerText.style.color = s.text_color;
-                document.querySelectorAll('.typewriter-cursor').forEach(cursor => {
-                    cursor.style.backgroundColor = s.text_color;
-                });
-            }
-
-            if (s.main_font_size !== undefined) {
-                mainTextEl.style.fontSize = `${s.main_font_size}px`;
-                mainTextEl.style.minHeight = `${s.main_font_size * 1.2}px`;
-            }
-            if (s.secondary_font_size !== undefined) {
-                secondaryTextEl.style.fontSize = `${s.secondary_font_size}px`;
-                secondaryTextEl.style.minHeight = `${s.secondary_font_size * 1.2}px`;
-                companyNameEl.style.fontSize = `${s.secondary_font_size * 0.7}px`;
-            }
-            if (s.ticker_font_size !== undefined) {
-                tickerText.style.fontSize = `${s.ticker_font_size}px`;
-            }
-
-            if (s.border_radius !== undefined) {
-                document.querySelector('.lower-third-bg').style.borderRadius = `${s.border_radius}px`;
-                document.querySelector('.lower-third-bg').style.borderTopLeftRadius = '0';
-                document.querySelector('.lower-third-bg').style.borderBottomLeftRadius = '0';
-            }
-
-            if (s.font_family !== undefined) {
-                document.body.style.fontFamily = s.font_family;
-            }
-
-            if (s.ticker_speed !== undefined) {
-                settings.ticker_speed = s.ticker_speed;
-                updateTickerSpeed(s.ticker_speed);
-            }
-
-            if (s.logo_size !== undefined && companyLogo) {
-                companyLogo.style.width = `${s.logo_size}px`;
-                companyLogo.style.height = `${s.logo_size}px`;
-            }
-
-            if (s.opacity !== undefined) {
-                document.querySelector('.lower-third-bg').style.opacity = s.opacity;
-                document.querySelector('.ticker-container').style.opacity = s.opacity;
-            }
-
-            if (s.show_decorative_elements !== undefined) {
-                const display = s.show_decorative_elements ? 'block' : 'none';
-                document.querySelectorAll('.corner-decoration, .divider-line').forEach(el => {
-                    el.style.display = display;
-                });
-            }
-
-            if (s.company_logo !== undefined || s.category_image !== undefined || s.show_category_image !== undefined) {
-                setTimeout(() => location.reload(), 500);
-            }
-        });
-
-        socket.on('visibility_update', (data) => {
-            if (data.category !== category) return;
-
-            if (data.visible) {
-                container.classList.remove('hidden');
-                setTimeout(() => replayAnimations(), 100);
-            } else {
-                container.classList.add('hidden');
-            }
-        });
-
-        socket.on('connect', () => console.log('Connected to server'));
-        socket.on('disconnect', () => console.log('Disconnected from server'));
+        // Poll every 3 seconds
+        setInterval(checkForUpdates, 3000);
 
         tickerText.addEventListener('animationiteration', () => {
             updateTickerSpeed(settings.ticker_speed);

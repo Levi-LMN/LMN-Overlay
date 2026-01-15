@@ -5,7 +5,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=1920, initial-scale=1.0">
     <title>Wedding Overlay Display</title>
-    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -347,7 +346,6 @@
     </div>
 
     <script>
-        const socket = io();
         const category = '{{ category }}';
         const container = document.getElementById('overlay-container');
         const tickerText = document.getElementById('ticker-text');
@@ -359,7 +357,6 @@
         const secondaryTextEl = document.getElementById('secondary-text');
         const companyNameEl = document.getElementById('company-name');
 
-        // Decode HTML entities
         function decodeHTML(html) {
             const txt = document.createElement('textarea');
             txt.innerHTML = html;
@@ -381,7 +378,9 @@
             ticker_speed: {{ settings.ticker_speed }},
             main_text: decodeHTML('{{ settings.main_text or "Together Forever" }}'),
             secondary_text: decodeHTML('{{ settings.secondary_text or "Celebrating Love & Unity" }}'),
-            company_name: decodeHTML('{{ settings.company_name or "Wedding Services" }}')
+            company_name: decodeHTML('{{ settings.company_name or "Wedding Services" }}'),
+            is_visible: {{ 'true' if settings.is_visible else 'false' }},
+            last_updated: '{{ settings.updated_at.isoformat() if settings.updated_at else "" }}'
         };
 
         let typewriterTimeouts = [];
@@ -399,7 +398,6 @@
 
         function typewriterEffect(elements) {
             clearTypewriterTimeouts();
-
             const baseDelay = (settings.entrance_delay + settings.entrance_duration) * 1000;
             let currentDelay = baseDelay;
 
@@ -547,126 +545,151 @@
             }, 50);
         }
 
+        // Poll for changes every 2 seconds
+        async function checkForUpdates() {
+            try {
+                const response = await fetch(`/api/settings/${category}`);
+                const data = await response.json();
+
+                if (data.settings && data.settings.updated_at !== settings.last_updated) {
+                    const s = data.settings;
+                    let needsReload = false;
+                    let textChanged = false;
+
+                    if (s.company_logo !== undefined && s.company_logo !== settings.company_logo) needsReload = true;
+                    if (s.category_image !== undefined && s.category_image !== settings.category_image) needsReload = true;
+                    if (s.show_category_image !== undefined && s.show_category_image !== settings.show_category_image) needsReload = true;
+
+                    if (needsReload) {
+                        location.reload();
+                        return;
+                    }
+
+                    // Check if text actually changed
+                    if (s.main_text !== undefined && s.main_text !== settings.main_text) {
+                        settings.main_text = s.main_text;
+                        textChanged = true;
+                    }
+                    if (s.secondary_text !== undefined && s.secondary_text !== settings.secondary_text) {
+                        settings.secondary_text = s.secondary_text;
+                        textChanged = true;
+                    }
+                    if (s.company_name !== undefined && s.company_name !== settings.company_name) {
+                        settings.company_name = s.company_name;
+                        textChanged = true;
+                    }
+
+                    // Only apply text animation if text actually changed
+                    if (textChanged) {
+                        applyTextAnimation();
+                    }
+
+                    if (s.entrance_animation !== undefined) settings.entrance_animation = s.entrance_animation;
+                    if (s.entrance_duration !== undefined) settings.entrance_duration = s.entrance_duration;
+                    if (s.entrance_delay !== undefined) settings.entrance_delay = s.entrance_delay;
+                    if (s.text_animation !== undefined) settings.text_animation = s.text_animation;
+                    if (s.text_animation_speed !== undefined) settings.text_animation_speed = s.text_animation_speed;
+                    if (s.image_animation !== undefined) settings.image_animation = s.image_animation;
+                    if (s.image_animation_delay !== undefined) settings.image_animation_delay = s.image_animation_delay;
+                    if (s.logo_animation !== undefined) settings.logo_animation = s.logo_animation;
+                    if (s.logo_animation_delay !== undefined) settings.logo_animation_delay = s.logo_animation_delay;
+                    if (s.ticker_entrance !== undefined) settings.ticker_entrance = s.ticker_entrance;
+                    if (s.ticker_entrance_delay !== undefined) settings.ticker_entrance_delay = s.ticker_entrance_delay;
+
+                    if (s.ticker_text !== undefined) {
+                        tickerText.textContent = s.ticker_text;
+                        updateTickerSpeed(s.ticker_speed || settings.ticker_speed);
+                    }
+
+                    if (s.bg_color !== undefined) {
+                        document.querySelector('.lower-third-bg').style.background = `linear-gradient(to right, ${s.bg_color}f8 0%, ${s.bg_color}e5 85%, ${s.bg_color}99 100%)`;
+                        document.querySelector('.ticker-container').style.background = `linear-gradient(to right, ${s.bg_color}f5 0%, ${s.bg_color}dd 50%, ${s.bg_color}f5 100%)`;
+                    }
+                    if (s.accent_color !== undefined) {
+                        document.querySelectorAll('.accent-corner').forEach(el => {
+                            el.style.borderColor = s.accent_color;
+                        });
+                        const style = document.createElement('style');
+                        style.textContent = `.heart-accent::before, .heart-accent::after { background: ${s.accent_color} !important; }`;
+                        document.head.appendChild(style);
+                        document.querySelector('.ticker-container').style.borderTopColor = s.accent_color;
+                        secondaryTextEl.style.color = s.accent_color;
+                        if (categoryImage) categoryImage.style.borderColor = s.accent_color;
+                    }
+                    if (s.text_color !== undefined) {
+                        mainTextEl.style.color = s.text_color;
+                        companyNameEl.style.color = s.text_color;
+                        tickerText.style.color = s.text_color;
+                        document.querySelectorAll('.typewriter-cursor').forEach(cursor => {
+                            cursor.style.backgroundColor = s.text_color;
+                        });
+                    }
+
+                    if (s.main_font_size !== undefined) {
+                        mainTextEl.style.fontSize = `${s.main_font_size}px`;
+                        mainTextEl.style.minHeight = `${s.main_font_size * 1.2}px`;
+                    }
+                    if (s.secondary_font_size !== undefined) {
+                        secondaryTextEl.style.fontSize = `${s.secondary_font_size}px`;
+                        secondaryTextEl.style.minHeight = `${s.secondary_font_size * 1.2}px`;
+                        companyNameEl.style.fontSize = `${s.secondary_font_size * 0.7}px`;
+                    }
+                    if (s.ticker_font_size !== undefined) {
+                        tickerText.style.fontSize = `${s.ticker_font_size}px`;
+                    }
+
+                    if (s.border_radius !== undefined) {
+                        document.querySelector('.lower-third-bg').style.borderRadius = `${s.border_radius}px`;
+                        document.querySelector('.lower-third-bg').style.borderTopLeftRadius = '0';
+                        document.querySelector('.lower-third-bg').style.borderBottomLeftRadius = '0';
+                        if (categoryImage) categoryImage.style.borderRadius = '15px';
+                    }
+
+                    if (s.font_family !== undefined) {
+                        document.body.style.fontFamily = s.font_family;
+                    }
+
+                    if (s.ticker_speed !== undefined) {
+                        settings.ticker_speed = s.ticker_speed;
+                        updateTickerSpeed(s.ticker_speed);
+                    }
+
+                    if (s.logo_size !== undefined && companyLogo) {
+                        companyLogo.style.width = `${s.logo_size}px`;
+                        companyLogo.style.height = `${s.logo_size}px`;
+                    }
+
+                    if (s.opacity !== undefined) {
+                        document.querySelector('.lower-third-bg').style.opacity = s.opacity;
+                        document.querySelector('.ticker-container').style.opacity = s.opacity;
+                    }
+
+                    if (s.show_decorative_elements !== undefined) {
+                        const display = s.show_decorative_elements ? 'block' : 'none';
+                        document.querySelectorAll('.accent-corner, .heart-accent').forEach(el => {
+                            el.style.display = display;
+                        });
+                    }
+
+                    if (s.is_visible !== undefined && s.is_visible !== settings.is_visible) {
+                        settings.is_visible = s.is_visible;
+                        if (s.is_visible) {
+                            container.classList.remove('hidden');
+                            setTimeout(() => replayAnimations(), 100);
+                        } else {
+                            container.classList.add('hidden');
+                        }
+                    }
+
+                    settings.last_updated = s.updated_at;
+                }
+            } catch (error) {
+                console.error('Error checking for updates:', error);
+            }
+        }
+
         setTimeout(initializeAnimations, 100);
-
-        socket.on('settings_update', (data) => {
-            if (data.category !== category) return;
-
-            const s = data.settings;
-
-            if (s.entrance_animation !== undefined) settings.entrance_animation = s.entrance_animation;
-            if (s.entrance_duration !== undefined) settings.entrance_duration = s.entrance_duration;
-            if (s.entrance_delay !== undefined) settings.entrance_delay = s.entrance_delay;
-            if (s.text_animation !== undefined) settings.text_animation = s.text_animation;
-            if (s.text_animation_speed !== undefined) settings.text_animation_speed = s.text_animation_speed;
-            if (s.image_animation !== undefined) settings.image_animation = s.image_animation;
-            if (s.image_animation_delay !== undefined) settings.image_animation_delay = s.image_animation_delay;
-            if (s.logo_animation !== undefined) settings.logo_animation = s.logo_animation;
-            if (s.logo_animation_delay !== undefined) settings.logo_animation_delay = s.logo_animation_delay;
-            if (s.ticker_entrance !== undefined) settings.ticker_entrance = s.ticker_entrance;
-            if (s.ticker_entrance_delay !== undefined) settings.ticker_entrance_delay = s.ticker_entrance_delay;
-
-            if (s.main_text !== undefined) settings.main_text = decodeHTML(s.main_text);
-            if (s.secondary_text !== undefined) settings.secondary_text = decodeHTML(s.secondary_text);
-            if (s.company_name !== undefined) settings.company_name = decodeHTML(s.company_name);
-
-            if (s.main_text !== undefined || s.secondary_text !== undefined || s.company_name !== undefined) {
-                applyTextAnimation();
-            }
-
-            if (s.ticker_text !== undefined) {
-                tickerText.textContent = decodeHTML(s.ticker_text);
-                updateTickerSpeed(s.ticker_speed || settings.ticker_speed);
-            }
-
-            if (s.bg_color !== undefined) {
-                document.querySelector('.lower-third-bg').style.background = `linear-gradient(to right, ${s.bg_color}f8 0%, ${s.bg_color}e5 85%, ${s.bg_color}99 100%)`;
-                document.querySelector('.ticker-container').style.background = `linear-gradient(to right, ${s.bg_color}f5 0%, ${s.bg_color}dd 50%, ${s.bg_color}f5 100%)`;
-            }
-            if (s.accent_color !== undefined) {
-                document.querySelectorAll('.accent-corner').forEach(el => {
-                    el.style.borderColor = s.accent_color;
-                });
-                const style = document.createElement('style');
-                style.textContent = `.heart-accent::before, .heart-accent::after { background: ${s.accent_color} !important; }`;
-                document.head.appendChild(style);
-                document.querySelector('.ticker-container').style.borderTopColor = s.accent_color;
-                secondaryTextEl.style.color = s.accent_color;
-                if (categoryImage) categoryImage.style.borderColor = s.accent_color;
-            }
-            if (s.text_color !== undefined) {
-                mainTextEl.style.color = s.text_color;
-                companyNameEl.style.color = s.text_color;
-                tickerText.style.color = s.text_color;
-                document.querySelectorAll('.typewriter-cursor').forEach(cursor => {
-                    cursor.style.backgroundColor = s.text_color;
-                });
-            }
-
-            if (s.main_font_size !== undefined) {
-                mainTextEl.style.fontSize = `${s.main_font_size}px`;
-                mainTextEl.style.minHeight = `${s.main_font_size * 1.2}px`;
-            }
-            if (s.secondary_font_size !== undefined) {
-                secondaryTextEl.style.fontSize = `${s.secondary_font_size}px`;
-                secondaryTextEl.style.minHeight = `${s.secondary_font_size * 1.2}px`;
-                companyNameEl.style.fontSize = `${s.secondary_font_size * 0.7}px`;
-            }
-            if (s.ticker_font_size !== undefined) {
-                tickerText.style.fontSize = `${s.ticker_font_size}px`;
-            }
-
-            if (s.border_radius !== undefined) {
-                document.querySelector('.lower-third-bg').style.borderRadius = `${s.border_radius}px`;
-                document.querySelector('.lower-third-bg').style.borderTopLeftRadius = '0';
-                document.querySelector('.lower-third-bg').style.borderBottomLeftRadius = '0';
-                if (categoryImage) categoryImage.style.borderRadius = '15px';
-            }
-
-            if (s.font_family !== undefined) {
-                document.body.style.fontFamily = s.font_family;
-            }
-
-            if (s.ticker_speed !== undefined) {
-                settings.ticker_speed = s.ticker_speed;
-                updateTickerSpeed(s.ticker_speed);
-            }
-
-            if (s.logo_size !== undefined && companyLogo) {
-                companyLogo.style.width = `${s.logo_size}px`;
-                companyLogo.style.height = `${s.logo_size}px`;
-            }
-
-            if (s.opacity !== undefined) {
-                document.querySelector('.lower-third-bg').style.opacity = s.opacity;
-                document.querySelector('.ticker-container').style.opacity = s.opacity;
-            }
-
-            if (s.show_decorative_elements !== undefined) {
-                const display = s.show_decorative_elements ? 'block' : 'none';
-                document.querySelectorAll('.accent-corner, .heart-accent').forEach(el => {
-                    el.style.display = display;
-                });
-            }
-
-            if (s.company_logo !== undefined || s.category_image !== undefined || s.show_category_image !== undefined) {
-                setTimeout(() => location.reload(), 500);
-            }
-        });
-
-        socket.on('visibility_update', (data) => {
-            if (data.category !== category) return;
-
-            if (data.visible) {
-                container.classList.remove('hidden');
-                setTimeout(() => replayAnimations(), 100);
-            } else {
-                container.classList.add('hidden');
-            }
-        });
-
-        socket.on('connect', () => console.log('Connected to server'));
-        socket.on('disconnect', () => console.log('Disconnected from server'));
+        setInterval(checkForUpdates, 2000);
 
         tickerText.addEventListener('animationiteration', () => {
             updateTickerSpeed(settings.ticker_speed);

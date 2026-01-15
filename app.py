@@ -26,8 +26,8 @@ app.config['GOOGLE_CLIENT_SECRET'] = os.environ.get('GOOGLE_CLIENT_SECRET', 'you
 
 db = SQLAlchemy(app)
 
-# Use gevent or threading async mode instead of eventlet
-socketio = SocketIO(app, cors_allowed_origins="*", async_mode='gevent')
+# Use threading async mode (works with Python 3.13+)
+socketio = SocketIO(app, cors_allowed_origins="*", async_mode='threading')
 
 oauth = OAuth(app)
 

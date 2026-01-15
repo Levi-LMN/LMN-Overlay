@@ -1,6 +1,6 @@
 """
 Flask OBS Overlay - Optimized for Shared Hosting
-Single Display Route + WebSocket Updates
+Single Display Route + WebSocket Updates + Google OAuth
 Minimal Process Usage
 """
 
@@ -12,7 +12,7 @@ from werkzeug.utils import secure_filename
 from functools import wraps
 import os
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from dotenv import load_dotenv
 
 logging.basicConfig(level=logging.WARNING)
@@ -37,6 +37,10 @@ app.config['UPLOAD_FOLDER'] = os.path.join(BASE_DIR, 'static', 'uploads')
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 app.config['COMPANY_NAME'] = os.environ.get('COMPANY_NAME', 'Zearom')
 
+# Google OAuth (optional)
+app.config['GOOGLE_CLIENT_ID'] = os.environ.get('GOOGLE_CLIENT_ID', '')
+app.config['GOOGLE_CLIENT_SECRET'] = os.environ.get('GOOGLE_CLIENT_SECRET', '')
+
 os.makedirs(os.path.join(BASE_DIR, 'instance'), exist_ok=True)
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
@@ -44,6 +48,24 @@ db = SQLAlchemy(app)
 
 # MINIMAL SocketIO config for shared hosting
 socketio = SocketIO(app, cors_allowed_origins="*", async_mode='threading', logger=False, engineio_logger=False, ping_timeout=60, ping_interval=25)
+
+# Optional OAuth (only if credentials provided)
+google = None
+try:
+    if app.config['GOOGLE_CLIENT_ID'] and app.config['GOOGLE_CLIENT_SECRET']:
+        from authlib.integrations.flask_client import OAuth
+        oauth = OAuth(app)
+        google = oauth.register(
+            name='google',
+            client_id=app.config['GOOGLE_CLIENT_ID'],
+            client_secret=app.config['GOOGLE_CLIENT_SECRET'],
+            server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
+            client_kwargs={'scope': 'openid email profile'}
+        )
+        logger.info("Google OAuth configured successfully")
+except Exception as e:
+    logger.warning(f"OAuth not configured: {e}")
+    google = None
 
 # Helper functions
 def settings_to_dict(s):
@@ -89,7 +111,8 @@ def inject_globals():
     """Inject global variables and functions into all templates"""
     return dict(
         company_name=app.config['COMPANY_NAME'],
-        settings_to_dict=settings_to_dict
+        settings_to_dict=settings_to_dict,
+        google_oauth_enabled=(google is not None)
     )
 
 # Models
@@ -98,11 +121,12 @@ class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(120), unique=True, nullable=False, index=True)
     password_hash = db.Column(db.String(200))
+    google_id = db.Column(db.String(200))
     is_active = db.Column(db.Boolean, default=True)
     is_admin = db.Column(db.Boolean, default=False)
     full_name = db.Column(db.String(200))
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
 class OverlaySettings(db.Model):
     __tablename__ = 'overlay_settings'
@@ -140,7 +164,7 @@ class OverlaySettings(db.Model):
     ticker_entrance_delay = db.Column(db.Float, default=0.8)
     is_visible = db.Column(db.Boolean, default=True)
     is_active = db.Column(db.Boolean, default=False)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
 # Decorators
 def login_required(f):
@@ -251,6 +275,48 @@ def login():
             flash('Login error occurred.', 'error')
     return render_template('login.html')
 
+@app.route('/login/google')
+def google_login():
+    if not google:
+        flash('Google login not configured.', 'error')
+        return redirect(url_for('login'))
+    return google.authorize_redirect(url_for('google_callback', _external=True))
+
+@app.route('/login/google/callback')
+def google_callback():
+    if not google:
+        flash('Google login not configured.', 'error')
+        return redirect(url_for('login'))
+
+    try:
+        token = google.authorize_access_token()
+        user_info = token.get('userinfo')
+
+        if user_info:
+            email = user_info['email'].lower()
+            user = db.session.query(User).filter(User.email.ilike(email)).first()
+
+            if user and user.is_active:
+                if not user.google_id:
+                    user.google_id = user_info['sub']
+                    user.full_name = user_info.get('name', user.full_name)
+                    db.session.commit()
+
+                session.clear()
+                session['user_id'] = user.id
+                session['user_email'] = user.email
+                session['is_admin'] = user.is_admin
+                session.permanent = True
+                flash('Login successful!', 'success')
+                return redirect(url_for('control'))
+
+            flash('Email not authorized. Please contact administrator.', 'error')
+    except Exception as e:
+        logger.error(f"Google OAuth error: {e}")
+        flash('Authentication failed.', 'error')
+
+    return redirect(url_for('login'))
+
 @app.route('/logout')
 def logout():
     session.clear()
@@ -334,7 +400,7 @@ def edit_user(user_id):
         user.email = email
         user.full_name = full_name
         user.is_admin = is_admin
-        user.updated_at = datetime.utcnow()
+        user.updated_at = datetime.now(timezone.utc)
         if password:
             user.password_hash = generate_password_hash(password)
         db.session.commit()
@@ -356,7 +422,7 @@ def toggle_user_status(user_id):
             flash('Cannot deactivate yourself.', 'error')
             return redirect(url_for('users'))
         user.is_active = not user.is_active
-        user.updated_at = datetime.utcnow()
+        user.updated_at = datetime.now(timezone.utc)
         db.session.commit()
         flash(f'User {"activated" if user.is_active else "deactivated"}!', 'success')
     except Exception as e:
@@ -430,7 +496,7 @@ def update_settings(category):
             settings.show_category_image = data['show_category_image'] == 'true'
         if 'show_decorative_elements' in data:
             settings.show_decorative_elements = data['show_decorative_elements'] == 'true'
-        settings.updated_at = datetime.utcnow()
+        settings.updated_at = datetime.now(timezone.utc)
         db.session.commit()
         if settings.is_active:
             socketio.emit('settings_update', {'settings': settings_to_dict(settings)})
@@ -464,7 +530,7 @@ def upload_file(category, file_type):
             settings.company_logo = relative_path
         elif file_type == 'image':
             settings.category_image = relative_path
-        settings.updated_at = datetime.utcnow()
+        settings.updated_at = datetime.now(timezone.utc)
         db.session.commit()
         if settings.is_active:
             socketio.emit('image_update', {'reload': True})
@@ -483,7 +549,7 @@ def toggle_visibility(category):
         if not settings:
             return jsonify({'error': 'Not found'}), 404
         settings.is_visible = data.get('visible', True)
-        settings.updated_at = datetime.utcnow()
+        settings.updated_at = datetime.now(timezone.utc)
         db.session.commit()
         if settings.is_active:
             socketio.emit('visibility_update', {'visible': settings.is_visible})
@@ -539,7 +605,7 @@ def server_error(e):
 # Health Check
 @app.route('/health')
 def health():
-    return jsonify({'status': 'healthy', 'timestamp': datetime.utcnow().isoformat()})
+    return jsonify({'status': 'healthy', 'timestamp': datetime.now(timezone.utc).isoformat()})
 
 try:
     init_db()

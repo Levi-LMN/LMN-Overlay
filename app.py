@@ -1,471 +1,300 @@
 """
-Flask OBS Overlay SaaS Application - Updated with Template Switching
+Flask OBS Lower-Third Overlay System with Advanced Animations
+A complete web application for managing dynamic OBS overlays with real-time updates and animations.
 """
 
-from flask import Flask, render_template, request, redirect, url_for, jsonify, session, flash
-from flask_socketio import SocketIO, emit, join_room, leave_room
-from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
+from flask import Flask, render_template, request, redirect, url_for, session, jsonify
+from flask_socketio import SocketIO, emit
+from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
+from authlib.integrations.flask_client import OAuth
 from functools import wraps
-from datetime import datetime, timedelta
-import sqlite3
 import os
-import json
-import secrets
-import requests
-from base64 import b64encode
+from datetime import datetime
 
-# Configuration
 app = Flask(__name__)
-app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', secrets.token_hex(32))
+app.config['SECRET_KEY'] = 'your-secret-key-change-in-production'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///overlays.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
-app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
-app.config['GOOGLE_CLIENT_ID'] = os.environ.get('GOOGLE_CLIENT_ID', '')
-app.config['GOOGLE_CLIENT_SECRET'] = os.environ.get('GOOGLE_CLIENT_SECRET', '')
-app.config['MPESA_CONSUMER_KEY'] = os.environ.get('MPESA_CONSUMER_KEY', '')
-app.config['MPESA_CONSUMER_SECRET'] = os.environ.get('MPESA_CONSUMER_SECRET', '')
-app.config['MPESA_SHORTCODE'] = os.environ.get('MPESA_SHORTCODE', '')
-app.config['MPESA_PASSKEY'] = os.environ.get('MPESA_PASSKEY', '')
-app.config['MPESA_ENVIRONMENT'] = os.environ.get('MPESA_ENVIRONMENT', 'sandbox')
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 
-# Initialize extensions
+# Google OAuth Configuration
+app.config['GOOGLE_CLIENT_ID'] = os.environ.get('GOOGLE_CLIENT_ID', 'your-google-client-id')
+app.config['GOOGLE_CLIENT_SECRET'] = os.environ.get('GOOGLE_CLIENT_SECRET', 'your-google-client-secret')
+
+db = SQLAlchemy(app)
 socketio = SocketIO(app, cors_allowed_origins="*")
-login_manager = LoginManager()
-login_manager.init_app(app)
-login_manager.login_view = 'login'
+oauth = OAuth(app)
 
-# Ensure upload directory exists
+# Configure Google OAuth
+google = oauth.register(
+    name='google',
+    client_id=app.config['GOOGLE_CLIENT_ID'],
+    client_secret=app.config['GOOGLE_CLIENT_SECRET'],
+    server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
+    client_kwargs={'scope': 'openid email profile'}
+)
+
+# Ensure upload folder exists
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
-os.makedirs(os.path.join(app.config['UPLOAD_FOLDER'], 'logos'), exist_ok=True)
-os.makedirs(os.path.join(app.config['UPLOAD_FOLDER'], 'photos'), exist_ok=True)
 
-# Database setup
-DATABASE = 'overlays.db'
+# Database Models
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    email = db.Column(db.String(120), unique=True, nullable=False, index=True)
+    password_hash = db.Column(db.String(200))
+    google_id = db.Column(db.String(200))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-def get_db():
-    conn = sqlite3.connect(DATABASE)
-    conn.row_factory = sqlite3.Row
-    return conn
+class OverlaySettings(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    category = db.Column(db.String(50), nullable=False)
 
-def init_db():
-    conn = get_db()
-    cursor = conn.cursor()
+    # Content
+    main_text = db.Column(db.String(200))
+    ticker_text = db.Column(db.String(500))
+    company_name = db.Column(db.String(100))
+    company_logo = db.Column(db.String(200))
+    category_image = db.Column(db.String(200))
+    show_category_image = db.Column(db.Boolean, default=True)
 
-    # Users table
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            email TEXT UNIQUE NOT NULL,
-            password_hash TEXT,
-            name TEXT NOT NULL,
-            is_admin BOOLEAN DEFAULT 0,
-            is_active BOOLEAN DEFAULT 1,
-            google_id TEXT UNIQUE,
-            logo_path TEXT,
-            company_name TEXT,
-            company_phone TEXT,
-            company_tagline TEXT,
-            show_company_info BOOLEAN DEFAULT 1,
-            subscription_status TEXT DEFAULT 'trial',
-            subscription_start DATE,
-            subscription_end DATE,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-    ''')
+    # Styling
+    bg_color = db.Column(db.String(7), default='#000000')
+    text_color = db.Column(db.String(7), default='#FFFFFF')
+    main_font_size = db.Column(db.Integer, default=32)
+    ticker_font_size = db.Column(db.Integer, default=18)
+    border_radius = db.Column(db.Integer, default=10)
+    font_family = db.Column(db.String(100), default='Arial, sans-serif')
+    ticker_speed = db.Column(db.Integer, default=50)
+    logo_size = db.Column(db.Integer, default=80)
 
-    # Overlays table
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS overlays (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            overlay_id TEXT UNIQUE NOT NULL,
-            user_id INTEGER NOT NULL,
-            event_type TEXT NOT NULL,
-            template_version TEXT NOT NULL,
-            name TEXT NOT NULL,
-            is_active BOOLEAN DEFAULT 1,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (user_id) REFERENCES users (id)
-        )
-    ''')
+    # Animation Settings
+    entrance_animation = db.Column(db.String(50), default='slide-left')
+    entrance_duration = db.Column(db.Float, default=1.0)
+    entrance_delay = db.Column(db.Float, default=0.0)
 
-    # Overlay data table
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS overlay_data (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            overlay_id TEXT NOT NULL,
-            data_key TEXT NOT NULL,
-            data_value TEXT,
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (overlay_id) REFERENCES overlays (overlay_id),
-            UNIQUE(overlay_id, data_key)
-        )
-    ''')
+    text_animation = db.Column(db.String(50), default='none')
+    text_animation_speed = db.Column(db.Float, default=0.05)
 
-    # Payments table
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS payments (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id INTEGER NOT NULL,
-            amount REAL NOT NULL,
-            phone_number TEXT NOT NULL,
-            mpesa_receipt TEXT,
-            status TEXT DEFAULT 'pending',
-            plan_type TEXT NOT NULL,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (user_id) REFERENCES users (id)
-        )
-    ''')
+    image_animation = db.Column(db.String(50), default='fade-in')
+    image_animation_delay = db.Column(db.Float, default=0.3)
 
-    # Create admin user if none exists
-    cursor.execute('SELECT COUNT(*) as count FROM users')
-    if cursor.fetchone()['count'] == 0:
-        admin_password = generate_password_hash('admin123')
-        cursor.execute('''
-            INSERT INTO users (email, password_hash, name, is_admin, subscription_status, subscription_end,
-                             company_name, company_phone, company_tagline)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ''', ('admin@overlays.com', admin_password, 'Admin User', 1, 'active',
-              (datetime.now() + timedelta(days=36500)).date(),
-              'WAMONIC', '+254 712 345 678', 'Memorial Services'))
+    logo_animation = db.Column(db.String(50), default='scale-in')
+    logo_animation_delay = db.Column(db.Float, default=0.5)
 
-    conn.commit()
-    conn.close()
+    ticker_entrance = db.Column(db.String(50), default='slide-up')
+    ticker_entrance_delay = db.Column(db.Float, default=0.8)
 
-# User model
-class User(UserMixin):
-    def __init__(self, id, email, name, is_admin, active, subscription_status, subscription_end):
-        self.id = id
-        self.email = email
-        self.name = name
-        self.is_admin = is_admin
-        self._active = active
-        self.subscription_status = subscription_status
-        self.subscription_end = subscription_end
+    # Visibility
+    is_visible = db.Column(db.Boolean, default=True)
 
-    @property
-    def is_active(self):
-        return self._active
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    def has_active_subscription(self):
-        if self.subscription_status == 'active':
-            if self.subscription_end:
-                return datetime.strptime(self.subscription_end, '%Y-%m-%d').date() >= datetime.now().date()
-        elif self.subscription_status == 'trial':
-            return True
-        return False
-
-@login_manager.user_loader
-def load_user(user_id):
-    conn = get_db()
-    cursor = conn.cursor()
-    cursor.execute('SELECT * FROM users WHERE id = ?', (user_id,))
-    user_data = cursor.fetchone()
-    conn.close()
-
-    if user_data:
-        return User(
-            user_data['id'],
-            user_data['email'],
-            user_data['name'],
-            user_data['is_admin'],
-            user_data['is_active'],
-            user_data['subscription_status'],
-            user_data['subscription_end']
-        )
-    return None
-
-def subscription_required(f):
+# Authentication decorator
+def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if not current_user.has_active_subscription():
-            flash('Your subscription has expired. Please renew to continue.', 'warning')
-            return redirect(url_for('subscription'))
+        if 'user_id' not in session:
+            return redirect(url_for('login'))
         return f(*args, **kwargs)
     return decorated_function
 
-def get_available_templates():
-    """Get available template versions from templates/overlays folder"""
-    templates = {
-        'funerals': [
-            {'file': 'elegant-memorial', 'title': 'Elegant Memorial'},
-            {'file': 'octagon-capsule-design', 'title': 'Octagon Capsule Design'},
-            {'file': 'seamless-circle-rectangle-flow', 'title': 'Seamless Circle Rectangle'},
-            {'file': 'centered-banner-with-wings', 'title': 'Centered Banner with Wings'},
-            {'file': 'minimalist-centered-strip', 'title': 'Minimalist Centered Strip'}
-        ],
-        'weddings': [
-            {'file': 'romantic-celebration', 'title': 'Romantic Celebration'},
-            {'file': 'elegant-wedding', 'title': 'Elegant Wedding Banner'},
-            {'file': 'modern-wedding', 'title': 'Modern Wedding Design'}
-        ],
-        'ceremonies': [
-            {'file': 'graduation-ceremony', 'title': 'Graduation Ceremony'},
-            {'file': 'awards-night', 'title': 'Awards Night'},
-            {'file': 'general-ceremony', 'title': 'General Ceremony'}
-        ],
-        'corporate': [
-            {'file': 'professional-speaker', 'title': 'Professional Speaker'},
-            {'file': 'conference-banner', 'title': 'Conference Banner'},
-            {'file': 'webinar-layout', 'title': 'Webinar Layout'}
-        ]
-    }
-    return templates
+# Initialize database and seed admin user
+def init_db():
+    with app.app_context():
+        db.create_all()
+
+        # Seed admin user with lowercase email
+        admin_email = 'admin@zearom.com'
+        admin = User.query.filter(User.email.ilike(admin_email)).first()
+        if not admin:
+            admin = User(
+                email=admin_email.lower(),
+                password_hash=generate_password_hash('Success@Zearom')
+            )
+            db.session.add(admin)
+
+        # Create default overlay settings for each category
+        for category in ['funeral', 'wedding', 'ceremony']:
+            settings = OverlaySettings.query.filter_by(category=category).first()
+            if not settings:
+                settings = OverlaySettings(
+                    category=category,
+                    main_text=f'{category.capitalize()} Service',
+                    ticker_text='Welcome to our service. Thank you for joining us today.',
+                    company_name='Zearom Productions',
+                    is_visible=False
+                )
+                db.session.add(settings)
+
+        db.session.commit()
+        print("Database initialized with admin user: admin@zearom.com / Success@Zearom")
 
 # Routes
 @app.route('/')
 def index():
-    if current_user.is_authenticated:
-        return redirect(url_for('dashboard'))
+    if 'user_id' in session:
+        return redirect(url_for('control'))
     return redirect(url_for('login'))
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    if current_user.is_authenticated:
-        return redirect(url_for('dashboard'))
-
     if request.method == 'POST':
         email = request.form.get('email')
         password = request.form.get('password')
 
-        conn = get_db()
-        cursor = conn.cursor()
-        cursor.execute('SELECT * FROM users WHERE email = ?', (email,))
-        user_data = cursor.fetchone()
-        conn.close()
+        email_normalized = email.lower() if email else ""
+        user = User.query.filter(User.email.ilike(email_normalized)).first()
 
-        if user_data and user_data['is_active']:
-            if check_password_hash(user_data['password_hash'], password):
-                user = User(
-                    user_data['id'],
-                    user_data['email'],
-                    user_data['name'],
-                    user_data['is_admin'],
-                    user_data['is_active'],
-                    user_data['subscription_status'],
-                    user_data['subscription_end']
-                )
-                login_user(user)
-                return redirect(url_for('dashboard'))
+        if not user:
+            return render_template('login.html', error='Email not authorized')
 
-        flash('Invalid email or password', 'error')
+        if user.password_hash and check_password_hash(user.password_hash, password):
+            session['user_id'] = user.id
+            session['user_email'] = user.email
+            return redirect(url_for('control'))
+
+        return render_template('login.html', error='Invalid credentials')
 
     return render_template('login.html')
 
-@app.route('/logout')
-@login_required
-def logout():
-    logout_user()
+@app.route('/login/google')
+def google_login():
+    redirect_uri = url_for('google_callback', _external=True)
+    return google.authorize_redirect(redirect_uri)
+
+@app.route('/login/google/callback')
+def google_callback():
+    token = google.authorize_access_token()
+    user_info = token.get('userinfo')
+
+    if user_info:
+        email = user_info['email'].lower()
+        google_id = user_info['sub']
+
+        user = User.query.filter(User.email.ilike(email)).first()
+
+        if not user:
+            return render_template('login.html', error='Email not authorized')
+
+        if not user.google_id:
+            user.google_id = google_id
+            db.session.commit()
+
+        session['user_id'] = user.id
+        session['user_email'] = user.email
+        return redirect(url_for('control'))
+
     return redirect(url_for('login'))
 
-@app.route('/dashboard')
+@app.route('/logout')
+def logout():
+    session.clear()
+    return redirect(url_for('login'))
+
+@app.route('/control')
 @login_required
-@subscription_required
-def dashboard():
-    conn = get_db()
-    cursor = conn.cursor()
-    cursor.execute('''
-        SELECT * FROM overlays 
-        WHERE user_id = ? AND is_active = 1
-        ORDER BY created_at DESC
-    ''', (current_user.id,))
-    overlays = cursor.fetchall()
-    conn.close()
+def control():
+    categories = ['funeral', 'wedding', 'ceremony']
+    settings = {}
+    for cat in categories:
+        settings[cat] = OverlaySettings.query.filter_by(category=cat).first()
 
-    return render_template('dashboard.html', overlays=overlays)
+    return render_template('control.html', settings=settings, categories=categories)
 
-@app.route('/create-overlay', methods=['GET', 'POST'])
+@app.route('/display')
+def display():
+    category = request.args.get('category', 'funeral')
+    settings = OverlaySettings.query.filter_by(category=category).first()
+
+    if not settings:
+        settings = OverlaySettings(category=category)
+
+    return render_template('display.html', settings=settings, category=category)
+
+@app.route('/api/settings/<category>', methods=['GET', 'POST'])
 @login_required
-@subscription_required
-def create_overlay():
-    if request.method == 'POST':
-        event_type = request.form.get('event_type')
-        template_version = request.form.get('template_version')
-        overlay_name = request.form.get('name')
+def manage_settings(category):
+    settings = OverlaySettings.query.filter_by(category=category).first()
 
-        overlay_id = secrets.token_urlsafe(16)
-
-        conn = get_db()
-        cursor = conn.cursor()
-        cursor.execute('''
-            INSERT INTO overlays (overlay_id, user_id, event_type, template_version, name)
-            VALUES (?, ?, ?, ?, ?)
-        ''', (overlay_id, current_user.id, event_type, template_version, overlay_name))
-        conn.commit()
-        conn.close()
-
-        return redirect(url_for('control', overlay_id=overlay_id))
-
-    templates = get_available_templates()
-    return render_template('create_overlay.html', templates=templates)
-
-@app.route('/control/<overlay_id>')
-@login_required
-@subscription_required
-def control(overlay_id):
-    conn = get_db()
-    cursor = conn.cursor()
-    cursor.execute('''
-        SELECT * FROM overlays 
-        WHERE overlay_id = ? AND user_id = ?
-    ''', (overlay_id, current_user.id))
-    overlay = cursor.fetchone()
-
-    if not overlay:
-        conn.close()
-        flash('Overlay not found', 'error')
-        return redirect(url_for('dashboard'))
-
-    cursor.execute('''
-        SELECT data_key, data_value FROM overlay_data
-        WHERE overlay_id = ?
-    ''', (overlay_id,))
-    data_rows = cursor.fetchall()
-
-    cursor.execute('''
-        SELECT logo_path, company_name, company_phone, company_tagline, show_company_info 
-        FROM users WHERE id = ?
-    ''', (current_user.id,))
-    user_info = cursor.fetchone()
-    conn.close()
-
-    overlay_data = {row['data_key']: row['data_value'] for row in data_rows}
-    display_url = url_for('display', overlay_id=overlay_id, _external=True)
-    templates = get_available_templates()
-
-    return render_template('control.html',
-                         overlay=overlay,
-                         overlay_data=overlay_data,
-                         display_url=display_url,
-                         user_info=user_info,
-                         templates=templates)
-
-@app.route('/display/<overlay_id>')
-def display(overlay_id):
-    conn = get_db()
-    cursor = conn.cursor()
-    cursor.execute('''
-        SELECT o.*, u.logo_path, u.company_name, u.company_phone, 
-               u.company_tagline, u.show_company_info
-        FROM overlays o
-        JOIN users u ON o.user_id = u.id
-        WHERE o.overlay_id = ? AND o.is_active = 1
-    ''', (overlay_id,))
-    overlay = cursor.fetchone()
-
-    if not overlay:
-        conn.close()
-        return "Overlay not found", 404
-
-    cursor.execute('''
-        SELECT data_key, data_value FROM overlay_data
-        WHERE overlay_id = ?
-    ''', (overlay_id,))
-    data_rows = cursor.fetchall()
-    conn.close()
-
-    overlay_data = {row['data_key']: row['data_value'] for row in data_rows}
-
-    template_path = f"overlays/{overlay['event_type']}/{overlay['template_version']}.html"
-
-    response = app.make_response(render_template(template_path,
-                         overlay=overlay,
-                         overlay_data=overlay_data,
-                         overlay_id=overlay_id))
-
-    response.headers['X-Frame-Options'] = 'SAMEORIGIN'
-    response.headers['Content-Security-Policy'] = "frame-ancestors 'self'"
-
-    return response
-
-@app.route('/api/overlay/<overlay_id>', methods=['GET', 'POST'])
-@login_required
-def api_overlay(overlay_id):
-    conn = get_db()
-    cursor = conn.cursor()
-
-    cursor.execute('''
-        SELECT * FROM overlays 
-        WHERE overlay_id = ? AND user_id = ?
-    ''', (overlay_id, current_user.id))
-    overlay = cursor.fetchone()
-
-    if not overlay:
-        conn.close()
-        return jsonify({'error': 'Overlay not found'}), 404
+    if not settings:
+        settings = OverlaySettings(category=category)
+        db.session.add(settings)
 
     if request.method == 'POST':
-        data = request.json
+        data = request.form
 
-        for key, value in data.items():
-            if isinstance(value, bool):
-                value = str(value).lower()
+        # Update text content
+        if 'main_text' in data:
+            settings.main_text = data['main_text']
+        if 'ticker_text' in data:
+            settings.ticker_text = data['ticker_text']
+        if 'company_name' in data:
+            settings.company_name = data['company_name']
 
-            cursor.execute('''
-                INSERT INTO overlay_data (overlay_id, data_key, data_value, updated_at)
-                VALUES (?, ?, ?, CURRENT_TIMESTAMP)
-                ON CONFLICT(overlay_id, data_key) 
-                DO UPDATE SET data_value = ?, updated_at = CURRENT_TIMESTAMP
-            ''', (overlay_id, key, value, value))
+        # Update styling
+        if 'bg_color' in data:
+            settings.bg_color = data['bg_color']
+        if 'text_color' in data:
+            settings.text_color = data['text_color']
+        if 'main_font_size' in data:
+            settings.main_font_size = int(data['main_font_size'])
+        if 'ticker_font_size' in data:
+            settings.ticker_font_size = int(data['ticker_font_size'])
+        if 'border_radius' in data:
+            settings.border_radius = int(data['border_radius'])
+        if 'font_family' in data:
+            settings.font_family = data['font_family']
+        if 'ticker_speed' in data:
+            settings.ticker_speed = int(data['ticker_speed'])
+        if 'logo_size' in data:
+            settings.logo_size = int(data['logo_size'])
 
-        conn.commit()
-        conn.close()
+        # Update animation settings
+        if 'entrance_animation' in data:
+            settings.entrance_animation = data['entrance_animation']
+        if 'entrance_duration' in data:
+            settings.entrance_duration = float(data['entrance_duration'])
+        if 'entrance_delay' in data:
+            settings.entrance_delay = float(data['entrance_delay'])
+        if 'text_animation' in data:
+            settings.text_animation = data['text_animation']
+        if 'text_animation_speed' in data:
+            settings.text_animation_speed = float(data['text_animation_speed'])
+        if 'image_animation' in data:
+            settings.image_animation = data['image_animation']
+        if 'image_animation_delay' in data:
+            settings.image_animation_delay = float(data['image_animation_delay'])
+        if 'logo_animation' in data:
+            settings.logo_animation = data['logo_animation']
+        if 'logo_animation_delay' in data:
+            settings.logo_animation_delay = float(data['logo_animation_delay'])
+        if 'ticker_entrance' in data:
+            settings.ticker_entrance = data['ticker_entrance']
+        if 'ticker_entrance_delay' in data:
+            settings.ticker_entrance_delay = float(data['ticker_entrance_delay'])
 
-        socketio.emit('overlay_update', data, room=overlay_id)
+        # Update visibility
+        if 'show_category_image' in data:
+            settings.show_category_image = data['show_category_image'] == 'true'
 
-        return jsonify({'success': True, 'message': 'Overlay updated successfully'})
+        db.session.commit()
 
-    cursor.execute('''
-        SELECT data_key, data_value FROM overlay_data
-        WHERE overlay_id = ?
-    ''', (overlay_id,))
-    data_rows = cursor.fetchall()
-    conn.close()
+        # Emit update via WebSocket
+        socketio.emit('settings_update', {
+            'category': category,
+            'settings': settings_to_dict(settings)
+        })
 
-    overlay_data = {row['data_key']: row['data_value'] for row in data_rows}
-    return jsonify(overlay_data)
+        return jsonify({'success': True, 'settings': settings_to_dict(settings)})
 
-@app.route('/api/overlay/<overlay_id>/change-template', methods=['POST'])
+    return jsonify({'settings': settings_to_dict(settings)})
+
+@app.route('/api/upload/<category>/<file_type>', methods=['POST'])
 @login_required
-def change_template(overlay_id):
-    """Change overlay template version"""
-    conn = get_db()
-    cursor = conn.cursor()
-
-    cursor.execute('''
-        SELECT * FROM overlays 
-        WHERE overlay_id = ? AND user_id = ?
-    ''', (overlay_id, current_user.id))
-    overlay = cursor.fetchone()
-
-    if not overlay:
-        conn.close()
-        return jsonify({'error': 'Overlay not found'}), 404
-
-    data = request.json
-    new_template = data.get('template_version')
-
-    if not new_template:
-        conn.close()
-        return jsonify({'error': 'Template version required'}), 400
-
-    cursor.execute('''
-        UPDATE overlays 
-        SET template_version = ?
-        WHERE overlay_id = ?
-    ''', (new_template, overlay_id))
-
-    conn.commit()
-    conn.close()
-
-    # Notify display to reload
-    socketio.emit('template_changed', {'template': new_template}, room=overlay_id)
-
-    return jsonify({'success': True, 'message': 'Template changed successfully'})
-
-@app.route('/upload/<file_type>', methods=['POST'])
-@login_required
-def upload_file(file_type):
+def upload_file(category, file_type):
     if 'file' not in request.files:
         return jsonify({'error': 'No file provided'}), 400
 
@@ -476,122 +305,89 @@ def upload_file(file_type):
     if file:
         filename = secure_filename(file.filename)
         timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
-        filename = f"{timestamp}_{filename}"
+        filename = f"{category}_{file_type}_{timestamp}_{filename}"
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        file.save(filepath)
+
+        settings = OverlaySettings.query.filter_by(category=category).first()
+        if not settings:
+            settings = OverlaySettings(category=category)
+            db.session.add(settings)
+
+        relative_path = f"uploads/{filename}"
 
         if file_type == 'logo':
-            filepath = os.path.join(app.config['UPLOAD_FOLDER'], 'logos', filename)
-            file.save(filepath)
+            settings.company_logo = relative_path
+        elif file_type == 'image':
+            settings.category_image = relative_path
 
-            conn = get_db()
-            cursor = conn.cursor()
-            cursor.execute('''
-                UPDATE users SET logo_path = ? WHERE id = ?
-            ''', (f'uploads/logos/{filename}', current_user.id))
-            conn.commit()
-            conn.close()
+        db.session.commit()
 
-            relative_path = f'uploads/logos/{filename}'
-        else:
-            filepath = os.path.join(app.config['UPLOAD_FOLDER'], 'photos', filename)
-            file.save(filepath)
-            relative_path = f'uploads/photos/{filename}'
-
-        return jsonify({
-            'success': True,
-            'path': relative_path,
-            'filename': filename
+        socketio.emit('settings_update', {
+            'category': category,
+            'settings': settings_to_dict(settings)
         })
 
-@app.route('/update-company-info', methods=['POST'])
+        return jsonify({'success': True, 'filename': relative_path})
+
+    return jsonify({'error': 'Upload failed'}), 500
+
+@app.route('/api/visibility/<category>', methods=['POST'])
 @login_required
-def update_company_info():
-    data = request.json
+def toggle_visibility(category):
+    data = request.get_json()
+    settings = OverlaySettings.query.filter_by(category=category).first()
 
-    conn = get_db()
-    cursor = conn.cursor()
-    cursor.execute('''
-        UPDATE users 
-        SET company_name = ?, company_phone = ?, company_tagline = ?, show_company_info = ?
-        WHERE id = ?
-    ''', (
-        data.get('company_name'),
-        data.get('company_phone'),
-        data.get('company_tagline'),
-        data.get('show_company_info', True),
-        current_user.id
-    ))
-    conn.commit()
-    conn.close()
+    if not settings:
+        return jsonify({'error': 'Settings not found'}), 404
 
-    return jsonify({'success': True})
+    settings.is_visible = data.get('visible', True)
+    db.session.commit()
 
-@app.route('/subscription')
-@login_required
-def subscription():
-    return render_template('subscription.html')
+    socketio.emit('visibility_update', {
+        'category': category,
+        'visible': settings.is_visible
+    })
 
-@app.route('/profile')
-@login_required
-def profile():
-    conn = get_db()
-    cursor = conn.cursor()
-    cursor.execute('''
-        SELECT logo_path, company_name, company_phone, company_tagline, show_company_info 
-        FROM users WHERE id = ?
-    ''', (current_user.id,))
-    user_info = cursor.fetchone()
-    conn.close()
+    return jsonify({'success': True, 'visible': settings.is_visible})
 
-    return render_template('profile.html', user_info=user_info)
+def settings_to_dict(settings):
+    return {
+        'main_text': settings.main_text,
+        'ticker_text': settings.ticker_text,
+        'company_name': settings.company_name,
+        'company_logo': settings.company_logo,
+        'category_image': settings.category_image,
+        'show_category_image': settings.show_category_image,
+        'bg_color': settings.bg_color,
+        'text_color': settings.text_color,
+        'main_font_size': settings.main_font_size,
+        'ticker_font_size': settings.ticker_font_size,
+        'border_radius': settings.border_radius,
+        'font_family': settings.font_family,
+        'ticker_speed': settings.ticker_speed,
+        'logo_size': settings.logo_size,
+        'is_visible': settings.is_visible,
+        'entrance_animation': settings.entrance_animation,
+        'entrance_duration': settings.entrance_duration,
+        'entrance_delay': settings.entrance_delay,
+        'text_animation': settings.text_animation,
+        'text_animation_speed': settings.text_animation_speed,
+        'image_animation': settings.image_animation,
+        'image_animation_delay': settings.image_animation_delay,
+        'logo_animation': settings.logo_animation,
+        'logo_animation_delay': settings.logo_animation_delay,
+        'ticker_entrance': settings.ticker_entrance,
+        'ticker_entrance_delay': settings.ticker_entrance_delay
+    }
 
-@app.route('/remove-logo', methods=['POST'])
-@login_required
-def remove_logo():
-    conn = get_db()
-    cursor = conn.cursor()
+@socketio.on('connect')
+def handle_connect():
+    print('Client connected')
 
-    cursor.execute('SELECT logo_path FROM users WHERE id = ?', (current_user.id,))
-    result = cursor.fetchone()
-
-    if result and result['logo_path']:
-        logo_path = os.path.join('static', result['logo_path'])
-        if os.path.exists(logo_path):
-            try:
-                os.remove(logo_path)
-            except Exception as e:
-                print(f"Error deleting logo file: {e}")
-
-    cursor.execute('UPDATE users SET logo_path = NULL WHERE id = ?', (current_user.id,))
-    conn.commit()
-    conn.close()
-
-    return jsonify({'success': True})
-
-@app.route('/admin/users')
-@login_required
-def admin_users():
-    if not current_user.is_admin:
-        flash('Access denied', 'error')
-        return redirect(url_for('dashboard'))
-
-    conn = get_db()
-    cursor = conn.cursor()
-    cursor.execute('SELECT * FROM users ORDER BY created_at DESC')
-    users = cursor.fetchall()
-    conn.close()
-
-    return render_template('admin_users.html', users=users)
-
-# WebSocket events
-@socketio.on('join')
-def on_join(data):
-    overlay_id = data['overlay_id']
-    join_room(overlay_id)
-
-@socketio.on('leave')
-def on_leave(data):
-    overlay_id = data['overlay_id']
-    leave_room(overlay_id)
+@socketio.on('disconnect')
+def handle_disconnect():
+    print('Client disconnected')
 
 if __name__ == '__main__':
     init_db()

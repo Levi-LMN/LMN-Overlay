@@ -1,6 +1,6 @@
 """
 Flask OBS Lower-Third Overlay System with User Management
-Optimized for PythonAnywhere deployment
+Optimized for PythonAnywhere/NovaHost deployment
 """
 
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify, flash
@@ -19,16 +19,21 @@ load_dotenv()
 
 app = Flask(__name__)
 
+# Get the absolute path to the application directory
+BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+
 # Configuration from environment variables
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'your-secret-key-change-in-production')
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///overlays.db')
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', f'sqlite:///{os.path.join(BASE_DIR, "instance", "overlays.db")}')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
     'pool_size': 10,
     'pool_recycle': 3600,
     'pool_pre_ping': True,
 }
-app.config['UPLOAD_FOLDER'] = 'static/uploads'
+
+# Use absolute path for uploads
+app.config['UPLOAD_FOLDER'] = os.path.join(BASE_DIR, 'static', 'uploads')
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 
 # Company Configuration
@@ -40,7 +45,7 @@ app.config['GOOGLE_CLIENT_SECRET'] = os.environ.get('GOOGLE_CLIENT_SECRET', 'you
 
 db = SQLAlchemy(app)
 
-# Use threading async mode with optimizations for PythonAnywhere
+# Use threading async mode with optimizations for PythonAnywhere/NovaHost
 socketio = SocketIO(
     app,
     cors_allowed_origins="*",
@@ -61,7 +66,12 @@ google = oauth.register(
     client_kwargs={'scope': 'openid email profile'}
 )
 
+# Create necessary directories with absolute paths
+os.makedirs(os.path.join(BASE_DIR, 'instance'), exist_ok=True)
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+
+print(f"Base directory: {BASE_DIR}")
+print(f"Upload folder: {app.config['UPLOAD_FOLDER']}")
 
 
 # Context processor to make company_name available in all templates
@@ -613,36 +623,66 @@ def upload_file(category, file_type):
         return jsonify({'error': 'No file selected'}), 400
 
     if file:
-        filename = secure_filename(file.filename)
-        timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
-        filename = f"{category}_{file_type}_{timestamp}_{filename}"
-        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-        file.save(filepath)
-
-        settings = OverlaySettings.query.filter_by(category=category).first()
-        if not settings:
-            settings = OverlaySettings(category=category)
-            db.session.add(settings)
-
-        relative_path = f"uploads/{filename}"
-
-        if file_type == 'logo':
-            settings.company_logo = relative_path
-        elif file_type == 'image':
-            settings.category_image = relative_path
-
-        db.session.commit()
-
-        # Emit socket event
         try:
-            socketio.emit('settings_update', {
-                'category': category,
-                'settings': settings_to_dict(settings)
-            })
-        except Exception as e:
-            print(f"Socket emit error: {e}")
+            filename = secure_filename(file.filename)
+            timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
+            filename = f"{category}_{file_type}_{timestamp}_{filename}"
 
-        return jsonify({'success': True, 'filename': relative_path})
+            # Use absolute path for saving
+            filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+
+            print(f"Attempting to save file to: {filepath}")
+
+            # Ensure the upload directory exists
+            os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+
+            # Save the file
+            file.save(filepath)
+
+            # Verify file was saved
+            if not os.path.exists(filepath):
+                print(f"ERROR: File was not saved to {filepath}")
+                return jsonify({'error': 'File save failed - file not found after save'}), 500
+
+            print(f"File successfully saved to: {filepath}")
+            print(f"File size: {os.path.getsize(filepath)} bytes")
+
+            settings = OverlaySettings.query.filter_by(category=category).first()
+            if not settings:
+                settings = OverlaySettings(category=category)
+                db.session.add(settings)
+
+            # Store relative path for URL access
+            relative_path = f"uploads/{filename}"
+
+            if file_type == 'logo':
+                settings.company_logo = relative_path
+            elif file_type == 'image':
+                settings.category_image = relative_path
+
+            db.session.commit()
+
+            # Emit socket event
+            try:
+                socketio.emit('settings_update', {
+                    'category': category,
+                    'settings': settings_to_dict(settings)
+                })
+            except Exception as e:
+                print(f"Socket emit error: {e}")
+
+            return jsonify({
+                'success': True,
+                'filename': relative_path,
+                'filepath': filepath,
+                'url': url_for('static', filename=relative_path)
+            })
+
+        except Exception as e:
+            print(f"Upload error: {str(e)}")
+            import traceback
+            traceback.print_exc()
+            return jsonify({'error': f'Upload failed: {str(e)}'}), 500
 
     return jsonify({'error': 'Upload failed'}), 500
 
@@ -717,6 +757,31 @@ def handle_connect():
 @socketio.on('disconnect')
 def handle_disconnect():
     print('Client disconnected')
+
+
+# Diagnostic route to check paths
+@app.route('/api/debug/paths')
+@login_required
+def debug_paths():
+    """Debug endpoint to check file paths and permissions"""
+    upload_folder = app.config['UPLOAD_FOLDER']
+
+    info = {
+        'base_dir': BASE_DIR,
+        'upload_folder': upload_folder,
+        'upload_folder_exists': os.path.exists(upload_folder),
+        'upload_folder_writable': os.access(upload_folder, os.W_OK) if os.path.exists(upload_folder) else False,
+        'files_in_upload_folder': []
+    }
+
+    if os.path.exists(upload_folder):
+        try:
+            info['files_in_upload_folder'] = os.listdir(upload_folder)
+        except Exception as e:
+            info['error_listing_files'] = str(e)
+
+    return jsonify(info)
+
 
 # Run the app
 if __name__ == '__main__':

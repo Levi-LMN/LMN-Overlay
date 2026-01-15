@@ -25,7 +25,10 @@ app.config['GOOGLE_CLIENT_ID'] = os.environ.get('GOOGLE_CLIENT_ID', 'your-google
 app.config['GOOGLE_CLIENT_SECRET'] = os.environ.get('GOOGLE_CLIENT_SECRET', 'your-google-client-secret')
 
 db = SQLAlchemy(app)
-socketio = SocketIO(app, cors_allowed_origins="*")
+
+# Use gevent or threading async mode instead of eventlet
+socketio = SocketIO(app, cors_allowed_origins="*", async_mode='gevent')
+
 oauth = OAuth(app)
 
 google = oauth.register(

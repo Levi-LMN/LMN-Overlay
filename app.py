@@ -1,6 +1,6 @@
 """
 Flask OBS Lower-Third Overlay System with Multi-Phrase Secondary Text
-Optimized for Shared Hosting - Using AJAX instead of Socket.IO
+Updated with Logo Hide/Remove functionality
 """
 
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify, flash
@@ -14,7 +14,6 @@ import json
 from datetime import datetime
 from dotenv import load_dotenv
 
-# Load environment variables from .env file
 load_dotenv()
 
 app = Flask(__name__)
@@ -30,16 +29,11 @@ app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
 }
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
-
-# Company Configuration
 app.config['COMPANY_NAME'] = os.environ.get('COMPANY_NAME', 'Zearom')
-
-# Google OAuth Configuration
 app.config['GOOGLE_CLIENT_ID'] = os.environ.get('GOOGLE_CLIENT_ID', 'your-google-client-id')
 app.config['GOOGLE_CLIENT_SECRET'] = os.environ.get('GOOGLE_CLIENT_SECRET', 'your-google-client-secret')
 
 db = SQLAlchemy(app)
-
 oauth = OAuth(app)
 
 google = oauth.register(
@@ -53,7 +47,6 @@ google = oauth.register(
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
 
-# Context processor to make company_name available in all templates
 @app.context_processor
 def inject_company_name():
     return dict(company_name=app.config['COMPANY_NAME'])
@@ -83,19 +76,20 @@ class OverlaySettings(db.Model):
 
     # Content
     main_text = db.Column(db.String(200))
-    secondary_text = db.Column(db.String(200))  # Kept for backwards compatibility
-    secondary_phrases = db.Column(db.Text)  # JSON array of phrases
+    secondary_text = db.Column(db.String(200))
+    secondary_phrases = db.Column(db.Text)
     ticker_text = db.Column(db.String(500))
     company_name = db.Column(db.String(100))
     company_logo = db.Column(db.String(200))
     category_image = db.Column(db.String(200))
     show_category_image = db.Column(db.Boolean, default=True)
+    show_company_logo = db.Column(db.Boolean, default=True)  # NEW FIELD
 
     # Secondary Text Rotation Settings
     secondary_rotation_enabled = db.Column(db.Boolean, default=False)
-    secondary_display_duration = db.Column(db.Float, default=3.0)  # seconds each phrase displays
-    secondary_transition_type = db.Column(db.String(50), default='fade')  # fade, slide-left, slide-right, slide-up, slide-down, zoom
-    secondary_transition_duration = db.Column(db.Float, default=0.5)  # seconds for transition
+    secondary_display_duration = db.Column(db.Float, default=3.0)
+    secondary_transition_type = db.Column(db.String(50), default='fade')
+    secondary_transition_duration = db.Column(db.Float, default=0.5)
 
     # Styling
     bg_color = db.Column(db.String(7), default='#000000')
@@ -118,29 +112,23 @@ class OverlaySettings(db.Model):
     entrance_animation = db.Column(db.String(50), default='slide-left')
     entrance_duration = db.Column(db.Float, default=1.0)
     entrance_delay = db.Column(db.Float, default=0.0)
-
     text_animation = db.Column(db.String(50), default='none')
     text_animation_speed = db.Column(db.Float, default=0.05)
-
     image_animation = db.Column(db.String(50), default='fade-in')
     image_animation_delay = db.Column(db.Float, default=0.3)
-
     logo_animation = db.Column(db.String(50), default='scale-in')
     logo_animation_delay = db.Column(db.Float, default=0.5)
-
     ticker_entrance = db.Column(db.String(50), default='slide-up')
     ticker_entrance_delay = db.Column(db.Float, default=0.8)
 
     # Visibility
     is_visible = db.Column(db.Boolean, default=True)
-
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     def __repr__(self):
         return f'<OverlaySettings {self.category}>'
 
     def get_secondary_phrases_list(self):
-        """Get secondary phrases as a Python list"""
         if self.secondary_phrases:
             try:
                 return json.loads(self.secondary_phrases)
@@ -149,7 +137,6 @@ class OverlaySettings(db.Model):
         return []
 
     def set_secondary_phrases_list(self, phrases_list):
-        """Set secondary phrases from a Python list"""
         self.secondary_phrases = json.dumps(phrases_list)
 
 
@@ -164,7 +151,6 @@ def login_required(f):
             flash('Your account has been deactivated.', 'error')
             return redirect(url_for('login'))
         return f(*args, **kwargs)
-
     return decorated_function
 
 
@@ -182,7 +168,6 @@ def admin_required(f):
             flash('You do not have permission to access this page.', 'error')
             return redirect(url_for('control'))
         return f(*args, **kwargs)
-
     return decorated_function
 
 
@@ -204,7 +189,6 @@ def init_db():
             )
             db.session.add(admin)
 
-        # Create default settings with category-specific defaults
         category_defaults = {
             'funeral': {
                 'main_text': 'In Loving Memory',
@@ -224,7 +208,8 @@ def init_db():
                 'secondary_rotation_enabled': True,
                 'secondary_display_duration': 4.0,
                 'secondary_transition_type': 'fade',
-                'secondary_transition_duration': 0.8
+                'secondary_transition_duration': 0.8,
+                'show_company_logo': True
             },
             'wedding': {
                 'main_text': 'Together Forever',
@@ -244,7 +229,8 @@ def init_db():
                 'secondary_rotation_enabled': True,
                 'secondary_display_duration': 3.5,
                 'secondary_transition_type': 'slide-left',
-                'secondary_transition_duration': 0.6
+                'secondary_transition_duration': 0.6,
+                'show_company_logo': True
             },
             'ceremony': {
                 'main_text': 'Special Ceremony',
@@ -264,7 +250,8 @@ def init_db():
                 'secondary_rotation_enabled': True,
                 'secondary_display_duration': 3.0,
                 'secondary_transition_type': 'zoom',
-                'secondary_transition_duration': 0.5
+                'secondary_transition_duration': 0.5,
+                'show_company_logo': True
             }
         }
 
@@ -295,7 +282,6 @@ def login():
     if request.method == 'POST':
         email = request.form.get('email')
         password = request.form.get('password')
-
         email_normalized = email.lower() if email else ""
         user = User.query.filter(User.email.ilike(email_normalized)).first()
 
@@ -335,7 +321,6 @@ def google_callback():
         if user_info:
             email = user_info['email'].lower()
             google_id = user_info['sub']
-
             user = User.query.filter(User.email.ilike(email)).first()
 
             if not user:
@@ -382,12 +367,10 @@ def control():
             db.session.add(settings[cat])
 
     db.session.commit()
-
     current_user = User.query.get(session['user_id'])
     return render_template('control.html', settings=settings, categories=categories, current_user=current_user)
 
 
-# User Management Routes
 @app.route('/users')
 @admin_required
 def users():
@@ -424,7 +407,6 @@ def create_user():
 
     db.session.add(new_user)
     db.session.commit()
-
     flash(f'User {email} created successfully!', 'success')
     return redirect(url_for('users'))
 
@@ -434,7 +416,6 @@ def create_user():
 def edit_user(user_id):
     user = User.query.get_or_404(user_id)
     data = request.form
-
     protected_admin_email = os.environ.get('ADMIN_EMAIL', 'admin@zearom.com').lower()
 
     if user.email.lower() == protected_admin_email:
@@ -478,7 +459,6 @@ def edit_user(user_id):
 @admin_required
 def toggle_user_status(user_id):
     user = User.query.get_or_404(user_id)
-
     protected_admin_email = os.environ.get('ADMIN_EMAIL', 'admin@zearom.com').lower()
 
     if user.email.lower() == protected_admin_email:
@@ -508,7 +488,6 @@ def toggle_user_status(user_id):
 @admin_required
 def delete_user(user_id):
     user = User.query.get_or_404(user_id)
-
     protected_admin_email = os.environ.get('ADMIN_EMAIL', 'admin@zearom.com').lower()
 
     if user.email.lower() == protected_admin_email:
@@ -528,7 +507,6 @@ def delete_user(user_id):
     email = user.email
     db.session.delete(user)
     db.session.commit()
-
     flash(f'User {email} deleted successfully!', 'success')
     return redirect(url_for('users'))
 
@@ -609,6 +587,8 @@ def manage_settings(category):
             settings.show_decorative_elements = data['show_decorative_elements'] == 'true'
         if 'secondary_rotation_enabled' in data:
             settings.secondary_rotation_enabled = data['secondary_rotation_enabled'] == 'true'
+        if 'show_company_logo' in data:
+            settings.show_company_logo = data['show_company_logo'] == 'true'
 
         settings.updated_at = datetime.utcnow()
         db.session.commit()
@@ -621,7 +601,6 @@ def manage_settings(category):
 @app.route('/api/secondary-phrases/<category>', methods=['GET', 'POST'])
 @login_required
 def manage_secondary_phrases(category):
-    """Manage secondary text phrases"""
     settings = OverlaySettings.query.filter_by(category=category).first()
 
     if not settings:
@@ -630,8 +609,6 @@ def manage_secondary_phrases(category):
     if request.method == 'POST':
         data = request.get_json()
         phrases = data.get('phrases', [])
-
-        # Filter out empty phrases
         phrases = [p.strip() for p in phrases if p.strip()]
 
         settings.set_secondary_phrases_list(phrases)
@@ -680,6 +657,24 @@ def upload_file(category, file_type):
     return jsonify({'error': 'Upload failed'}), 500
 
 
+# NEW ENDPOINT: Remove logo completely
+@app.route('/api/remove-logo/<category>', methods=['POST'])
+@login_required
+def remove_logo(category):
+    settings = OverlaySettings.query.filter_by(category=category).first()
+
+    if not settings:
+        return jsonify({'error': 'Settings not found'}), 404
+
+    # Remove the logo file path from database
+    settings.company_logo = None
+    settings.show_company_logo = False
+    settings.updated_at = datetime.utcnow()
+    db.session.commit()
+
+    return jsonify({'success': True, 'message': 'Logo removed successfully'})
+
+
 @app.route('/api/visibility/<category>', methods=['POST'])
 @login_required
 def toggle_visibility(category):
@@ -696,10 +691,8 @@ def toggle_visibility(category):
     return jsonify({'success': True, 'visible': settings.is_visible})
 
 
-# New endpoint for polling updates
 @app.route('/api/poll/<category>')
 def poll_updates(category):
-    """Poll for settings updates"""
     settings = OverlaySettings.query.filter_by(category=category).first()
 
     if not settings:
@@ -712,7 +705,6 @@ def poll_updates(category):
 
 
 def settings_to_dict(settings):
-    """Convert settings object to dictionary"""
     return {
         'main_text': settings.main_text,
         'secondary_text': settings.secondary_text,
@@ -726,6 +718,7 @@ def settings_to_dict(settings):
         'company_logo': settings.company_logo,
         'category_image': settings.category_image,
         'show_category_image': settings.show_category_image,
+        'show_company_logo': settings.show_company_logo,
         'bg_color': settings.bg_color,
         'accent_color': settings.accent_color,
         'text_color': settings.text_color,

@@ -1,6 +1,7 @@
 /**
- * Unified Overlay Display Controller
- * Handles animations, polling, and live updates for all overlay categories
+ * Fixed Overlay Display Controller
+ * Complete rewrite with immediate updates and proper state management
+ * FIXED: Secondary phrases now use their own transition animations
  */
 
 class OverlayController {
@@ -13,6 +14,7 @@ class OverlayController {
         this.rotationTimeouts = [];
         this.typewriterTimeouts = [];
         this.currentPhraseIndex = 0;
+        this.animationInitialized = false;
 
         // DOM element references
         this.container = document.getElementById('overlay-container');
@@ -136,11 +138,14 @@ class OverlayController {
     }
 
     applyTextAnimation() {
+        // Only apply text animations to main text and company name
+        // Secondary phrases will use their own transition system
         if (this.settings.text_animation === 'typewriter') {
-            this.typewriterEffect([
+            const elements = [
                 { element: this.mainTextEl, text: this.settings.main_text },
                 { element: this.companyNameEl, text: this.settings.company_name }
-            ]);
+            ];
+            this.typewriterEffect(elements);
         } else if (this.settings.text_animation === 'fade-in-words') {
             this.fadeInWords(this.mainTextEl, this.settings.main_text);
             this.fadeInWords(this.companyNameEl, this.settings.company_name);
@@ -151,6 +156,8 @@ class OverlayController {
             this.mainTextEl.textContent = this.settings.main_text;
             this.companyNameEl.textContent = this.settings.company_name;
         }
+
+        // Secondary phrases are handled separately in initializeSecondaryText
     }
 
     applyImageAnimation() {
@@ -177,7 +184,7 @@ class OverlayController {
         this.tickerText.style.animationDuration = `${duration}s`;
     }
 
-    // Secondary Text Rotation
+    // Secondary Text Rotation - FIXED TO USE PROPER TRANSITIONS
     applyTransition(element, type, duration) {
         const transitions = {
             'fade': `opacity ${duration}s ease`,
@@ -193,32 +200,41 @@ class OverlayController {
     getTransitionStyles(type, entering) {
         const styles = {
             'fade': {
-                entering: { opacity: '1' },
-                exiting: { opacity: '0' }
+                entering: { transform: 'none', opacity: '1' },
+                exiting: { transform: 'none', opacity: '0' },
+                initial: { transform: 'none', opacity: '0' }
             },
             'slide-left': {
                 entering: { transform: 'translateX(0)', opacity: '1' },
-                exiting: { transform: 'translateX(-100%)', opacity: '0' }
+                exiting: { transform: 'translateX(-100%)', opacity: '0' },
+                initial: { transform: 'translateX(100%)', opacity: '0' }
             },
             'slide-right': {
                 entering: { transform: 'translateX(0)', opacity: '1' },
-                exiting: { transform: 'translateX(100%)', opacity: '0' }
+                exiting: { transform: 'translateX(100%)', opacity: '0' },
+                initial: { transform: 'translateX(-100%)', opacity: '0' }
             },
             'slide-up': {
                 entering: { transform: 'translateY(0)', opacity: '1' },
-                exiting: { transform: 'translateY(-50%)', opacity: '0' }
+                exiting: { transform: 'translateY(-50%)', opacity: '0' },
+                initial: { transform: 'translateY(50%)', opacity: '0' }
             },
             'slide-down': {
                 entering: { transform: 'translateY(0)', opacity: '1' },
-                exiting: { transform: 'translateY(50%)', opacity: '0' }
+                exiting: { transform: 'translateY(50%)', opacity: '0' },
+                initial: { transform: 'translateY(-50%)', opacity: '0' }
             },
             'zoom': {
                 entering: { transform: 'scale(1)', opacity: '1' },
-                exiting: { transform: 'scale(0.8)', opacity: '0' }
+                exiting: { transform: 'scale(0.8)', opacity: '0' },
+                initial: { transform: 'scale(0.8)', opacity: '0' }
             }
         };
 
         const typeStyles = styles[type] || styles['fade'];
+        if (entering === 'initial') {
+            return typeStyles.initial;
+        }
         return entering ? typeStyles.entering : typeStyles.exiting;
     }
 
@@ -232,8 +248,15 @@ class OverlayController {
                 : 'Default Secondary Text';
             const div = document.createElement('div');
             div.className = 'secondary-phrase active';
-            div.style.position = 'relative';
             div.textContent = phrase;
+            div.style.position = 'relative';
+            div.style.opacity = '1';
+
+            // Apply transition settings even for single phrase
+            this.applyTransition(div, this.settings.secondary_transition_type, this.settings.secondary_transition_duration);
+            const enteringStyles = this.getTransitionStyles(this.settings.secondary_transition_type, true);
+            Object.assign(div.style, enteringStyles);
+
             this.secondaryContainer.appendChild(div);
             return;
         }
@@ -243,12 +266,34 @@ class OverlayController {
             const div = document.createElement('div');
             div.className = 'secondary-phrase';
             div.textContent = phrase;
-            if (index === 0) {
-                div.classList.add('active');
-                const enterStyles = this.getTransitionStyles(this.settings.secondary_transition_type, true);
-                Object.assign(div.style, enterStyles);
-            }
+
+            // Apply transition to all phrases
             this.applyTransition(div, this.settings.secondary_transition_type, this.settings.secondary_transition_duration);
+
+            if (index === 0) {
+                // First phrase - make it visible with entering animation
+                div.classList.add('active');
+                div.style.position = 'relative';
+
+                // Start with initial state
+                const initialStyles = this.getTransitionStyles(this.settings.secondary_transition_type, 'initial');
+                Object.assign(div.style, initialStyles);
+
+                // Trigger reflow
+                void div.offsetWidth;
+
+                // Animate to entering state
+                const enteringStyles = this.getTransitionStyles(this.settings.secondary_transition_type, true);
+                Object.assign(div.style, enteringStyles);
+            } else {
+                // Hidden phrases
+                div.style.position = 'absolute';
+                div.style.top = '0';
+                div.style.left = '0';
+                div.style.width = '100%';
+                div.style.opacity = '0';
+            }
+
             this.secondaryContainer.appendChild(div);
         });
 
@@ -273,48 +318,141 @@ class OverlayController {
         const nextIndex = (this.currentPhraseIndex + 1) % phrases.length;
         const nextPhrase = phrases[nextIndex];
 
-        const exitStyles = this.getTransitionStyles(this.settings.secondary_transition_type, false);
-        Object.assign(currentPhrase.style, exitStyles);
+        // Apply transition to both phrases
+        this.applyTransition(currentPhrase, this.settings.secondary_transition_type, this.settings.secondary_transition_duration);
+        this.applyTransition(nextPhrase, this.settings.secondary_transition_type, this.settings.secondary_transition_duration);
 
-        const enteringInitialStyles = {
-            'slide-left': { transform: 'translateX(100%)', opacity: '0' },
-            'slide-right': { transform: 'translateX(-100%)', opacity: '0' },
-            'slide-up': { transform: 'translateY(50%)', opacity: '0' },
-            'slide-down': { transform: 'translateY(-50%)', opacity: '0' },
-            'zoom': { transform: 'scale(0.8)', opacity: '0' },
-            'fade': { opacity: '0' }
-        };
+        // Animate out current phrase
+        const exitingStyles = this.getTransitionStyles(this.settings.secondary_transition_type, false);
+        Object.assign(currentPhrase.style, exitingStyles);
 
-        const initialStyles = enteringInitialStyles[this.settings.secondary_transition_type] || { opacity: '0' };
-        Object.assign(nextPhrase.style, initialStyles);
-        nextPhrase.classList.add('active');
+        setTimeout(() => {
+            // Hide current phrase
+            currentPhrase.classList.remove('active');
+            currentPhrase.style.position = 'absolute';
+            currentPhrase.style.top = '0';
+            currentPhrase.style.left = '0';
+            currentPhrase.style.width = '100%';
 
-        void nextPhrase.offsetWidth;
+            // Prepare next phrase in initial state
+            nextPhrase.style.position = 'relative';
+            nextPhrase.style.top = 'auto';
+            nextPhrase.style.left = 'auto';
+            nextPhrase.style.width = 'auto';
+            nextPhrase.classList.add('active');
 
-        const timeout = setTimeout(() => {
-            const enterStyles = this.getTransitionStyles(this.settings.secondary_transition_type, true);
-            Object.assign(nextPhrase.style, enterStyles);
+            const initialStyles = this.getTransitionStyles(this.settings.secondary_transition_type, 'initial');
+            Object.assign(nextPhrase.style, initialStyles);
 
-            const cleanupTimeout = setTimeout(() => {
-                currentPhrase.classList.remove('active');
-            }, this.settings.secondary_transition_duration * 1000);
+            // Trigger reflow
+            void nextPhrase.offsetWidth;
 
-            this.rotationTimeouts.push(cleanupTimeout);
-        }, 50);
+            // Animate in next phrase
+            const enteringStyles = this.getTransitionStyles(this.settings.secondary_transition_type, true);
+            Object.assign(nextPhrase.style, enteringStyles);
 
-        this.rotationTimeouts.push(timeout);
-        this.currentPhraseIndex = nextIndex;
+            this.currentPhraseIndex = nextIndex;
+        }, this.settings.secondary_transition_duration * 1000);
+    }
+
+    // Apply ALL visual styles immediately without reloading
+    applyAllStyles() {
+        // Background colors
+        if (this.lowerThirdBg) {
+            this.lowerThirdBg.style.background = `linear-gradient(135deg, ${this.settings.bg_color}f5 0%, ${this.settings.bg_color}e0 100%)`;
+            this.lowerThirdBg.style.opacity = this.settings.opacity;
+            this.lowerThirdBg.style.borderRadius = `${this.settings.border_radius}px`;
+        }
+
+        if (this.tickerContainer) {
+            this.tickerContainer.style.background = `linear-gradient(90deg, ${this.settings.bg_color}dd 0%, ${this.settings.bg_color} 50%, ${this.settings.bg_color}dd 100%)`;
+            this.tickerContainer.style.opacity = this.settings.opacity;
+        }
+
+        // Text colors
+        if (this.mainTextEl) {
+            this.mainTextEl.style.color = this.settings.text_color;
+            this.mainTextEl.style.fontSize = `${this.settings.main_font_size}px`;
+        }
+
+        if (this.companyNameEl) {
+            this.companyNameEl.style.color = this.settings.text_color;
+            this.companyNameEl.style.fontSize = `${this.settings.main_font_size * 0.6}px`;
+        }
+
+        if (this.tickerText) {
+            this.tickerText.style.color = this.settings.text_color;
+            this.tickerText.style.fontSize = `${this.settings.ticker_font_size}px`;
+        }
+
+        // Accent color for decorative elements and images
+        const accentElements = document.querySelectorAll('.corner-decoration, .accent-corner, .accent-stripe, .heart-accent, .corner-accent');
+        accentElements.forEach(el => {
+            el.style.borderColor = this.settings.accent_color;
+        });
+
+        // Update heart accents (wedding)
+        const heartAccents = document.querySelectorAll('.heart-accent::before, .heart-accent::after');
+        if (heartAccents.length > 0) {
+            const style = document.createElement('style');
+            style.textContent = `.heart-accent::before, .heart-accent::after { background: ${this.settings.accent_color}; }`;
+            document.head.appendChild(style);
+        }
+
+        if (this.categoryImage) {
+            this.categoryImage.style.borderColor = this.settings.accent_color;
+            this.categoryImage.style.borderRadius = this.settings.border_radius > 25 ? '50%' : `${this.settings.border_radius}px`;
+        }
+
+        // Secondary text container
+        if (this.secondaryContainer) {
+            this.secondaryContainer.style.minHeight = `${this.settings.secondary_font_size * 1.3}px`;
+        }
+
+        document.querySelectorAll('.secondary-phrase').forEach(el => {
+            el.style.fontSize = `${this.settings.secondary_font_size}px`;
+            el.style.color = this.settings.accent_color;
+            el.style.lineHeight = '1.3';
+        });
+
+        // Logo size
+        if (this.companyLogo) {
+            this.companyLogo.style.width = `${this.settings.logo_size}px`;
+            this.companyLogo.style.height = `${this.settings.logo_size}px`;
+        }
+
+        // Font family
+        document.body.style.fontFamily = this.settings.font_family;
+
+        // Decorative elements visibility
+        const decorativeElements = document.querySelectorAll('.corner-decoration, .corner-accent, .accent-stripe, .heart-accent, .divider-line');
+        decorativeElements.forEach(el => {
+            el.style.display = this.settings.show_decorative_elements ? 'block' : 'none';
+        });
+
+        // Ticker speed
+        this.updateTickerSpeed(this.settings.ticker_speed);
     }
 
     // Initialize all animations
     initializeAnimations() {
+        this.applyAllStyles();
         this.applyEntranceAnimation();
         this.applyTextAnimation();
-        this.initializeSecondaryText();
+
+        // Wait for text animations to complete before initializing secondary text rotation
+        const textAnimationDelay = this.settings.text_animation !== 'none'
+            ? (this.settings.entrance_delay + this.settings.entrance_duration + 2) * 1000
+            : 100;
+
+        setTimeout(() => {
+            this.initializeSecondaryText();
+        }, textAnimationDelay);
+
         this.applyImageAnimation();
         this.applyLogoAnimation();
         this.applyTickerAnimation();
-        this.updateTickerSpeed(this.settings.ticker_speed);
+        this.animationInitialized = true;
     }
 
     // Replay all animations
@@ -334,196 +472,135 @@ class OverlayController {
         }, 50);
     }
 
-    // Live Settings Updates
-    updateLiveSettings(s) {
-        let settingsChanged = false;
+    // Handle settings updates from polling - COMPLETELY REWRITTEN
+    handleSettingsUpdate(newSettings) {
+        console.log('Received settings update:', newSettings);
 
-        // Update colors immediately
-        if (s.bg_color !== undefined && s.bg_color !== this.settings.bg_color) {
-            this.settings.bg_color = s.bg_color;
-            this.lowerThirdBg.style.background = `linear-gradient(135deg, ${s.bg_color}f5 0%, ${s.bg_color}e0 100%)`;
-            if (this.tickerContainer) {
-                this.tickerContainer.style.background = `linear-gradient(90deg, ${s.bg_color}dd 0%, ${s.bg_color} 50%, ${s.bg_color}dd 100%)`;
+        // Track what actually changed
+        let needsReload = false;
+        let needsAnimationReplay = false;
+        let stylesChanged = false;
+
+        // Handle visibility changes FIRST (most important)
+        if (newSettings.is_visible !== undefined && newSettings.is_visible !== this.settings.is_visible) {
+            console.log('Visibility changed:', newSettings.is_visible);
+            this.settings.is_visible = newSettings.is_visible;
+
+            if (newSettings.is_visible) {
+                // Turn ON: Remove hidden class and show overlay
+                this.container.classList.remove('hidden');
+                this.container.style.opacity = '1';
+                // Replay animations when turning back on
+                setTimeout(() => this.replayAnimations(), 100);
+            } else {
+                // Turn OFF: Make completely transparent
+                this.container.style.opacity = '0';
+                // After fade out, add hidden class
+                setTimeout(() => {
+                    this.container.classList.add('hidden');
+                }, 500);
             }
-            settingsChanged = true;
-        }
 
-        if (s.accent_color !== undefined && s.accent_color !== this.settings.accent_color) {
-            this.settings.accent_color = s.accent_color;
-            document.documentElement.style.setProperty('--accent-color', s.accent_color);
-            // Update all elements with accent color
-            document.querySelectorAll('.corner-decoration, .accent-corner::before, .accent-accent::after, .accent-stripe, .heart-accent::before, .heart-accent::after').forEach(el => {
-                el.style.borderColor = s.accent_color;
-                el.style.background = s.accent_color;
-            });
-            if (this.categoryImage) {
-                this.categoryImage.style.borderColor = s.accent_color;
-            }
-            settingsChanged = true;
-        }
-
-        if (s.text_color !== undefined && s.text_color !== this.settings.text_color) {
-            this.settings.text_color = s.text_color;
-            this.mainTextEl.style.color = s.text_color;
-            this.companyNameEl.style.color = s.text_color;
-            this.tickerText.style.color = s.text_color;
-            settingsChanged = true;
-        }
-
-        // Update opacity immediately
-        if (s.opacity !== undefined && s.opacity !== this.settings.opacity) {
-            this.settings.opacity = s.opacity;
-            this.lowerThirdBg.style.opacity = s.opacity;
-            if (this.tickerContainer) {
-                this.tickerContainer.style.opacity = s.opacity;
-            }
-            settingsChanged = true;
-        }
-
-        // Update font sizes immediately
-        if (s.main_font_size !== undefined && s.main_font_size !== this.settings.main_font_size) {
-            this.settings.main_font_size = s.main_font_size;
-            this.mainTextEl.style.fontSize = `${s.main_font_size}px`;
-            this.companyNameEl.style.fontSize = `${s.main_font_size * 0.6}px`;
-            settingsChanged = true;
-        }
-
-        if (s.secondary_font_size !== undefined && s.secondary_font_size !== this.settings.secondary_font_size) {
-            this.settings.secondary_font_size = s.secondary_font_size;
-            document.querySelectorAll('.secondary-phrase').forEach(el => {
-                el.style.fontSize = `${s.secondary_font_size}px`;
-            });
-            this.secondaryContainer.style.height = `${s.secondary_font_size * 1.2}px`;
-            settingsChanged = true;
-        }
-
-        if (s.ticker_font_size !== undefined && s.ticker_font_size !== this.settings.ticker_font_size) {
-            this.settings.ticker_font_size = s.ticker_font_size;
-            this.tickerText.style.fontSize = `${s.ticker_font_size}px`;
-            settingsChanged = true;
-        }
-
-        // Update border radius immediately
-        if (s.border_radius !== undefined && s.border_radius !== this.settings.border_radius) {
-            this.settings.border_radius = s.border_radius;
-            this.lowerThirdBg.style.borderRadius = `${s.border_radius}px`;
-            if (this.categoryImage) {
-                this.categoryImage.style.borderRadius = s.border_radius > 25 ? '50%' : `${s.border_radius}px`;
-            }
-            settingsChanged = true;
-        }
-
-        // Update font family immediately
-        if (s.font_family !== undefined && s.font_family !== this.settings.font_family) {
-            this.settings.font_family = s.font_family;
-            document.body.style.fontFamily = s.font_family;
-            settingsChanged = true;
-        }
-
-        // Update logo size immediately
-        if (s.logo_size !== undefined && s.logo_size !== this.settings.logo_size) {
-            this.settings.logo_size = s.logo_size;
-            if (this.companyLogo) {
-                this.companyLogo.style.width = `${s.logo_size}px`;
-                this.companyLogo.style.height = `${s.logo_size}px`;
-            }
-            settingsChanged = true;
-        }
-
-        // Update ticker speed immediately
-        if (s.ticker_speed !== undefined && s.ticker_speed !== this.settings.ticker_speed) {
-            this.settings.ticker_speed = s.ticker_speed;
-            this.updateTickerSpeed(s.ticker_speed);
-            settingsChanged = true;
-        }
-
-        // Update decorative elements visibility immediately
-        if (s.show_decorative_elements !== undefined && s.show_decorative_elements !== this.settings.show_decorative_elements) {
-            this.settings.show_decorative_elements = s.show_decorative_elements;
-            document.querySelectorAll('.corner-decoration, .corner-accent, .accent-stripe, .heart-accent, .divider-line').forEach(el => {
-                el.style.display = s.show_decorative_elements ? 'block' : 'none';
-            });
-            settingsChanged = true;
-        }
-
-        return settingsChanged;
-    }
-
-    // Handle settings updates from polling
-    handleSettingsUpdate(s) {
-        // First, apply all live settings that don't require reload
-        const liveSettingsChanged = this.updateLiveSettings(s);
-
-        // Check if images/visibility changed (requires reload)
-        const needsReload =
-            (s.company_logo !== undefined && s.company_logo !== this.settings.company_logo) ||
-            (s.category_image !== undefined && s.category_image !== this.settings.category_image) ||
-            (s.show_category_image !== undefined && s.show_category_image !== this.settings.show_category_image) ||
-            (s.show_company_logo !== undefined && s.show_company_logo !== this.settings.show_company_logo);
-
-        if (needsReload) {
-            setTimeout(() => location.reload(), 500);
+            // Don't process other changes if visibility changed
+            // This prevents conflicts during visibility toggle
             return;
         }
 
-        // Handle secondary text changes
-        const phrasesChanged = s.secondary_phrases && JSON.stringify(s.secondary_phrases) !== JSON.stringify(this.settings.secondary_phrases);
-        const rotationChanged = s.secondary_rotation_enabled !== undefined && s.secondary_rotation_enabled !== this.settings.secondary_rotation_enabled;
-        const rotationSettingsChanged =
-            (s.secondary_display_duration !== undefined && s.secondary_display_duration !== this.settings.secondary_display_duration) ||
-            (s.secondary_transition_type !== undefined && s.secondary_transition_type !== this.settings.secondary_transition_type) ||
-            (s.secondary_transition_duration !== undefined && s.secondary_transition_duration !== this.settings.secondary_transition_duration);
-
-        if (phrasesChanged || rotationChanged || rotationSettingsChanged) {
-            if (s.secondary_phrases) this.settings.secondary_phrases = s.secondary_phrases;
-            if (s.secondary_rotation_enabled !== undefined) this.settings.secondary_rotation_enabled = s.secondary_rotation_enabled;
-            if (s.secondary_display_duration !== undefined) this.settings.secondary_display_duration = s.secondary_display_duration;
-            if (s.secondary_transition_type !== undefined) this.settings.secondary_transition_type = s.secondary_transition_type;
-            if (s.secondary_transition_duration !== undefined) this.settings.secondary_transition_duration = s.secondary_transition_duration;
-            this.initializeSecondaryText();
+        // Check for changes that require page reload (images)
+        if (newSettings.company_logo !== undefined && newSettings.company_logo !== this.settings.company_logo) {
+            needsReload = true;
+        }
+        if (newSettings.category_image !== undefined && newSettings.category_image !== this.settings.category_image) {
+            needsReload = true;
+        }
+        if (newSettings.show_category_image !== undefined && newSettings.show_category_image !== this.settings.show_category_image) {
+            needsReload = true;
+        }
+        if (newSettings.show_company_logo !== undefined && newSettings.show_company_logo !== this.settings.show_company_logo) {
+            needsReload = true;
         }
 
-        // Handle text content changes
-        if (s.main_text !== undefined && this.decodeHTML(s.main_text) !== this.settings.main_text) {
-            this.settings.main_text = this.decodeHTML(s.main_text);
-            this.applyTextAnimation();
+        // If reload needed, do it immediately
+        if (needsReload) {
+            console.log('Image settings changed, reloading page...');
+            Object.assign(this.settings, newSettings);
+            setTimeout(() => location.reload(), 300);
+            return;
         }
 
-        if (s.company_name !== undefined && this.decodeHTML(s.company_name) !== this.settings.company_name) {
-            this.settings.company_name = this.decodeHTML(s.company_name);
-            if (this.companyNameEl) {
-                this.companyNameEl.textContent = this.settings.company_name;
+        // Check for animation setting changes
+        const animationFields = [
+            'entrance_animation', 'entrance_duration', 'entrance_delay',
+            'text_animation', 'text_animation_speed',
+            'image_animation', 'image_animation_delay',
+            'logo_animation', 'logo_animation_delay',
+            'ticker_entrance', 'ticker_entrance_delay'
+        ];
+
+        for (const field of animationFields) {
+            if (newSettings[field] !== undefined && newSettings[field] !== this.settings[field]) {
+                needsAnimationReplay = true;
+                break;
             }
         }
 
-        if (s.ticker_text !== undefined && this.decodeHTML(s.ticker_text) !== this.tickerText.textContent) {
-            this.tickerText.textContent = this.decodeHTML(s.ticker_text);
-            this.updateTickerSpeed(this.settings.ticker_speed);
+        // Check for style changes
+        const styleFields = [
+            'bg_color', 'accent_color', 'text_color', 'opacity',
+            'main_font_size', 'secondary_font_size', 'ticker_font_size',
+            'border_radius', 'font_family', 'logo_size', 'ticker_speed',
+            'show_decorative_elements'
+        ];
+
+        for (const field of styleFields) {
+            if (newSettings[field] !== undefined && newSettings[field] !== this.settings[field]) {
+                stylesChanged = true;
+                break;
+            }
         }
 
-        // Handle animation changes (requires replay)
-        const animationChanged =
-            (s.entrance_animation !== undefined && s.entrance_animation !== this.settings.entrance_animation) ||
-            (s.entrance_duration !== undefined && s.entrance_duration !== this.settings.entrance_duration) ||
-            (s.entrance_delay !== undefined && s.entrance_delay !== this.settings.entrance_delay) ||
-            (s.text_animation !== undefined && s.text_animation !== this.settings.text_animation) ||
-            (s.image_animation !== undefined && s.image_animation !== this.settings.image_animation) ||
-            (s.logo_animation !== undefined && s.logo_animation !== this.settings.logo_animation) ||
-            (s.ticker_entrance !== undefined && s.ticker_entrance !== this.settings.ticker_entrance);
+        // Check for text content changes
+        const textChanged =
+            (newSettings.main_text !== undefined && this.decodeHTML(newSettings.main_text) !== this.settings.main_text) ||
+            (newSettings.company_name !== undefined && this.decodeHTML(newSettings.company_name) !== this.settings.company_name) ||
+            (newSettings.ticker_text !== undefined && this.decodeHTML(newSettings.ticker_text) !== this.tickerText.textContent);
 
-        if (animationChanged) {
-            if (s.entrance_animation !== undefined) this.settings.entrance_animation = s.entrance_animation;
-            if (s.entrance_duration !== undefined) this.settings.entrance_duration = s.entrance_duration;
-            if (s.entrance_delay !== undefined) this.settings.entrance_delay = s.entrance_delay;
-            if (s.text_animation !== undefined) this.settings.text_animation = s.text_animation;
-            if (s.text_animation_speed !== undefined) this.settings.text_animation_speed = s.text_animation_speed;
-            if (s.image_animation !== undefined) this.settings.image_animation = s.image_animation;
-            if (s.image_animation_delay !== undefined) this.settings.image_animation_delay = s.image_animation_delay;
-            if (s.logo_animation !== undefined) this.settings.logo_animation = s.logo_animation;
-            if (s.logo_animation_delay !== undefined) this.settings.logo_animation_delay = s.logo_animation_delay;
-            if (s.ticker_entrance !== undefined) this.settings.ticker_entrance = s.ticker_entrance;
-            if (s.ticker_entrance_delay !== undefined) this.settings.ticker_entrance_delay = s.ticker_entrance_delay;
+        // Check for secondary phrases changes - INCLUDING TRANSITION SETTINGS
+        const phrasesChanged =
+            (newSettings.secondary_phrases && JSON.stringify(newSettings.secondary_phrases) !== JSON.stringify(this.settings.secondary_phrases)) ||
+            (newSettings.secondary_rotation_enabled !== undefined && newSettings.secondary_rotation_enabled !== this.settings.secondary_rotation_enabled) ||
+            (newSettings.secondary_display_duration !== undefined && newSettings.secondary_display_duration !== this.settings.secondary_display_duration) ||
+            (newSettings.secondary_transition_type !== undefined && newSettings.secondary_transition_type !== this.settings.secondary_transition_type) ||
+            (newSettings.secondary_transition_duration !== undefined && newSettings.secondary_transition_duration !== this.settings.secondary_transition_duration);
 
+        // Update settings object
+        Object.assign(this.settings, newSettings);
+
+        // Decode HTML entities for text fields
+        if (newSettings.main_text !== undefined) {
+            this.settings.main_text = this.decodeHTML(newSettings.main_text);
+        }
+        if (newSettings.company_name !== undefined) {
+            this.settings.company_name = this.decodeHTML(newSettings.company_name);
+        }
+        if (newSettings.ticker_text !== undefined) {
+            this.settings.ticker_text = this.decodeHTML(newSettings.ticker_text);
+            this.tickerText.textContent = this.settings.ticker_text;
+        }
+
+        // Apply updates in the correct order
+        if (stylesChanged) {
+            console.log('Applying style changes immediately...');
+            this.applyAllStyles();
+        }
+
+        if (phrasesChanged) {
+            console.log('Updating secondary text phrases...');
+            this.initializeSecondaryText();
+        }
+
+        if (textChanged || needsAnimationReplay) {
+            console.log('Replaying animations...');
             setTimeout(() => this.replayAnimations(), 100);
         }
     }
@@ -552,8 +629,24 @@ class OverlayController {
 
     // Start the overlay
     start() {
-        setTimeout(() => this.initializeAnimations(), 100);
-        this.pollInterval = setInterval(() => this.pollForUpdates(), 3000);
+        console.log('Starting overlay controller...');
+
+        // Check initial visibility state
+        if (!this.settings.is_visible) {
+            this.container.classList.add('hidden');
+            this.container.style.opacity = '0';
+            console.log('Overlay starting in hidden state');
+        } else {
+            // Initial animation only if visible
+            setTimeout(() => {
+                this.initializeAnimations();
+            }, 100);
+        }
+
+        // Start polling
+        this.pollInterval = setInterval(() => this.pollForUpdates(), 2000);
+
+        // Initial poll after short delay
         setTimeout(() => this.pollForUpdates(), 1000);
 
         // Update ticker speed on animation iteration
@@ -567,12 +660,14 @@ class OverlayController {
         window.addEventListener('beforeunload', () => {
             if (this.pollInterval) clearInterval(this.pollInterval);
             this.clearRotationTimers();
+            this.clearTypewriterTimeouts();
         });
     }
 }
 
 // Initialize overlay when DOM is ready
 function initOverlay(category, settings) {
+    console.log('Initializing overlay with category:', category);
     const controller = new OverlayController(category, settings);
     controller.start();
     return controller;

@@ -100,7 +100,7 @@
             height: 160px;
             object-fit: cover;
             border-radius: 20px;
-            border: 5px solid #FF1493;
+            border: 5px solid var(--accent-color, #FF1493);
             box-shadow:
                 0 12px 35px rgba(255, 20, 147, 0.4),
                 inset 0 0 0 2px rgba(255, 255, 255, 0.3);
@@ -166,7 +166,7 @@
         }
 
         .secondary-phrase {
-            color: #FF1493;
+            color: var(--accent-color, #FF1493);
             font-size: 23px;
             font-weight: 500;
             text-shadow: 1px 1px 6px rgba(0,0,0,0.15);
@@ -230,7 +230,7 @@
             width: 10px;
             height: 16px;
             border-radius: 10px 10px 0 0;
-            background: #FF1493;
+            background: var(--accent-color, #FF1493);
         }
 
         .heart-accent::before {
@@ -255,16 +255,16 @@
         .corner-flourish.top-left {
             top: 15px;
             left: 15px;
-            border-top: 3px solid #FF1493;
-            border-left: 3px solid #FF1493;
+            border-top: 3px solid var(--accent-color, #FF1493);
+            border-left: 3px solid var(--accent-color, #FF1493);
             border-radius: 20px 0 0 0;
         }
 
         .corner-flourish.bottom-right {
             bottom: 15px;
             right: 40px;
-            border-bottom: 3px solid #FF1493;
-            border-right: 3px solid #FF1493;
+            border-bottom: 3px solid var(--accent-color, #FF1493);
+            border-right: 3px solid var(--accent-color, #FF1493);
             border-radius: 0 0 20px 0;
         }
 
@@ -278,8 +278,7 @@
                 rgba(255, 228, 225, 0.95) 100%);
             overflow: hidden;
             margin-top: 10px;
-            border-top: 3px solid #FF1493;
-            box-shadow: 0 -8px 25px rgba(255, 20, 147, 0.2);
+            border-top: 3px solid var(--accent-color, #FF1493);
             backdrop-filter: blur(10px);
         }
 
@@ -408,6 +407,9 @@
 
     <script src="{{ url_for('static', filename='js/overlay-display.js') }}"></script>
     <script>
+        // Set CSS variables for dynamic accent color
+        document.documentElement.style.setProperty('--accent-color', '{{ settings.accent_color }}');
+
         function decodeHTML(html) {
             const txt = document.createElement('textarea');
             txt.innerHTML = html;

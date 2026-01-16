@@ -44,7 +44,7 @@
             height: 85px;
             object-fit: contain;
             filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.7));
-            border: 2px solid rgba(139, 115, 85, 0.3);
+            border: 2px solid var(--accent-color, #8B7355);
             border-radius: 8px;
             padding: 8px;
             background: rgba(26, 26, 26, 0.2);
@@ -101,7 +101,7 @@
             height: 160px;
             object-fit: cover;
             border-radius: 50%;
-            border: 5px solid #8B7355;
+            border: 5px solid var(--accent-color, #8B7355);
             box-shadow:
                 0 8px 30px rgba(0, 0, 0, 0.6),
                 0 0 0 10px rgba(139, 115, 85, 0.15),
@@ -166,7 +166,7 @@
         }
 
         .secondary-phrase {
-            color: #8B7355;
+            color: var(--accent-color, #8B7355);
             font-size: 22px;
             font-weight: 400;
             text-shadow: 1px 1px 6px rgba(0, 0, 0, 0.7);
@@ -207,7 +207,7 @@
             position: absolute;
             width: 60px;
             height: 60px;
-            border: 2px solid rgba(139, 115, 85, 0.5);
+            border: 2px solid var(--accent-color, #8B7355);
             opacity: 0.6;
         }
 
@@ -234,9 +234,9 @@
             height: 1px;
             background: linear-gradient(90deg,
                 transparent,
-                rgba(139, 115, 85, 0.4) 20%,
-                rgba(139, 115, 85, 0.6) 50%,
-                rgba(139, 115, 85, 0.4) 80%,
+                var(--accent-color, #8B7355) 20%,
+                var(--accent-color, #8B7355) 50%,
+                var(--accent-color, #8B7355) 80%,
                 transparent);
             top: 50%;
             opacity: 0.5;
@@ -252,11 +252,8 @@
                 rgba(0, 0, 0, 0.92) 100%);
             overflow: hidden;
             margin-top: 10px;
-            border-top: 2px solid rgba(139, 115, 85, 0.6);
-            border-bottom: 2px solid rgba(139, 115, 85, 0.6);
-            box-shadow:
-                0 0 20px rgba(0, 0, 0, 0.5),
-                inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            border-top: 2px solid var(--accent-color, #8B7355);
+            border-bottom: 2px solid var(--accent-color, #8B7355);
             backdrop-filter: blur(10px);
         }
 
@@ -384,6 +381,9 @@
 
     <script src="{{ url_for('static', filename='js/overlay-display.js') }}"></script>
     <script>
+        // Set CSS variables for dynamic accent color
+        document.documentElement.style.setProperty('--accent-color', '{{ settings.accent_color }}');
+
         function decodeHTML(html) {
             const txt = document.createElement('textarea');
             txt.innerHTML = html;

@@ -1,5 +1,5 @@
 """
-Flask OBS Lower-Third Overlay System with User Management
+Flask OBS Lower-Third Overlay System with Multi-Phrase Secondary Text
 Optimized for Shared Hosting - Using AJAX instead of Socket.IO
 """
 
@@ -10,6 +10,7 @@ from werkzeug.utils import secure_filename
 from authlib.integrations.flask_client import OAuth
 from functools import wraps
 import os
+import json
 from datetime import datetime
 from dotenv import load_dotenv
 
@@ -82,12 +83,19 @@ class OverlaySettings(db.Model):
 
     # Content
     main_text = db.Column(db.String(200))
-    secondary_text = db.Column(db.String(200))
+    secondary_text = db.Column(db.String(200))  # Kept for backwards compatibility
+    secondary_phrases = db.Column(db.Text)  # JSON array of phrases
     ticker_text = db.Column(db.String(500))
     company_name = db.Column(db.String(100))
     company_logo = db.Column(db.String(200))
     category_image = db.Column(db.String(200))
     show_category_image = db.Column(db.Boolean, default=True)
+
+    # Secondary Text Rotation Settings
+    secondary_rotation_enabled = db.Column(db.Boolean, default=False)
+    secondary_display_duration = db.Column(db.Float, default=3.0)  # seconds each phrase displays
+    secondary_transition_type = db.Column(db.String(50), default='fade')  # fade, slide-left, slide-right, slide-up, slide-down, zoom
+    secondary_transition_duration = db.Column(db.Float, default=0.5)  # seconds for transition
 
     # Styling
     bg_color = db.Column(db.String(7), default='#000000')
@@ -130,6 +138,19 @@ class OverlaySettings(db.Model):
 
     def __repr__(self):
         return f'<OverlaySettings {self.category}>'
+
+    def get_secondary_phrases_list(self):
+        """Get secondary phrases as a Python list"""
+        if self.secondary_phrases:
+            try:
+                return json.loads(self.secondary_phrases)
+            except:
+                return []
+        return []
+
+    def set_secondary_phrases_list(self, phrases_list):
+        """Set secondary phrases from a Python list"""
+        self.secondary_phrases = json.dumps(phrases_list)
 
 
 def login_required(f):
@@ -187,33 +208,63 @@ def init_db():
         category_defaults = {
             'funeral': {
                 'main_text': 'In Loving Memory',
-                'secondary_text': 'Celebrating a Life Well Lived',
+                'secondary_text': 'Forever in Our Hearts',
+                'secondary_phrases': json.dumps([
+                    'Forever in Our Hearts',
+                    'Celebrating a Life Well Lived',
+                    'Gone But Never Forgotten',
+                    'In Our Hearts Always'
+                ]),
                 'ticker_text': 'We gather today to honor and remember.',
                 'company_name': f'{app.config["COMPANY_NAME"]} Funeral Services',
                 'bg_color': '#1a1a1a',
                 'accent_color': '#8B7355',
                 'text_color': '#E8E8E8',
-                'layout_style': 'elegant'
+                'layout_style': 'elegant',
+                'secondary_rotation_enabled': True,
+                'secondary_display_duration': 4.0,
+                'secondary_transition_type': 'fade',
+                'secondary_transition_duration': 0.8
             },
             'wedding': {
                 'main_text': 'Together Forever',
                 'secondary_text': 'Celebrating Love & Unity',
+                'secondary_phrases': json.dumps([
+                    'Celebrating Love & Unity',
+                    'Two Hearts Become One',
+                    'A Love Story Begins',
+                    'Forever and Always'
+                ]),
                 'ticker_text': 'Join us as we celebrate this beautiful union.',
                 'company_name': f'{app.config["COMPANY_NAME"]} Wedding Services',
                 'bg_color': '#FFE4E1',
                 'accent_color': '#FF1493',
                 'text_color': '#8B008B',
-                'layout_style': 'romantic'
+                'layout_style': 'romantic',
+                'secondary_rotation_enabled': True,
+                'secondary_display_duration': 3.5,
+                'secondary_transition_type': 'slide-left',
+                'secondary_transition_duration': 0.6
             },
             'ceremony': {
                 'main_text': 'Special Ceremony',
                 'secondary_text': 'A Moment to Remember',
+                'secondary_phrases': json.dumps([
+                    'A Moment to Remember',
+                    'Celebrating Excellence',
+                    'Honoring Achievement',
+                    'A Special Occasion'
+                ]),
                 'ticker_text': 'Welcome to this special occasion.',
                 'company_name': f'{app.config["COMPANY_NAME"]} Event Services',
                 'bg_color': '#000080',
                 'accent_color': '#FFD700',
                 'text_color': '#FFFFFF',
-                'layout_style': 'formal'
+                'layout_style': 'formal',
+                'secondary_rotation_enabled': True,
+                'secondary_display_duration': 3.0,
+                'secondary_transition_type': 'zoom',
+                'secondary_transition_duration': 0.5
             }
         }
 
@@ -516,7 +567,8 @@ def manage_settings(category):
 
         fields = [
             'main_text', 'secondary_text', 'ticker_text', 'company_name',
-            'bg_color', 'accent_color', 'text_color', 'font_family', 'layout_style'
+            'bg_color', 'accent_color', 'text_color', 'font_family', 'layout_style',
+            'secondary_transition_type'
         ]
 
         for field in fields:
@@ -534,7 +586,8 @@ def manage_settings(category):
 
         float_fields = [
             'entrance_duration', 'entrance_delay', 'text_animation_speed',
-            'image_animation_delay', 'logo_animation_delay', 'ticker_entrance_delay', 'opacity'
+            'image_animation_delay', 'logo_animation_delay', 'ticker_entrance_delay', 'opacity',
+            'secondary_display_duration', 'secondary_transition_duration'
         ]
 
         for field in float_fields:
@@ -554,6 +607,8 @@ def manage_settings(category):
             settings.show_category_image = data['show_category_image'] == 'true'
         if 'show_decorative_elements' in data:
             settings.show_decorative_elements = data['show_decorative_elements'] == 'true'
+        if 'secondary_rotation_enabled' in data:
+            settings.secondary_rotation_enabled = data['secondary_rotation_enabled'] == 'true'
 
         settings.updated_at = datetime.utcnow()
         db.session.commit()
@@ -561,6 +616,31 @@ def manage_settings(category):
         return jsonify({'success': True, 'settings': settings_to_dict(settings)})
 
     return jsonify({'settings': settings_to_dict(settings)})
+
+
+@app.route('/api/secondary-phrases/<category>', methods=['GET', 'POST'])
+@login_required
+def manage_secondary_phrases(category):
+    """Manage secondary text phrases"""
+    settings = OverlaySettings.query.filter_by(category=category).first()
+
+    if not settings:
+        return jsonify({'error': 'Settings not found'}), 404
+
+    if request.method == 'POST':
+        data = request.get_json()
+        phrases = data.get('phrases', [])
+
+        # Filter out empty phrases
+        phrases = [p.strip() for p in phrases if p.strip()]
+
+        settings.set_secondary_phrases_list(phrases)
+        settings.updated_at = datetime.utcnow()
+        db.session.commit()
+
+        return jsonify({'success': True, 'phrases': phrases})
+
+    return jsonify({'phrases': settings.get_secondary_phrases_list()})
 
 
 @app.route('/api/upload/<category>/<file_type>', methods=['POST'])
@@ -636,6 +716,11 @@ def settings_to_dict(settings):
     return {
         'main_text': settings.main_text,
         'secondary_text': settings.secondary_text,
+        'secondary_phrases': settings.get_secondary_phrases_list(),
+        'secondary_rotation_enabled': settings.secondary_rotation_enabled,
+        'secondary_display_duration': settings.secondary_display_duration,
+        'secondary_transition_type': settings.secondary_transition_type,
+        'secondary_transition_duration': settings.secondary_transition_duration,
         'ticker_text': settings.ticker_text,
         'company_name': settings.company_name,
         'company_logo': settings.company_logo,

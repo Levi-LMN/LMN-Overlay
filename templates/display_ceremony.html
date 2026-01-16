@@ -156,6 +156,11 @@
             to { transform: translateY(0); opacity: 1; }
         }
 
+        @keyframes slide-down {
+            from { transform: translateY(-100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
         @keyframes fade-in {
             from { opacity: 0; }
             to { opacity: 1; }
@@ -163,6 +168,11 @@
 
         @keyframes zoom-in {
             from { transform: scale(0); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        @keyframes zoom {
+            from { transform: scale(0.8); opacity: 0; }
             to { transform: scale(1); opacity: 1; }
         }
 
@@ -258,16 +268,30 @@
             vertical-align: text-bottom;
         }
 
-        .secondary-text {
+        .secondary-text-container {
+            position: relative;
+            overflow: hidden;
+            height: {{ settings.secondary_font_size * 1.2 }}px;
+        }
+
+        .secondary-phrase {
+            position: absolute;
+            width: 100%;
+            left: 0;
+            top: 0;
+            opacity: 0;
             color: {{ settings.accent_color }};
             font-size: {{ settings.secondary_font_size }}px;
             font-weight: 600;
-            opacity: 0.95;
             text-shadow: 2px 2px 6px rgba(0,0,0,0.6);
             letter-spacing: 2px;
-            transition: all 0.3s ease;
-            min-height: {{ settings.secondary_font_size * 1.2 }}px;
-            white-space: pre-wrap;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .secondary-phrase.active {
+            opacity: 1;
         }
 
         .company-name {
@@ -336,7 +360,7 @@
             <div class="content-wrapper">
                 <div class="text-content">
                     <div id="main-text" class="main-text"></div>
-                    <div id="secondary-text" class="secondary-text"></div>
+                    <div id="secondary-text-container" class="secondary-text-container"></div>
                     <div id="company-name" class="company-name"></div>
                 </div>
             </div>
@@ -358,11 +382,13 @@
         const companyLogo = document.getElementById('company-logo');
         const tickerContainer = document.querySelector('.ticker-container');
         const mainTextEl = document.getElementById('main-text');
-        const secondaryTextEl = document.getElementById('secondary-text');
+        const secondaryContainer = document.getElementById('secondary-text-container');
         const companyNameEl = document.getElementById('company-name');
 
         let lastTimestamp = null;
         let pollInterval = null;
+        let rotationInterval = null;
+        let rotationTimeouts = [];
 
         function decodeHTML(html) {
             const txt = document.createElement('textarea');
@@ -384,7 +410,11 @@
             ticker_entrance_delay: {{ settings.ticker_entrance_delay }},
             ticker_speed: {{ settings.ticker_speed }},
             main_text: decodeHTML('{{ settings.main_text or "Special Ceremony" }}'),
-            secondary_text: decodeHTML('{{ settings.secondary_text or "A Moment to Remember" }}'),
+            secondary_phrases: {{ settings.get_secondary_phrases_list()|tojson }},
+            secondary_rotation_enabled: {{ 'true' if settings.secondary_rotation_enabled else 'false' }},
+            secondary_display_duration: {{ settings.secondary_display_duration }},
+            secondary_transition_type: '{{ settings.secondary_transition_type }}',
+            secondary_transition_duration: {{ settings.secondary_transition_duration }},
             company_name: decodeHTML('{{ settings.company_name or "Event Services" }}'),
             company_logo: '{{ settings.company_logo or "" }}',
             category_image: '{{ settings.category_image or "" }}',
@@ -393,10 +423,20 @@
         };
 
         let typewriterTimeouts = [];
+        let currentPhraseIndex = 0;
 
         function clearTypewriterTimeouts() {
             typewriterTimeouts.forEach(timeout => clearTimeout(timeout));
             typewriterTimeouts = [];
+        }
+
+        function clearRotationTimers() {
+            if (rotationInterval) {
+                clearInterval(rotationInterval);
+                rotationInterval = null;
+            }
+            rotationTimeouts.forEach(timeout => clearTimeout(timeout));
+            rotationTimeouts = [];
         }
 
         function applyEntranceAnimation() {
@@ -485,24 +525,148 @@
             });
         }
 
+        function applyTransition(element, type, duration) {
+            const transitions = {
+                'fade': `opacity ${duration}s ease`,
+                'slide-left': `transform ${duration}s ease, opacity ${duration}s ease`,
+                'slide-right': `transform ${duration}s ease, opacity ${duration}s ease`,
+                'slide-up': `transform ${duration}s ease, opacity ${duration}s ease`,
+                'slide-down': `transform ${duration}s ease, opacity ${duration}s ease`,
+                'zoom': `transform ${duration}s ease, opacity ${duration}s ease`
+            };
+            element.style.transition = transitions[type] || transitions['fade'];
+        }
+
+        function getTransitionStyles(type, entering) {
+            const styles = {
+                'fade': {
+                    entering: { opacity: '1' },
+                    exiting: { opacity: '0' }
+                },
+                'slide-left': {
+                    entering: { transform: 'translateX(0)', opacity: '1' },
+                    exiting: { transform: 'translateX(-100%)', opacity: '0' }
+                },
+                'slide-right': {
+                    entering: { transform: 'translateX(0)', opacity: '1' },
+                    exiting: { transform: 'translateX(100%)', opacity: '0' }
+                },
+                'slide-up': {
+                    entering: { transform: 'translateY(0)', opacity: '1' },
+                    exiting: { transform: 'translateY(-50%)', opacity: '0' }
+                },
+                'slide-down': {
+                    entering: { transform: 'translateY(0)', opacity: '1' },
+                    exiting: { transform: 'translateY(50%)', opacity: '0' }
+                },
+                'zoom': {
+                    entering: { transform: 'scale(1)', opacity: '1' },
+                    exiting: { transform: 'scale(0.8)', opacity: '0' }
+                }
+            };
+
+            const typeStyles = styles[type] || styles['fade'];
+            return entering ? typeStyles.entering : typeStyles.exiting;
+        }
+
+        function initializeSecondaryText() {
+            clearRotationTimers();
+            secondaryContainer.innerHTML = '';
+
+            if (!settings.secondary_rotation_enabled || !settings.secondary_phrases || settings.secondary_phrases.length === 0) {
+                const phrase = settings.secondary_phrases && settings.secondary_phrases.length > 0
+                    ? settings.secondary_phrases[0]
+                    : 'A Moment to Remember';
+                const div = document.createElement('div');
+                div.className = 'secondary-phrase active';
+                div.style.position = 'relative';
+                div.textContent = phrase;
+                secondaryContainer.appendChild(div);
+                return;
+            }
+
+            currentPhraseIndex = 0;
+            settings.secondary_phrases.forEach((phrase, index) => {
+                const div = document.createElement('div');
+                div.className = 'secondary-phrase';
+                div.textContent = phrase;
+                if (index === 0) {
+                    div.classList.add('active');
+                    const enterStyles = getTransitionStyles(settings.secondary_transition_type, true);
+                    Object.assign(div.style, enterStyles);
+                }
+                applyTransition(div, settings.secondary_transition_type, settings.secondary_transition_duration);
+                secondaryContainer.appendChild(div);
+            });
+
+            startPhraseRotation();
+        }
+
+        function startPhraseRotation() {
+            if (!settings.secondary_rotation_enabled || settings.secondary_phrases.length <= 1) return;
+
+            const totalDuration = (settings.secondary_display_duration + settings.secondary_transition_duration) * 1000;
+
+            rotationInterval = setInterval(() => {
+                rotatePhrases();
+            }, totalDuration);
+        }
+
+        function rotatePhrases() {
+            const phrases = secondaryContainer.querySelectorAll('.secondary-phrase');
+            if (phrases.length <= 1) return;
+
+            const currentPhrase = phrases[currentPhraseIndex];
+            const nextIndex = (currentPhraseIndex + 1) % phrases.length;
+            const nextPhrase = phrases[nextIndex];
+
+            const exitStyles = getTransitionStyles(settings.secondary_transition_type, false);
+            Object.assign(currentPhrase.style, exitStyles);
+
+            const enteringInitialStyles = {
+                'slide-left': { transform: 'translateX(100%)', opacity: '0' },
+                'slide-right': { transform: 'translateX(-100%)', opacity: '0' },
+                'slide-up': { transform: 'translateY(50%)', opacity: '0' },
+                'slide-down': { transform: 'translateY(-50%)', opacity: '0' },
+                'zoom': { transform: 'scale(0.8)', opacity: '0' },
+                'fade': { opacity: '0' }
+            };
+
+            const initialStyles = enteringInitialStyles[settings.secondary_transition_type] || { opacity: '0' };
+            Object.assign(nextPhrase.style, initialStyles);
+            nextPhrase.classList.add('active');
+
+            void nextPhrase.offsetWidth;
+
+            const timeout = setTimeout(() => {
+                const enterStyles = getTransitionStyles(settings.secondary_transition_type, true);
+                Object.assign(nextPhrase.style, enterStyles);
+
+                const cleanupTimeout = setTimeout(() => {
+                    currentPhrase.classList.remove('active');
+                }, settings.secondary_transition_duration * 1000);
+
+                rotationTimeouts.push(cleanupTimeout);
+            }, 50);
+
+            rotationTimeouts.push(timeout);
+            currentPhraseIndex = nextIndex;
+        }
+
         function applyTextAnimation() {
             if (settings.text_animation === 'typewriter') {
                 typewriterEffect([
                     { element: mainTextEl, text: settings.main_text },
-                    { element: secondaryTextEl, text: settings.secondary_text },
                     { element: companyNameEl, text: settings.company_name }
                 ]);
             } else if (settings.text_animation === 'fade-in-words') {
                 fadeInWords(mainTextEl, settings.main_text);
-                fadeInWords(secondaryTextEl, settings.secondary_text);
                 fadeInWords(companyNameEl, settings.company_name);
             } else if (settings.text_animation === 'slide-in-chars') {
                 slideInChars(mainTextEl, settings.main_text);
-                slideInChars(secondaryTextEl, settings.secondary_text);
                 slideInChars(companyNameEl, settings.company_name);
             } else {
                 mainTextEl.textContent = settings.main_text;
-                secondaryTextEl.textContent = settings.secondary_text;
                 companyNameEl.textContent = settings.company_name;
             }
         }
@@ -534,6 +698,7 @@
         function initializeAnimations() {
             applyEntranceAnimation();
             applyTextAnimation();
+            initializeSecondaryText();
             applyImageAnimation();
             applyLogoAnimation();
             applyTickerAnimation();
@@ -542,6 +707,7 @@
 
         function replayAnimations() {
             clearTypewriterTimeouts();
+            clearRotationTimers();
             const elements = [lowerThird, categoryImage, companyLogo, tickerContainer];
             elements.forEach(el => {
                 if (el) {
@@ -586,50 +752,24 @@
                 needsReload = true;
             }
 
+            const phrasesChanged = JSON.stringify(s.secondary_phrases) !== JSON.stringify(settings.secondary_phrases);
+            const rotationChanged = s.secondary_rotation_enabled !== settings.secondary_rotation_enabled;
+            const rotationSettingsChanged =
+                s.secondary_display_duration !== settings.secondary_display_duration ||
+                s.secondary_transition_type !== settings.secondary_transition_type ||
+                s.secondary_transition_duration !== settings.secondary_transition_duration;
+
+            if (phrasesChanged || rotationChanged || rotationSettingsChanged) {
+                settings.secondary_phrases = s.secondary_phrases;
+                settings.secondary_rotation_enabled = s.secondary_rotation_enabled;
+                settings.secondary_display_duration = s.secondary_display_duration;
+                settings.secondary_transition_type = s.secondary_transition_type;
+                settings.secondary_transition_duration = s.secondary_transition_duration;
+                initializeSecondaryText();
+            }
+
             if (s.entrance_animation !== undefined && s.entrance_animation !== settings.entrance_animation) {
                 settings.entrance_animation = s.entrance_animation;
-                needsReplayAnimations = true;
-            }
-            if (s.entrance_duration !== undefined && s.entrance_duration !== settings.entrance_duration) {
-                settings.entrance_duration = s.entrance_duration;
-                needsReplayAnimations = true;
-            }
-            if (s.entrance_delay !== undefined && s.entrance_delay !== settings.entrance_delay) {
-                settings.entrance_delay = s.entrance_delay;
-                needsReplayAnimations = true;
-            }
-
-            if (s.text_animation !== undefined && s.text_animation !== settings.text_animation) {
-                settings.text_animation = s.text_animation;
-                needsReplayAnimations = true;
-            }
-            if (s.text_animation_speed !== undefined && s.text_animation_speed !== settings.text_animation_speed) {
-                settings.text_animation_speed = s.text_animation_speed;
-                needsReplayAnimations = true;
-            }
-
-            if (s.image_animation !== undefined && s.image_animation !== settings.image_animation) {
-                settings.image_animation = s.image_animation;
-                needsReplayAnimations = true;
-            }
-            if (s.image_animation_delay !== undefined && s.image_animation_delay !== settings.image_animation_delay) {
-                settings.image_animation_delay = s.image_animation_delay;
-                needsReplayAnimations = true;
-            }
-            if (s.logo_animation !== undefined && s.logo_animation !== settings.logo_animation) {
-                settings.logo_animation = s.logo_animation;
-                needsReplayAnimations = true;
-            }
-            if (s.logo_animation_delay !== undefined && s.logo_animation_delay !== settings.logo_animation_delay) {
-                settings.logo_animation_delay = s.logo_animation_delay;
-                needsReplayAnimations = true;
-            }
-            if (s.ticker_entrance !== undefined && s.ticker_entrance !== settings.ticker_entrance) {
-                settings.ticker_entrance = s.ticker_entrance;
-                needsReplayAnimations = true;
-            }
-            if (s.ticker_entrance_delay !== undefined && s.ticker_entrance_delay !== settings.ticker_entrance_delay) {
-                settings.ticker_entrance_delay = s.ticker_entrance_delay;
                 needsReplayAnimations = true;
             }
 
@@ -637,10 +777,7 @@
                 settings.main_text = decodeHTML(s.main_text);
                 applyTextAnimation();
             }
-            if (s.secondary_text !== undefined && decodeHTML(s.secondary_text) !== settings.secondary_text) {
-                settings.secondary_text = decodeHTML(s.secondary_text);
-                applyTextAnimation();
-            }
+
             if (s.company_name !== undefined && decodeHTML(s.company_name) !== settings.company_name) {
                 settings.company_name = decodeHTML(s.company_name);
                 applyTextAnimation();
@@ -649,81 +786,6 @@
             if (s.ticker_text !== undefined) {
                 tickerText.textContent = decodeHTML(s.ticker_text);
                 updateTickerSpeed(s.ticker_speed || settings.ticker_speed);
-            }
-
-            if (s.bg_color !== undefined) {
-                document.querySelector('.lower-third-bg').style.background = `linear-gradient(90deg, ${s.bg_color}f5 0%, ${s.bg_color}e0 80%, ${s.bg_color}aa 95%, transparent 100%)`;
-                document.querySelector('.ticker-container').style.background = `linear-gradient(90deg, ${s.bg_color}f5 0%, ${s.bg_color}dd 50%, ${s.bg_color}f5 100%)`;
-            }
-            if (s.accent_color !== undefined) {
-                const style = document.createElement('style');
-                style.textContent = `.corner-accent::before, .corner-accent::after { background: ${s.accent_color} !important; }`;
-                document.head.appendChild(style);
-                document.querySelector('.accent-stripe').style.background = `linear-gradient(180deg, transparent 0%, ${s.accent_color} 20%, ${s.accent_color} 80%, transparent 100%)`;
-                document.querySelector('.ticker-container').style.borderTopColor = s.accent_color;
-                document.querySelector('.ticker-container').style.borderBottomColor = s.accent_color;
-                secondaryTextEl.style.color = s.accent_color;
-                if (categoryImage) categoryImage.style.borderColor = s.accent_color;
-            }
-            if (s.text_color !== undefined) {
-                mainTextEl.style.color = s.text_color;
-                companyNameEl.style.color = s.text_color;
-                tickerText.style.color = s.text_color;
-                document.querySelectorAll('.typewriter-cursor').forEach(cursor => {
-                    cursor.style.backgroundColor = s.text_color;
-                });
-            }
-
-            if (s.main_font_size !== undefined) {
-                mainTextEl.style.fontSize = `${s.main_font_size}px`;
-                mainTextEl.style.minHeight = `${s.main_font_size * 1.2}px`;
-            }
-            if (s.secondary_font_size !== undefined) {
-                secondaryTextEl.style.fontSize = `${s.secondary_font_size}px`;
-                secondaryTextEl.style.minHeight = `${s.secondary_font_size * 1.2}px`;
-                companyNameEl.style.fontSize = `${s.secondary_font_size * 0.7}px`;
-            }
-            if (s.ticker_font_size !== undefined) {
-                tickerText.style.fontSize = `${s.ticker_font_size}px`;
-            }
-
-            if (s.border_radius !== undefined) {
-                if (categoryImage) categoryImage.style.borderRadius = '8px';
-            }
-
-            if (s.font_family !== undefined) {
-                document.body.style.fontFamily = s.font_family;
-            }
-
-            if (s.ticker_speed !== undefined) {
-                settings.ticker_speed = s.ticker_speed;
-                updateTickerSpeed(s.ticker_speed);
-            }
-
-            if (s.logo_size !== undefined && companyLogo) {
-                companyLogo.style.width = `${s.logo_size}px`;
-                companyLogo.style.height = `${s.logo_size}px`;
-            }
-
-            if (s.opacity !== undefined) {
-                document.querySelector('.lower-third-bg').style.opacity = s.opacity;
-                document.querySelector('.ticker-container').style.opacity = s.opacity;
-            }
-
-            if (s.show_decorative_elements !== undefined) {
-                const display = s.show_decorative_elements ? 'block' : 'none';
-                document.querySelectorAll('.corner-accent, .accent-stripe').forEach(el => {
-                    el.style.display = display;
-                });
-            }
-
-            if (s.is_visible !== undefined) {
-                if (s.is_visible) {
-                    container.classList.remove('hidden');
-                    needsReplayAnimations = true;
-                } else {
-                    container.classList.add('hidden');
-                }
             }
 
             if (needsReload) {
@@ -737,9 +799,7 @@
         }
 
         setTimeout(initializeAnimations, 100);
-
         pollInterval = setInterval(pollForUpdates, 3000);
-
         setTimeout(pollForUpdates, 1000);
 
         tickerText.addEventListener('animationiteration', () => {
@@ -747,9 +807,8 @@
         });
 
         window.addEventListener('beforeunload', () => {
-            if (pollInterval) {
-                clearInterval(pollInterval);
-            }
+            if (pollInterval) clearInterval(pollInterval);
+            clearRotationTimers();
         });
     </script>
 </body>

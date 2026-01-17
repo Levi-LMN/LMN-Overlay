@@ -2,6 +2,7 @@
  * Fixed Overlay Display Controller
  * Complete rewrite with immediate updates and proper state management
  * FIXED: Secondary phrases now use their own transition animations
+ * FIXED: Accent color updates in real-time without page reload
  */
 
 class OverlayController {
@@ -48,6 +49,11 @@ class OverlayController {
         }
         this.rotationTimeouts.forEach(timeout => clearTimeout(timeout));
         this.rotationTimeouts = [];
+    }
+
+    // Update CSS variable for accent color
+    updateAccentColor(color) {
+        document.documentElement.style.setProperty('--accent-color', color);
     }
 
     // Animation Functions
@@ -357,6 +363,9 @@ class OverlayController {
 
     // Apply ALL visual styles immediately without reloading
     applyAllStyles() {
+        // Update accent color CSS variable FIRST
+        this.updateAccentColor(this.settings.accent_color);
+
         // Background colors
         if (this.lowerThirdBg) {
             this.lowerThirdBg.style.background = `linear-gradient(135deg, ${this.settings.bg_color}f5 0%, ${this.settings.bg_color}e0 100%)`;
@@ -385,25 +394,6 @@ class OverlayController {
             this.tickerText.style.fontSize = `${this.settings.ticker_font_size}px`;
         }
 
-        // Accent color for decorative elements and images
-        const accentElements = document.querySelectorAll('.corner-decoration, .accent-corner, .accent-stripe, .heart-accent, .corner-accent');
-        accentElements.forEach(el => {
-            el.style.borderColor = this.settings.accent_color;
-        });
-
-        // Update heart accents (wedding)
-        const heartAccents = document.querySelectorAll('.heart-accent::before, .heart-accent::after');
-        if (heartAccents.length > 0) {
-            const style = document.createElement('style');
-            style.textContent = `.heart-accent::before, .heart-accent::after { background: ${this.settings.accent_color}; }`;
-            document.head.appendChild(style);
-        }
-
-        if (this.categoryImage) {
-            this.categoryImage.style.borderColor = this.settings.accent_color;
-            this.categoryImage.style.borderRadius = this.settings.border_radius > 25 ? '50%' : `${this.settings.border_radius}px`;
-        }
-
         // Secondary text container
         if (this.secondaryContainer) {
             this.secondaryContainer.style.minHeight = `${this.settings.secondary_font_size * 1.3}px`;
@@ -411,7 +401,6 @@ class OverlayController {
 
         document.querySelectorAll('.secondary-phrase').forEach(el => {
             el.style.fontSize = `${this.settings.secondary_font_size}px`;
-            el.style.color = this.settings.accent_color;
             el.style.lineHeight = '1.3';
         });
 
@@ -425,7 +414,7 @@ class OverlayController {
         document.body.style.fontFamily = this.settings.font_family;
 
         // Decorative elements visibility
-        const decorativeElements = document.querySelectorAll('.corner-decoration, .corner-accent, .accent-stripe, .heart-accent, .divider-line');
+        const decorativeElements = document.querySelectorAll('.corner-decoration, .corner-accent, .accent-stripe, .heart-accent, .divider-line, .corner-flourish');
         decorativeElements.forEach(el => {
             el.style.display = this.settings.show_decorative_elements ? 'block' : 'none';
         });
@@ -544,7 +533,7 @@ class OverlayController {
             }
         }
 
-        // Check for style changes
+        // Check for style changes (including accent color)
         const styleFields = [
             'bg_color', 'accent_color', 'text_color', 'opacity',
             'main_font_size', 'secondary_font_size', 'ticker_font_size',

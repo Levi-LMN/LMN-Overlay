@@ -25,10 +25,14 @@
             bottom: 0;
             left: 0;
             width: 100%;
-            max-height: 270px;
+            max-height: calc(100vh - 60px);
             transition: opacity 0.5s ease;
             opacity: {% if settings.is_visible %}1{% else %}0{% endif %};
             pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            padding-bottom: 0;
         }
 
         #overlay-container.hidden {
@@ -58,11 +62,12 @@
             width: auto;
             max-width: 65%;
             min-width: 600px;
-            height: 100%;
+            max-height: calc(100vh - 120px);
             padding: 0;
             display: inline-flex;
             align-items: stretch;
             gap: 0;
+            overflow: visible;
         }
 
         .lower-third-bg {
@@ -280,6 +285,7 @@
             margin-top: 10px;
             border-top: 3px solid var(--accent-color, #FF1493);
             backdrop-filter: blur(10px);
+            flex-shrink: 0;
         }
 
         .ticker-text {

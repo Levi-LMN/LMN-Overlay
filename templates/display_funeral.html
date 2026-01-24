@@ -1,4 +1,4 @@
-<!-- templates/display_funeral.html -->
+<!-- templates/display_funeral.html - COMPLETE VERSION -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -32,6 +32,7 @@
             display: flex;
             flex-direction: column;
             justify-content: flex-end;
+            align-items: flex-start;
             padding-bottom: 0;
         }
 
@@ -69,6 +70,7 @@
             align-items: stretch;
             gap: 0;
             overflow: visible;
+            margin-bottom: 10px;
         }
 
         .lower-third-bg {
@@ -249,14 +251,13 @@
 
         .ticker-container {
             position: relative;
-            width: 100%;
+            width: 100vw;
             height: 60px;
             background: linear-gradient(90deg,
                 rgba(0, 0, 0, 0.92) 0%,
                 rgba(0, 0, 0, 0.85) 50%,
                 rgba(0, 0, 0, 0.92) 100%);
             overflow: hidden;
-            margin-top: 10px;
             border-top: 2px solid var(--accent-color, #8B7355);
             border-bottom: 2px solid var(--accent-color, #8B7355);
             backdrop-filter: blur(10px);
@@ -276,6 +277,7 @@
             font-weight: 300;
         }
 
+        /* Animations */
         @keyframes slide-left {
             from { transform: translateX(-100%); opacity: 0; }
             to { transform: translateX(0); opacity: 1; }
@@ -387,7 +389,6 @@
 
     <script src="{{ url_for('static', filename='js/overlay-display.js') }}"></script>
     <script>
-        // Set CSS variables for dynamic accent color
         document.documentElement.style.setProperty('--accent-color', '{{ settings.accent_color }}');
 
         function decodeHTML(html) {
@@ -431,7 +432,26 @@
             border_radius: {{ settings.border_radius }},
             font_family: '{{ settings.font_family }}',
             logo_size: {{ settings.logo_size }},
-            show_decorative_elements: {{ 'true' if settings.show_decorative_elements else 'false' }}
+            show_decorative_elements: {{ 'true' if settings.show_decorative_elements else 'false' }},
+            // Position & Size settings
+            vertical_position: '{{ settings.vertical_position }}',
+            horizontal_position: '{{ settings.horizontal_position }}',
+            custom_top: {{ settings.custom_top }},
+            custom_bottom: {{ settings.custom_bottom }},
+            custom_left: {{ settings.custom_left }},
+            custom_right: {{ settings.custom_right }},
+            container_width: '{{ settings.container_width }}',
+            custom_width: {{ settings.custom_width }},
+            container_max_width: {{ settings.container_max_width }},
+            container_min_width: {{ settings.container_min_width }},
+            container_height: '{{ settings.container_height }}',
+            custom_height: {{ settings.custom_height }},
+            container_padding: {{ settings.container_padding }},
+            // Text scaling settings
+            text_scale_mode: '{{ settings.text_scale_mode }}',
+            text_line_height: {{ settings.text_line_height }},
+            text_max_lines: {{ settings.text_max_lines }},
+            enable_text_truncation: {{ 'true' if settings.enable_text_truncation else 'false' }}
         };
 
         initOverlay('funeral', settings);

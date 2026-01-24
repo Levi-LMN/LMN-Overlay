@@ -1,4 +1,4 @@
-<!-- templates/display_ceremony.html -->
+<!-- templates/display_ceremony.html - COMPLETE VERSION -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -59,7 +59,6 @@
             {% endif %}
         }
 
-        /* Main overlay card - centered above ticker */
         .lower-third {
             position: relative;
             width: auto;
@@ -247,7 +246,6 @@
             border-left: 35px solid transparent;
         }
 
-        /* Ticker at the bottom - fixed height */
         .ticker-container {
             position: relative;
             width: 100vw;
@@ -279,6 +277,7 @@
             font-weight: 600;
         }
 
+        /* Animations */
         @keyframes slide-left {
             from { transform: translateX(-100%); opacity: 0; }
             to { transform: translateX(0); opacity: 1; }
@@ -356,7 +355,6 @@
     {% endif %}
 
     <div id="overlay-container" {% if not settings.is_visible %}class="hidden"{% endif %}>
-        <!-- Main overlay card centered above ticker -->
         <div class="lower-third">
             <div class="lower-third-bg">
                 <div class="corner-accent top-left"></div>
@@ -383,7 +381,6 @@
             </div>
         </div>
 
-        <!-- Ticker at bottom -->
         <div class="ticker-container">
             <div id="ticker-text" class="ticker-text">
                 {{ settings.ticker_text or 'Welcome to this special occasion celebrating excellence and achievement.' }}
@@ -393,7 +390,6 @@
 
     <script src="{{ url_for('static', filename='js/overlay-display.js') }}"></script>
     <script>
-        // Set CSS variables for dynamic accent color
         document.documentElement.style.setProperty('--accent-color', '{{ settings.accent_color }}');
 
         function decodeHTML(html) {
@@ -437,7 +433,26 @@
             border_radius: {{ settings.border_radius }},
             font_family: '{{ settings.font_family }}',
             logo_size: {{ settings.logo_size }},
-            show_decorative_elements: {{ 'true' if settings.show_decorative_elements else 'false' }}
+            show_decorative_elements: {{ 'true' if settings.show_decorative_elements else 'false' }},
+            // Position & Size settings
+            vertical_position: '{{ settings.vertical_position }}',
+            horizontal_position: '{{ settings.horizontal_position }}',
+            custom_top: {{ settings.custom_top }},
+            custom_bottom: {{ settings.custom_bottom }},
+            custom_left: {{ settings.custom_left }},
+            custom_right: {{ settings.custom_right }},
+            container_width: '{{ settings.container_width }}',
+            custom_width: {{ settings.custom_width }},
+            container_max_width: {{ settings.container_max_width }},
+            container_min_width: {{ settings.container_min_width }},
+            container_height: '{{ settings.container_height }}',
+            custom_height: {{ settings.custom_height }},
+            container_padding: {{ settings.container_padding }},
+            // Text scaling settings
+            text_scale_mode: '{{ settings.text_scale_mode }}',
+            text_line_height: {{ settings.text_line_height }},
+            text_max_lines: {{ settings.text_max_lines }},
+            enable_text_truncation: {{ 'true' if settings.enable_text_truncation else 'false' }}
         };
 
         initOverlay('ceremony', settings);

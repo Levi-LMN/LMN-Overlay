@@ -7,17 +7,31 @@
     .settings-section {
         background: white;
         border-radius: 0.5rem;
-        padding: 1.5rem;
-        margin-bottom: 1.5rem;
+        padding: 1rem;
+        margin-bottom: 1rem;
         box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     }
+
+    @media (min-width: 640px) {
+        .settings-section {
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+    }
+
     .settings-section h3 {
-        font-size: 1.125rem;
+        font-size: 1rem;
         font-weight: 600;
         color: #1F2937;
         margin-bottom: 1rem;
         padding-bottom: 0.5rem;
         border-bottom: 2px solid #E5E7EB;
+    }
+
+    @media (min-width: 640px) {
+        .settings-section h3 {
+            font-size: 1.125rem;
+        }
     }
     .form-group {
         margin-bottom: 1rem;
@@ -89,18 +103,39 @@
         aspect-ratio: 16/9;
     }
     .tab-button {
-        padding: 0.75rem 1.5rem;
+        padding: 0.5rem 1rem;
         border: none;
         background: transparent;
         color: #6B7280;
         font-weight: 500;
+        font-size: 0.875rem;
         cursor: pointer;
         border-bottom: 2px solid transparent;
         transition: all 0.2s;
+        white-space: nowrap;
+        flex-shrink: 0;
     }
+
+    @media (min-width: 640px) {
+        .tab-button {
+            padding: 0.75rem 1.5rem;
+            font-size: 1rem;
+        }
+    }
+
     .tab-button.active {
         color: #4F46E5;
         border-bottom-color: #4F46E5;
+    }
+
+    .tab-button i {
+        display: none;
+    }
+
+    @media (min-width: 640px) {
+        .tab-button i {
+            display: inline;
+        }
     }
     .tab-content {
         display: none;
@@ -110,8 +145,99 @@
     }
     .grid-2 {
         display: grid;
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: 1fr;
         gap: 1rem;
+    }
+
+    @media (min-width: 640px) {
+        .grid-2 {
+            grid-template-columns: 1fr 1fr;
+        }
+    }
+
+    /* Preview frame responsive */
+    .preview-frame {
+        position: relative;
+        background: #000;
+        border-radius: 0.5rem;
+        overflow: hidden;
+        margin-bottom: 1rem;
+        border: 2px solid #374151;
+        transition: all 0.3s ease;
+    }
+
+    .preview-frame.collapsed {
+        display: none;
+    }
+
+    .preview-frame::before {
+        content: '';
+        display: block;
+        padding-top: 56.25%; /* 16:9 aspect ratio */
+    }
+
+    @media (min-width: 1024px) {
+        .preview-frame {
+            position: sticky;
+            top: 20px;
+            margin-bottom: 0;
+        }
+    }
+
+    /* Force iframe content to scale */
+    .preview-frame iframe {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        border: 0;
+    }
+
+    /* Preview toggle button */
+    .preview-toggle {
+        position: sticky;
+        top: 20px;
+        background: white;
+        border: 2px solid #E5E7EB;
+        border-radius: 0.5rem;
+        padding: 1rem;
+        cursor: pointer;
+        transition: all 0.2s;
+        text-align: center;
+    }
+
+    .preview-toggle:hover {
+        border-color: #4F46E5;
+        background: #F9FAFB;
+    }
+
+    .preview-toggle i {
+        transition: transform 0.3s ease;
+    }
+
+    .preview-container.collapsed .preview-toggle i.fa-chevron-down {
+        transform: rotate(180deg);
+    }
+
+    /* Mobile-optimized form inputs */
+    @media (max-width: 639px) {
+        .color-input-group {
+            flex-wrap: wrap;
+        }
+
+        .form-input, select.form-input {
+            font-size: 16px; /* Prevents zoom on iOS */
+        }
+    }
+    /* Hide scrollbar for tabs but keep functionality */
+    .scrollbar-hide {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+
+    .scrollbar-hide::-webkit-scrollbar {
+        display: none;
     }
 </style>
 {% endblock %}
@@ -127,44 +253,47 @@
     </div>
 
     <!-- Page Header -->
-    <div class="mb-8 flex items-center justify-between">
-        <div>
-            <h1 class="text-3xl font-bold text-gray-900 mb-2">
-                <i class="fas {% if category == 'funeral' %}fa-dove{% elif category == 'wedding' %}fa-rings-wedding{% else %}fa-trophy{% endif %} text-indigo-600 mr-3"></i>
-                {{ category_name }} Customization
-            </h1>
-            <p class="text-gray-600">Customize appearance, animations, and behavior</p>
-        </div>
-        <div class="flex gap-3">
-            <button onclick="resetToDefaults()" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
-                <i class="fas fa-undo mr-2"></i>Reset to Defaults
-            </button>
-            <a href="{{ url_for('main.display', category=category) }}" target="_blank"
-               class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">
-                <i class="fas fa-external-link-alt mr-2"></i>Open Preview
-            </a>
+    <div class="mb-6 sm:mb-8">
+        <div class="flex flex-col gap-4">
+            <div>
+                <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-2 flex items-center flex-wrap gap-2">
+                    <i class="fas {% if category == 'funeral' %}fa-dove{% elif category == 'wedding' %}fa-heart{% else %}fa-trophy{% endif %} text-indigo-600"></i>
+                    <span>{{ category_name }} Customization</span>
+                </h1>
+                <p class="text-sm sm:text-base text-gray-600">Customize appearance, animations, and behavior</p>
+            </div>
+            <div class="flex flex-col sm:flex-row gap-2 sm:gap-3">
+                <button onclick="resetToDefaults()"
+                        class="w-full sm:w-auto px-4 py-2 border border-gray-300 rounded-md text-sm sm:text-base text-gray-700 hover:bg-gray-50 font-medium">
+                    <i class="fas fa-undo mr-2"></i>Reset to Defaults
+                </button>
+                <a href="{{ url_for('main.display', category=category) }}" target="_blank"
+                   class="w-full sm:w-auto px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 text-center text-sm sm:text-base font-medium">
+                    <i class="fas fa-external-link-alt mr-2"></i>Open Preview
+                </a>
+            </div>
         </div>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         <!-- Settings Panel -->
-        <div class="lg:col-span-2">
+        <div class="lg:col-span-2 order-2 lg:order-1">
             <!-- Tab Navigation -->
-            <div class="bg-white rounded-t-lg border-b border-gray-200 flex overflow-x-auto">
+            <div class="bg-white rounded-t-lg border-b border-gray-200 flex overflow-x-auto scrollbar-hide">
                 <button class="tab-button active" onclick="switchTab('content')">
-                    <i class="fas fa-text mr-2"></i>Content
+                    <i class="fas fa-text mr-2"></i><span>Content</span>
                 </button>
                 <button class="tab-button" onclick="switchTab('appearance')">
-                    <i class="fas fa-palette mr-2"></i>Appearance
+                    <i class="fas fa-palette mr-2"></i><span>Appearance</span>
                 </button>
                 <button class="tab-button" onclick="switchTab('animations')">
-                    <i class="fas fa-magic mr-2"></i>Animations
+                    <i class="fas fa-magic mr-2"></i><span>Animations</span>
                 </button>
                 <button class="tab-button" onclick="switchTab('layout')">
-                    <i class="fas fa-th-large mr-2"></i>Layout
+                    <i class="fas fa-th-large mr-2"></i><span>Layout</span>
                 </button>
                 <button class="tab-button" onclick="switchTab('assets')">
-                    <i class="fas fa-images mr-2"></i>Assets
+                    <i class="fas fa-images mr-2"></i><span>Assets</span>
                 </button>
             </div>
 
@@ -872,10 +1001,24 @@
         </div>
 
         <!-- Live Preview -->
-        <div class="lg:col-span-1">
-            <div class="preview-frame">
-                <iframe id="preview-frame" src="{{ url_for('main.display', category=category) }}"
-                        class="w-full h-full border-0"></iframe>
+        <div class="lg:col-span-1 order-1 lg:order-2">
+            <div id="preview-container" class="preview-container">
+                <!-- Toggle Button -->
+                <button onclick="togglePreview()" class="preview-toggle w-full mb-3">
+                    <div class="flex items-center justify-center gap-2">
+                        <i class="fas fa-eye text-indigo-600"></i>
+                        <span class="font-medium text-gray-700">
+                            <span id="preview-toggle-text">Hide Preview</span>
+                        </span>
+                        <i class="fas fa-chevron-down text-gray-500"></i>
+                    </div>
+                </button>
+
+                <!-- Preview Frame -->
+                <div class="preview-frame" id="preview-frame-container">
+                    <iframe id="preview-frame" src="{{ url_for('main.display', category=category) }}"
+                            class="w-full h-full border-0"></iframe>
+                </div>
             </div>
         </div>
     </div>
@@ -883,12 +1026,147 @@
 
 <script>
     const category = '{{ category }}';
+    const STORAGE_KEY = `customize_state_${category}`;
+
+    // Load saved state from localStorage
+    function loadSavedState() {
+        try {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (saved) {
+                const state = JSON.parse(saved);
+
+                // Restore active tab
+                if (state.activeTab) {
+                    const tabButton = Array.from(document.querySelectorAll('.tab-button')).find(
+                        btn => btn.textContent.trim().toLowerCase().includes(state.activeTab)
+                    );
+                    if (tabButton) {
+                        tabButton.click();
+                    }
+                }
+
+                // Restore preview visibility
+                if (state.previewCollapsed) {
+                    const container = document.getElementById('preview-frame-container');
+                    const previewContainer = document.getElementById('preview-container');
+                    const toggleText = document.getElementById('preview-toggle-text');
+
+                    if (container && previewContainer && toggleText) {
+                        container.classList.add('collapsed');
+                        previewContainer.classList.add('collapsed');
+                        toggleText.textContent = 'Show Preview';
+                    }
+                }
+            }
+        } catch (error) {
+            console.error('Error loading saved state:', error);
+        }
+    }
+
+    // Save state to localStorage
+    function saveState() {
+        try {
+            const activeTabBtn = document.querySelector('.tab-button.active');
+            const activeTab = activeTabBtn ? activeTabBtn.textContent.trim().toLowerCase() : 'content';
+            const previewCollapsed = document.getElementById('preview-frame-container')?.classList.contains('collapsed') || false;
+
+            const state = {
+                activeTab: activeTab,
+                previewCollapsed: previewCollapsed,
+                timestamp: Date.now()
+            };
+
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        } catch (error) {
+            console.error('Error saving state:', error);
+        }
+    }
+
+    // Toggle preview visibility
+    function togglePreview() {
+        const container = document.getElementById('preview-frame-container');
+        const previewContainer = document.getElementById('preview-container');
+        const toggleText = document.getElementById('preview-toggle-text');
+
+        if (container.classList.contains('collapsed')) {
+            container.classList.remove('collapsed');
+            previewContainer.classList.remove('collapsed');
+            toggleText.textContent = 'Hide Preview';
+            setTimeout(scalePreviewFrame, 100);
+        } else {
+            container.classList.add('collapsed');
+            previewContainer.classList.add('collapsed');
+            toggleText.textContent = 'Show Preview';
+        }
+
+        saveState();
+    }
+
+    // Scale preview iframe to fit - simpler approach
+    function scalePreviewFrame() {
+        const iframe = document.getElementById('preview-frame');
+        const container = iframe?.parentElement;
+
+        if (!iframe || !container || container.classList.contains('collapsed')) return;
+
+        const containerWidth = container.offsetWidth;
+        const containerHeight = container.offsetHeight;
+
+        // Assuming display is designed for 1920x1080
+        const displayWidth = 1920;
+        const displayHeight = 1080;
+
+        // Calculate scale to fit both dimensions
+        const scaleX = containerWidth / displayWidth;
+        const scaleY = containerHeight / displayHeight;
+        const scale = Math.min(scaleX, scaleY);
+
+        // Apply zoom to scale the content
+        iframe.style.zoom = scale;
+
+        // Center the iframe if it doesn't fill the container
+        const scaledWidth = displayWidth * scale;
+        const scaledHeight = displayHeight * scale;
+
+        if (scaledWidth < containerWidth) {
+            iframe.style.left = `${(containerWidth - scaledWidth) / 2 / scale}px`;
+        } else {
+            iframe.style.left = '0';
+        }
+
+        if (scaledHeight < containerHeight) {
+            iframe.style.top = `${(containerHeight - scaledHeight) / 2 / scale}px`;
+        } else {
+            iframe.style.top = '0';
+        }
+    }
+
+    // Run on load and resize
+    window.addEventListener('load', () => {
+        loadSavedState();
+        setTimeout(scalePreviewFrame, 200);
+    });
+    window.addEventListener('resize', scalePreviewFrame);
+
+    // Save state before unload
+    window.addEventListener('beforeunload', saveState);
+
+    // Re-scale after iframe loads
+    const iframe = document.getElementById('preview-frame');
+    if (iframe) {
+        iframe.addEventListener('load', () => {
+            setTimeout(scalePreviewFrame, 200);
+        });
+    }
 
     function switchTab(tabName) {
         document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
         event.target.classList.add('active');
         document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
         document.getElementById(tabName + '-tab').classList.add('active');
+
+        // Save state when tab changes
+        saveState();
     }
 
     function updateSetting(field, value) {
@@ -1035,6 +1313,8 @@
     function refreshPreview() {
         const iframe = document.getElementById('preview-frame');
         iframe.src = iframe.src;
+        // Re-scale after refresh
+        setTimeout(scalePreviewFrame, 300);
     }
 
     function showToast(message, type) {

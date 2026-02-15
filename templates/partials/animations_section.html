@@ -1,0 +1,270 @@
+<div class="space-y-4">
+    <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Entrance Animation</label>
+        <select name="entrance_animation"
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
+            <option value="none" {% if settings[category].entrance_animation == 'none' %}selected{% endif %}>None</option>
+            <option value="fade-in" {% if settings[category].entrance_animation == 'fade-in' %}selected{% endif %}>Fade In</option>
+            <option value="slide-left" {% if settings[category].entrance_animation == 'slide-left' %}selected{% endif %}>Slide from Left</option>
+            <option value="slide-right" {% if settings[category].entrance_animation == 'slide-right' %}selected{% endif %}>Slide from Right</option>
+            <option value="slide-up" {% if settings[category].entrance_animation == 'slide-up' %}selected{% endif %}>Slide Up</option>
+            <option value="slide-down" {% if settings[category].entrance_animation == 'slide-down' %}selected{% endif %}>Slide Down</option>
+            <option value="zoom-in" {% if settings[category].entrance_animation == 'zoom-in' %}selected{% endif %}>Zoom In</option>
+            <option value="bounce-in" {% if settings[category].entrance_animation == 'bounce-in' %}selected{% endif %}>Bounce In</option>
+        </select>
+    </div>
+
+    <div class="grid grid-cols-2 gap-4">
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Duration (s)</label>
+            <input type="number" name="entrance_duration"
+                   value="{{ settings[category].entrance_duration }}"
+                   min="0.1" max="5" step="0.1"
+                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Delay (s)</label>
+            <input type="number" name="entrance_delay"
+                   value="{{ settings[category].entrance_delay }}"
+                   min="0" max="10" step="0.1"
+                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
+        </div>
+    </div>
+
+    <div class="pt-4 border-t border-gray-200">
+        <h4 class="font-medium text-gray-900 mb-3">Text Animation</h4>
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Animation Type</label>
+            <select name="text_animation"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
+                <option value="none" {% if settings[category].text_animation == 'none' %}selected{% endif %}>None</option>
+                <option value="typewriter" {% if settings[category].text_animation == 'typewriter' %}selected{% endif %}>Typewriter</option>
+                <option value="fade-in-word" {% if settings[category].text_animation == 'fade-in-word' %}selected{% endif %}>Fade In by Word</option>
+                <option value="slide-in-word" {% if settings[category].text_animation == 'slide-in-word' %}selected{% endif %}>Slide In by Word</option>
+            </select>
+        </div>
+        <div class="mt-2">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Speed (s per character/word)</label>
+            <input type="number" name="text_animation_speed"
+                   value="{{ settings[category].text_animation_speed }}"
+                   min="0.01" max="1" step="0.01"
+                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
+        </div>
+    </div>
+
+    <div class="pt-4 border-t border-gray-200">
+        <h4 class="font-medium text-gray-900 mb-3">Image Entry Animation</h4>
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Animation Type</label>
+            <select name="image_animation"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
+                <option value="none" {% if settings[category].image_animation == 'none' %}selected{% endif %}>None</option>
+                <option value="fade-in" {% if settings[category].image_animation == 'fade-in' %}selected{% endif %}>Fade In</option>
+                <option value="zoom-in" {% if settings[category].image_animation == 'zoom-in' %}selected{% endif %}>Zoom In</option>
+                <option value="slide-in" {% if settings[category].image_animation == 'slide-in' %}selected{% endif %}>Slide In</option>
+                <option value="rotate-in" {% if settings[category].image_animation == 'rotate-in' %}selected{% endif %}>Rotate In</option>
+            </select>
+        </div>
+        <div class="mt-2">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Delay (s)</label>
+            <input type="number" name="image_animation_delay"
+                   value="{{ settings[category].image_animation_delay }}"
+                   min="0" max="10" step="0.1"
+                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
+        </div>
+    </div>
+
+    <!-- NEW: Image Display Animation (On-Display/Continuous) -->
+    <div class="pt-4 border-t border-gray-200 bg-blue-50 rounded-lg p-4">
+        <div class="flex items-center justify-between mb-3">
+            <h4 class="font-medium text-gray-900">
+                <i class="fas fa-image mr-2 text-blue-600"></i>
+                Image Display Animation (On-Display)
+            </h4>
+            <label class="flex items-center cursor-pointer">
+                <input type="checkbox" name="image_display_animation_enabled"
+                       {% if settings[category].image_display_animation_enabled %}checked{% endif %}
+                       class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                <span class="ml-2 text-sm text-gray-700">Enable</span>
+            </label>
+        </div>
+        <p class="text-xs text-gray-600 mb-3">Continuous/looping animation while image is displayed</p>
+
+        <div class="space-y-3">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Animation Type</label>
+                <select name="image_display_animation"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
+                    <option value="none" {% if settings[category].image_display_animation == 'none' %}selected{% endif %}>None</option>
+                    <option value="pulse" {% if settings[category].image_display_animation == 'pulse' %}selected{% endif %}>Pulse</option>
+                    <option value="zoom-slow" {% if settings[category].image_display_animation == 'zoom-slow' %}selected{% endif %}>Zoom Slow</option>
+                    <option value="pan" {% if settings[category].image_display_animation == 'pan' %}selected{% endif %}>Pan (Ken Burns)</option>
+                    <option value="rotate-slow" {% if settings[category].image_display_animation == 'rotate-slow' %}selected{% endif %}>Rotate Slow</option>
+                    <option value="float" {% if settings[category].image_display_animation == 'float' %}selected{% endif %}>Float</option>
+                    <option value="glow" {% if settings[category].image_display_animation == 'glow' %}selected{% endif %}>Glow</option>
+                    <option value="shake-subtle" {% if settings[category].image_display_animation == 'shake-subtle' %}selected{% endif %}>Shake Subtle</option>
+                </select>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Duration (s)</label>
+                    <input type="number" name="image_display_animation_duration"
+                           value="{{ settings[category].image_display_animation_duration }}"
+                           min="1" max="20" step="0.5"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Frequency (s)</label>
+                    <input type="number" name="image_display_animation_frequency"
+                           value="{{ settings[category].image_display_animation_frequency }}"
+                           min="1" max="60" step="0.5"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
+                    <p class="text-xs text-gray-500 mt-1">Time between animations</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="pt-4 border-t border-gray-200">
+        <h4 class="font-medium text-gray-900 mb-3">Logo Entry Animation</h4>
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Animation Type</label>
+            <select name="logo_animation"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
+                <option value="none" {% if settings[category].logo_animation == 'none' %}selected{% endif %}>None</option>
+                <option value="fade-in" {% if settings[category].logo_animation == 'fade-in' %}selected{% endif %}>Fade In</option>
+                <option value="scale-in" {% if settings[category].logo_animation == 'scale-in' %}selected{% endif %}>Scale In</option>
+                <option value="rotate-in" {% if settings[category].logo_animation == 'rotate-in' %}selected{% endif %}>Rotate In</option>
+                <option value="bounce-in" {% if settings[category].logo_animation == 'bounce-in' %}selected{% endif %}>Bounce In</option>
+            </select>
+        </div>
+        <div class="mt-2">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Delay (s)</label>
+            <input type="number" name="logo_animation_delay"
+                   value="{{ settings[category].logo_animation_delay }}"
+                   min="0" max="10" step="0.1"
+                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
+        </div>
+    </div>
+
+    <!-- NEW: Logo Display Animation (On-Display/Continuous) -->
+    <div class="pt-4 border-t border-gray-200 bg-purple-50 rounded-lg p-4">
+        <div class="flex items-center justify-between mb-3">
+            <h4 class="font-medium text-gray-900">
+                <i class="fas fa-crown mr-2 text-purple-600"></i>
+                Logo Display Animation (On-Display)
+            </h4>
+            <label class="flex items-center cursor-pointer">
+                <input type="checkbox" name="logo_display_animation_enabled"
+                       {% if settings[category].logo_display_animation_enabled %}checked{% endif %}
+                       class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                <span class="ml-2 text-sm text-gray-700">Enable</span>
+            </label>
+        </div>
+        <p class="text-xs text-gray-600 mb-3">Continuous/looping animation while logo is displayed</p>
+
+        <div class="space-y-3">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Animation Type</label>
+                <select name="logo_display_animation"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
+                    <option value="none" {% if settings[category].logo_display_animation == 'none' %}selected{% endif %}>None</option>
+                    <option value="pulse" {% if settings[category].logo_display_animation == 'pulse' %}selected{% endif %}>Pulse</option>
+                    <option value="float" {% if settings[category].logo_display_animation == 'float' %}selected{% endif %}>Float</option>
+                    <option value="rotate-slow" {% if settings[category].logo_display_animation == 'rotate-slow' %}selected{% endif %}>Rotate Slow</option>
+                    <option value="glow" {% if settings[category].logo_display_animation == 'glow' %}selected{% endif %}>Glow</option>
+                    <option value="bounce-subtle" {% if settings[category].logo_display_animation == 'bounce-subtle' %}selected{% endif %}>Bounce Subtle</option>
+                    <option value="shake-subtle" {% if settings[category].logo_display_animation == 'shake-subtle' %}selected{% endif %}>Shake Subtle</option>
+                    <option value="swing" {% if settings[category].logo_display_animation == 'swing' %}selected{% endif %}>Swing</option>
+                </select>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Duration (s)</label>
+                    <input type="number" name="logo_display_animation_duration"
+                           value="{{ settings[category].logo_display_animation_duration }}"
+                           min="1" max="20" step="0.5"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Frequency (s)</label>
+                    <input type="number" name="logo_display_animation_frequency"
+                           value="{{ settings[category].logo_display_animation_frequency }}"
+                           min="1" max="60" step="0.5"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
+                    <p class="text-xs text-gray-500 mt-1">Time between animations</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="pt-4 border-t border-gray-200">
+        <div class="flex items-center justify-between mb-3">
+            <h4 class="font-medium text-gray-900">Ticker Animation</h4>
+            <label class="flex items-center cursor-pointer">
+                <input type="checkbox" name="show_ticker"
+                       {% if settings[category].show_ticker %}checked{% endif %}
+                       class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                <span class="ml-2 text-sm text-gray-700">Show Ticker</span>
+            </label>
+        </div>
+
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Entrance Type</label>
+            <select name="ticker_entrance"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
+                <option value="none" {% if settings[category].ticker_entrance == 'none' %}selected{% endif %}>None</option>
+                <option value="slide-up" {% if settings[category].ticker_entrance == 'slide-up' %}selected{% endif %}>Slide Up</option>
+                <option value="fade-in" {% if settings[category].ticker_entrance == 'fade-in' %}selected{% endif %}>Fade In</option>
+            </select>
+        </div>
+        <div class="mt-2">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Delay (s)</label>
+            <input type="number" name="ticker_entrance_delay"
+                   value="{{ settings[category].ticker_entrance_delay }}"
+                   min="0" max="10" step="0.1"
+                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
+        </div>
+        <div class="mt-2">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Scroll Speed (px/s)</label>
+            <input type="range" name="ticker_speed"
+                   value="{{ settings[category].ticker_speed }}"
+                   min="10" max="200"
+                   class="w-full"
+                   oninput="this.nextElementSibling.textContent = this.value + 'px/s'">
+            <span class="text-sm text-gray-600">{{ settings[category].ticker_speed }}px/s</span>
+        </div>
+    </div>
+
+    <div class="pt-4 border-t border-gray-200">
+        <h4 class="font-medium text-gray-900 mb-3">Secondary Text Rotation</h4>
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Transition Type</label>
+            <select name="secondary_transition_type"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
+                <option value="fade" {% if settings[category].secondary_transition_type == 'fade' %}selected{% endif %}>Fade</option>
+                <option value="slide-up" {% if settings[category].secondary_transition_type == 'slide-up' %}selected{% endif %}>Slide Up</option>
+                <option value="slide-down" {% if settings[category].secondary_transition_type == 'slide-down' %}selected{% endif %}>Slide Down</option>
+                <option value="zoom" {% if settings[category].secondary_transition_type == 'zoom' %}selected{% endif %}>Zoom</option>
+            </select>
+        </div>
+        <div class="grid grid-cols-2 gap-4 mt-2">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Display Duration (s)</label>
+                <input type="number" name="secondary_display_duration"
+                       value="{{ settings[category].secondary_display_duration }}"
+                       min="1" max="30" step="0.5"
+                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Transition Duration (s)</label>
+                <input type="number" name="secondary_transition_duration"
+                       value="{{ settings[category].secondary_transition_duration }}"
+                       min="0.1" max="3" step="0.1"
+                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
+            </div>
+        </div>
+    </div>
+</div>

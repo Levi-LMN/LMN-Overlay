@@ -9,3 +9,9 @@ simple-websocket==1.0.0
 requests==2.31.0
 python-dotenv==1.0.0
 gunicorn==21.2.0
+
+# OCR Dependencies - Python 3.12 compatible with numpy 1.x for OpenCV
+pytesseract==0.3.10
+Pillow==10.1.0
+numpy<2.0.0
+opencv-python==4.10.0.84

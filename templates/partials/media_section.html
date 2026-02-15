@@ -1,0 +1,118 @@
+<div class="space-y-4">
+    <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Company Logo</label>
+        <div class="flex items-center gap-4">
+            {% if settings[category].company_logo %}
+            <div class="relative">
+                <img src="{{ url_for('static', filename=settings[category].company_logo) }}"
+                     alt="Company Logo"
+                     class="h-20 w-20 object-contain border border-gray-300 rounded">
+                <button type="button"
+                        onclick="removeLogo('{{ category }}')"
+                        class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600">
+                    <i class="fas fa-times text-xs"></i>
+                </button>
+            </div>
+            {% endif %}
+            <label class="cursor-pointer">
+                <span class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors inline-block">
+                    <i class="fas fa-upload mr-2"></i> Upload Logo
+                </span>
+                <input type="file"
+                       accept="image/*"
+                       class="hidden"
+                       onchange="uploadFile(event, '{{ category }}', 'logo')">
+            </label>
+        </div>
+        <div class="flex items-center mt-2">
+            <input type="checkbox" name="show_company_logo"
+                   {% if settings[category].show_company_logo %}checked{% endif %}
+                   class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+            <label class="ml-2 text-sm text-gray-700">Show company logo</label>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-2 gap-4">
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Logo Size (px)</label>
+            <input type="range" name="logo_size"
+                   value="{{ settings[category].logo_size }}"
+                   min="40" max="200"
+                   class="w-full"
+                   oninput="this.nextElementSibling.textContent = this.value + 'px'">
+            <span class="text-sm text-gray-600">{{ settings[category].logo_size }}px</span>
+        </div>
+
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Logo Opacity</label>
+            <input type="range" name="logo_opacity"
+                   value="{{ settings[category].logo_opacity }}"
+                   min="0" max="1" step="0.1"
+                   class="w-full"
+                   oninput="this.nextElementSibling.textContent = this.value">
+            <span class="text-sm text-gray-600">{{ settings[category].logo_opacity }}</span>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-2 gap-4">
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Logo Border Radius (px)</label>
+            <input type="range" name="logo_border_radius"
+                   value="{{ settings[category].logo_border_radius }}"
+                   min="0" max="100"
+                   class="w-full"
+                   oninput="this.nextElementSibling.textContent = this.value + 'px'">
+            <span class="text-sm text-gray-600">{{ settings[category].logo_border_radius }}px</span>
+        </div>
+
+        <div class="flex items-center">
+            <input type="checkbox" name="logo_shadow"
+                   {% if settings[category].logo_shadow %}checked{% endif %}
+                   class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+            <label class="ml-2 text-sm text-gray-700">Enable logo shadow</label>
+        </div>
+    </div>
+
+    <div class="pt-4 border-t border-gray-200">
+        <label class="block text-sm font-medium text-gray-700 mb-2">Category Background Image</label>
+        <div class="flex items-center gap-4">
+            {% if settings[category].category_image %}
+            <div class="relative">
+                <img src="{{ url_for('static', filename=settings[category].category_image) }}"
+                     alt="Category Image"
+                     class="h-20 w-32 object-cover border border-gray-300 rounded">
+                <button type="button"
+                        onclick="removeImage('{{ category }}')"
+                        class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600">
+                    <i class="fas fa-times text-xs"></i>
+                </button>
+            </div>
+            {% endif %}
+            <label class="cursor-pointer">
+                <span class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors inline-block">
+                    <i class="fas fa-upload mr-2"></i> Upload Image
+                </span>
+                <input type="file"
+                       accept="image/*"
+                       class="hidden"
+                       onchange="uploadFile(event, '{{ category }}', 'image')">
+            </label>
+        </div>
+        <div class="flex items-center mt-2">
+            <input type="checkbox" name="show_category_image"
+                   {% if settings[category].show_category_image %}checked{% endif %}
+                   class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+            <label class="ml-2 text-sm text-gray-700">Show category image</label>
+        </div>
+    </div>
+
+    <div class="pt-4 border-t border-gray-200">
+        <label class="block text-sm font-medium text-gray-700 mb-2">Overall Opacity</label>
+        <input type="range" name="opacity"
+               value="{{ settings[category].opacity }}"
+               min="0" max="1" step="0.1"
+               class="w-full"
+               oninput="this.nextElementSibling.textContent = this.value">
+        <span class="text-sm text-gray-600">{{ settings[category].opacity }}</span>
+    </div>
+</div>

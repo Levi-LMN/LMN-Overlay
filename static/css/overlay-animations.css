@@ -1,0 +1,232 @@
+/* Animation Keyframes */
+
+/* Entrance Animations */
+@keyframes fade-in {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slide-left {
+    from {
+        transform: translateX(-100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slide-right {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slide-up {
+    from {
+        transform: translateY(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slide-down {
+    from {
+        transform: translateY(-100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes zoom-in {
+    from {
+        transform: scale(0);
+        opacity: 0;
+    }
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* Logo Animations */
+@keyframes scale-in {
+    from {
+        transform: scale(0);
+        opacity: 0;
+    }
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+@keyframes rotate-in {
+    from {
+        transform: rotate(-360deg) scale(0);
+        opacity: 0;
+    }
+    to {
+        transform: rotate(0) scale(1);
+        opacity: 1;
+    }
+}
+
+@keyframes bounce-in {
+    0% {
+        transform: scale(0);
+        opacity: 0;
+    }
+    50% {
+        transform: scale(1.2);
+    }
+    70% {
+        transform: scale(0.9);
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+@keyframes flip-in {
+    from {
+        transform: rotateY(90deg);
+        opacity: 0;
+    }
+    to {
+        transform: rotateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+}
+
+/* Ticker Animation */
+@keyframes ticker-scroll {
+    from {
+        transform: translateX(100%);
+    }
+    to {
+        transform: translateX(-100%);
+    }
+}
+
+/* Overlay Container Styles */
+#overlay-container {
+    position: fixed;
+    z-index: 1000;
+    font-family: Arial, sans-serif;
+    box-sizing: border-box;
+}
+
+/* Main Text */
+#main-text {
+    font-weight: bold;
+    padding: 10px 20px;
+    margin: 10px 0;
+    border-radius: 5px;
+}
+
+/* Secondary Text */
+#secondary-text {
+    padding: 8px 15px;
+    margin: 8px 0;
+    border-radius: 5px;
+}
+
+/* Company Name */
+#company-name {
+    font-weight: 600;
+    padding: 5px 15px;
+    margin: 5px 0;
+    border-radius: 5px;
+}
+
+/* Ticker Container */
+.ticker-container {
+    overflow: hidden;
+    white-space: nowrap;
+    padding: 10px 0;
+    margin-top: 15px;
+}
+
+#ticker-text {
+    display: inline-block;
+    padding-left: 100%;
+    animation: ticker-scroll 50s linear infinite;
+}
+
+/* Logo Styling */
+#company-logo {
+    object-fit: contain;
+    display: block;
+    margin: 10px auto;
+}
+
+/* Category Image */
+#category-image {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 10px auto;
+    border-radius: 8px;
+}
+
+/* Footer */
+.overlay-footer {
+    padding: 8px 15px;
+    margin-top: 15px;
+    text-align: center;
+    border-radius: 5px;
+}
+
+/* Decorative Elements */
+.decorative-accent {
+    width: 50px;
+    height: 3px;
+    margin: 10px auto;
+    border-radius: 2px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    #overlay-container {
+        max-width: 90% !important;
+    }
+
+    #main-text {
+        font-size: 24px !important;
+    }
+
+    #secondary-text {
+        font-size: 18px !important;
+    }
+
+    #ticker-text {
+        font-size: 14px !important;
+    }
+}

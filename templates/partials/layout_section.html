@@ -1,0 +1,130 @@
+<div class="space-y-4">
+    <div class="grid grid-cols-2 gap-4">
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Vertical Position</label>
+            <select name="vertical_position"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
+                <option value="top" {% if settings[category].vertical_position == 'top' %}selected{% endif %}>Top</option>
+                <option value="middle" {% if settings[category].vertical_position == 'middle' %}selected{% endif %}>Middle</option>
+                <option value="bottom" {% if settings[category].vertical_position == 'bottom' %}selected{% endif %}>Bottom</option>
+                <option value="custom" {% if settings[category].vertical_position == 'custom' %}selected{% endif %}>Custom</option>
+            </select>
+        </div>
+
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Horizontal Position</label>
+            <select name="horizontal_position"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
+                <option value="left" {% if settings[category].horizontal_position == 'left' %}selected{% endif %}>Left</option>
+                <option value="center" {% if settings[category].horizontal_position == 'center' %}selected{% endif %}>Center</option>
+                <option value="right" {% if settings[category].horizontal_position == 'right' %}selected{% endif %}>Right</option>
+                <option value="custom" {% if settings[category].horizontal_position == 'custom' %}selected{% endif %}>Custom</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-4 gap-2">
+        <div>
+            <label class="block text-xs font-medium text-gray-700 mb-1">Top (px)</label>
+            <input type="number" name="custom_top"
+                   value="{{ settings[category].custom_top }}"
+                   class="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-indigo-500">
+        </div>
+        <div>
+            <label class="block text-xs font-medium text-gray-700 mb-1">Bottom (px)</label>
+            <input type="number" name="custom_bottom"
+                   value="{{ settings[category].custom_bottom }}"
+                   class="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-indigo-500">
+        </div>
+        <div>
+            <label class="block text-xs font-medium text-gray-700 mb-1">Left (px)</label>
+            <input type="number" name="custom_left"
+                   value="{{ settings[category].custom_left }}"
+                   class="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-indigo-500">
+        </div>
+        <div>
+            <label class="block text-xs font-medium text-gray-700 mb-1">Right (px)</label>
+            <input type="number" name="custom_right"
+                   value="{{ settings[category].custom_right }}"
+                   class="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-indigo-500">
+        </div>
+    </div>
+
+    <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Container Width</label>
+        <select name="container_width"
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
+            <option value="auto" {% if settings[category].container_width == 'auto' %}selected{% endif %}>Auto</option>
+            <option value="full" {% if settings[category].container_width == 'full' %}selected{% endif %}>Full Width</option>
+            <option value="custom" {% if settings[category].container_width == 'custom' %}selected{% endif %}>Custom</option>
+        </select>
+    </div>
+
+    <div class="grid grid-cols-3 gap-4">
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Custom Width</label>
+            <input type="number" name="custom_width"
+                   value="{{ settings[category].custom_width }}"
+                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                   placeholder="px">
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Min Width</label>
+            <input type="number" name="container_min_width"
+                   value="{{ settings[category].container_min_width }}"
+                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                   placeholder="px">
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Max Width</label>
+            <input type="number" name="container_max_width"
+                   value="{{ settings[category].container_max_width }}"
+                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                   placeholder="px">
+        </div>
+    </div>
+
+    <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Container Height</label>
+        <select name="container_height"
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
+            <option value="auto" {% if settings[category].container_height == 'auto' %}selected{% endif %}>Auto</option>
+            <option value="custom" {% if settings[category].container_height == 'custom' %}selected{% endif %}>Custom</option>
+        </select>
+    </div>
+
+    <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Custom Height (px)</label>
+        <input type="number" name="custom_height"
+               value="{{ settings[category].custom_height }}"
+               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
+    </div>
+
+    <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Container Padding (px)</label>
+        <input type="range" name="container_padding"
+               value="{{ settings[category].container_padding }}"
+               min="0" max="100"
+               class="w-full"
+               oninput="this.nextElementSibling.textContent = this.value + 'px'">
+        <span class="text-sm text-gray-600">{{ settings[category].container_padding }}px</span>
+    </div>
+
+    <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Layout Style</label>
+        <select name="layout_style"
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
+            <option value="default" {% if settings[category].layout_style == 'default' %}selected{% endif %}>Default</option>
+            <option value="minimal" {% if settings[category].layout_style == 'minimal' %}selected{% endif %}>Minimal</option>
+            <option value="elegant" {% if settings[category].layout_style == 'elegant' %}selected{% endif %}>Elegant</option>
+            <option value="modern" {% if settings[category].layout_style == 'modern' %}selected{% endif %}>Modern</option>
+        </select>
+    </div>
+
+    <div class="flex items-center">
+        <input type="checkbox" name="show_decorative_elements"
+               {% if settings[category].show_decorative_elements %}checked{% endif %}
+               class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+        <label class="ml-2 text-sm text-gray-700">Show decorative elements</label>
+    </div>
+</div>

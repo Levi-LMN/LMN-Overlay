@@ -1,10 +1,9 @@
-<!-- templates/display_ceremony.html - COMPLETE VERSION -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=1920, initial-scale=1.0">
-    <title>Ceremony Overlay Display</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ceremony Overlay - Display</title>
     <style>
         * {
             margin: 0;
@@ -12,450 +11,1090 @@
             box-sizing: border-box;
         }
 
-        body {
-            width: 1920px;
-            height: 1080px;
+        html, body {
+            width: 100%;
+            height: 100%;
             overflow: hidden;
             background: transparent;
-            font-family: 'Arial', sans-serif;
         }
 
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            position: relative;
+        }
+
+        /* Company Logo - Bottom right for ceremony */
+        #company-logo-container {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            z-index: 100;
+            display: none;
+        }
+
+        #company-logo-container.visible {
+            display: block;
+        }
+
+        #company-logo {
+            display: block;
+            filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.3));
+            transition: all 0.3s ease;
+        }
+
+        /* Main Overlay Container */
         #overlay-container {
+            position: absolute;
+            display: none;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        #overlay-container.visible {
+            display: block;
+        }
+
+        #overlay-container.ticker-active {
+            margin-bottom: 50px;
+        }
+
+        /* Overlay inner wrapper - VERTICAL LAYOUT */
+        #overlay-inner {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Category Image - AT THE TOP CENTER */
+        #category-image-container {
+            position: relative;
+            width: 100%;
+            display: none;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        #category-image-container.visible {
+            display: flex;
+        }
+
+        #category-image {
+            display: block;
+            width: 120px;
+            height: 120px;
+            object-fit: cover;
+            border-radius: 12px;
+            padding: 6px;
+            background: linear-gradient(135deg, var(--image-border-color-1, #FFD700), var(--image-border-color-2, #FFA500));
+            border: 2px solid rgba(255, 255, 255, 0.6);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2), 0 3px 10px rgba(0, 0, 0, 0.15);
+            transition: all 0.3s ease;
+        }
+
+        /* Decorative line separators */
+        .line-separator {
+            width: 80%;
+            height: 2px;
+            background: linear-gradient(to right, transparent, var(--accent-color, #FFD700), transparent);
+            margin: 10px 0;
+            opacity: 0.5;
+        }
+
+        /* Decorative corner badges */
+        .corner-badge {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            background: var(--accent-color, #FFD700);
+            opacity: 0.2;
+            clip-path: polygon(0 0, 100% 0, 0 100%);
+        }
+
+        .badge-top-left {
+            top: 0;
+            left: 0;
+        }
+
+        .badge-top-right {
+            top: 0;
+            right: 0;
+            transform: rotate(90deg);
+        }
+
+        .badge-bottom-left {
+            bottom: 0;
+            left: 0;
+            transform: rotate(-90deg);
+        }
+
+        .badge-bottom-right {
+            bottom: 0;
+            right: 0;
+            transform: rotate(180deg);
+        }
+
+        /* Text Content Section - BELOW IMAGE */
+        #text-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            align-items: center;
+            text-align: center;
+            width: 100%;
+            padding: 0 30px;
+        }
+
+        #main-text,
+        #secondary-text,
+        #company-name {
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            transition: all 0.4s ease;
+            width: 100%;
+        }
+
+        #main-text {
+            font-weight: 700;
+            line-height: 1.2;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        #secondary-text-container {
+            position: relative;
+            display: block;
+            width: 100%;
+        }
+
+        #secondary-text {
+            font-weight: 400;
+            line-height: 1.4;
+            letter-spacing: 0.5px;
+            opacity: 0.95;
+            display: block;
+        }
+
+        #company-name {
+            font-weight: 500;
+            opacity: 0.85;
+            font-size: 0.85em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Ticker Container */
+        #ticker-container {
             position: fixed;
             bottom: 0;
             left: 0;
             width: 100%;
-            max-height: calc(100vh - 60px);
-            transition: opacity 0.5s ease;
-            opacity: {% if settings.is_visible %}1{% else %}0{% endif %};
-            pointer-events: none;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: flex-end;
-            padding-bottom: 0;
-        }
-
-        #overlay-container.hidden {
-            opacity: 0 !important;
-        }
-
-        .logo-standalone {
-            position: fixed;
-            top: 25px;
-            right: 25px;
-            z-index: 100;
-            width: 85px;
-            height: 85px;
-            object-fit: contain;
-            filter: drop-shadow(0 8px 16px rgba(255, 215, 0, 0.6));
-            border: 2px solid var(--accent-color, #FFD700);
-            border-radius: 8px;
-            padding: 8px;
-            background: rgba(0, 0, 128, 0.2);
-            backdrop-filter: blur(8px);
-            {% if not settings.company_logo or not settings.show_company_logo %}
+            overflow: hidden;
+            z-index: 50;
             display: none;
-            {% endif %}
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.2);
         }
 
-        .lower-third {
+        #ticker-container.visible {
+            display: block;
+        }
+
+        #ticker-wrapper {
             position: relative;
-            width: auto;
-            max-width: 1200px;
-            min-width: 700px;
-            max-height: calc(100vh - 120px);
-            display: inline-flex;
-            align-items: stretch;
-            gap: 0;
-            z-index: 2;
-            margin-bottom: 10px;
-            overflow: visible;
-        }
-
-        .lower-third-bg {
-            position: absolute;
-            top: 0;
-            left: 0;
             width: 100%;
-            height: 100%;
-            background: linear-gradient(135deg,
-                rgba(0, 0, 128, 0.96) 0%,
-                rgba(0, 0, 128, 0.94) 50%,
-                rgba(0, 0, 128, 0.96) 100%);
-            border-radius: 20px;
-            box-shadow:
-                0 15px 50px rgba(0, 0, 0, 0.8),
-                0 0 0 3px var(--accent-color, #FFD700);
-            backdrop-filter: blur(12px);
-        }
-
-        .image-section {
-            position: relative;
-            z-index: 2;
-            width: 180px;
-            flex-shrink: 0;
-            padding: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            {% if not settings.show_category_image or not settings.category_image %}
-            display: none;
-            {% endif %}
-        }
-
-        .category-image {
-            width: 140px;
-            height: 140px;
-            object-fit: cover;
-            border-radius: 12px;
-            border: 4px solid var(--accent-color, #FFD700);
-            box-shadow:
-                0 8px 25px rgba(255, 215, 0, 0.5),
-                inset 0 0 0 2px rgba(255, 255, 255, 0.1);
-        }
-
-        .content-section {
-            position: relative;
-            z-index: 2;
-            flex: 1;
-            padding: 25px 35px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            gap: 12px;
-            min-width: 0;
             overflow: hidden;
         }
 
-        .text-content {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            max-width: 100%;
-        }
-
-        .main-text {
-            color: #FFFFFF;
-            font-size: 36px;
-            font-weight: 700;
-            letter-spacing: 2.5px;
-            text-shadow:
-                2px 2px 10px rgba(0, 0, 0, 0.8),
-                0 0 20px rgba(255, 215, 0, 0.3);
-            text-transform: uppercase;
-            line-height: 1.2;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            max-width: 100%;
-        }
-
-        .main-text span {
-            display: inline;
-        }
-
-        .typewriter-cursor {
+        #ticker-content {
             display: inline-block;
-            width: 3px;
-            height: 1em;
-            background-color: #FFFFFF;
-            margin-left: 4px;
-            animation: typewriter-blink 0.7s infinite;
-            vertical-align: text-bottom;
-        }
-
-        .secondary-text-container {
-            position: relative;
-            min-height: 28px;
-            width: 100%;
-            max-width: 100%;
-            overflow: hidden;
-        }
-
-        .secondary-phrase {
-            color: var(--accent-color, #FFD700);
-            font-size: 24px;
-            font-weight: 600;
-            text-shadow: 1px 1px 8px rgba(0, 0, 0, 0.8);
-            letter-spacing: 1.5px;
-            line-height: 1.3;
             white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            opacity: 0;
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            max-width: 100%;
-        }
-
-        .secondary-phrase.active {
-            opacity: 1;
-            position: relative;
-        }
-
-        .company-name {
-            color: #FFFFFF;
-            font-size: 16px;
-            opacity: 0.85;
-            text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.6);
-            line-height: 1.3;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            letter-spacing: 1px;
+            padding: 14px 0;
             font-weight: 500;
-            max-width: 100%;
+            letter-spacing: 0.5px;
+            will-change: transform;
         }
 
-        /* Decorative Elements */
-        .corner-accent {
-            position: absolute;
-            width: 0;
-            height: 0;
-            opacity: 0.5;
-        }
-
-        .corner-accent.top-left {
-            top: 12px;
-            left: 12px;
-            border-top: 35px solid var(--accent-color, #FFD700);
-            border-right: 35px solid transparent;
-        }
-
-        .corner-accent.top-right {
-            top: 12px;
-            right: 12px;
-            border-top: 35px solid var(--accent-color, #FFD700);
-            border-left: 35px solid transparent;
-        }
-
-        .corner-accent.bottom-left {
-            bottom: 12px;
-            left: 12px;
-            border-bottom: 35px solid var(--accent-color, #FFD700);
-            border-right: 35px solid transparent;
-        }
-
-        .corner-accent.bottom-right {
-            bottom: 12px;
-            right: 12px;
-            border-bottom: 35px solid var(--accent-color, #FFD700);
-            border-left: 35px solid transparent;
-        }
-
-        .ticker-container {
-            position: relative;
-            width: 100vw;
-            height: 60px;
-            background: linear-gradient(90deg,
-                rgba(0, 0, 0, 0.95) 0%,
-                rgba(0, 0, 0, 0.88) 50%,
-                rgba(0, 0, 0, 0.95) 100%);
-            overflow: hidden;
-            border-top: 3px solid var(--accent-color, #FFD700);
-            border-bottom: 3px solid var(--accent-color, #FFD700);
-            backdrop-filter: blur(10px);
-            z-index: 1;
-            flex-shrink: 0;
-        }
-
-        .ticker-text {
-            position: absolute;
-            top: 0;
-            left: 0;
-            white-space: nowrap;
-            color: #FFFFFF;
-            font-size: 18px;
-            line-height: 60px;
-            padding: 0 40px;
-            animation: scroll-left linear infinite;
-            text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.9);
-            letter-spacing: 1.5px;
-            font-weight: 600;
-        }
-
-        /* Animations */
-        @keyframes slide-left {
-            from { transform: translateX(-100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
-
-        @keyframes slide-right {
-            from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
-
-        @keyframes slide-up {
-            from { transform: translateY(100%); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
-        }
-
-        @keyframes slide-down {
-            from { transform: translateY(-100%); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
-        }
-
-        @keyframes fade-in {
+        /* Entrance Animations */
+        @keyframes fadeIn {
             from { opacity: 0; }
             to { opacity: 1; }
         }
 
-        @keyframes zoom-in {
-            from { transform: scale(0); opacity: 0; }
-            to { transform: scale(1); opacity: 1; }
+        @keyframes slideInLeft {
+            from { opacity: 0; transform: translateX(-100%); }
+            to { opacity: 1; transform: translateX(0); }
         }
 
-        @keyframes zoom {
-            from { transform: scale(0.8); opacity: 0; }
-            to { transform: scale(1); opacity: 1; }
+        @keyframes slideInRight {
+            from { opacity: 0; transform: translateX(100%); }
+            to { opacity: 1; transform: translateX(0); }
         }
 
-        @keyframes scale-in {
-            from { transform: scale(0); opacity: 0; }
-            to { transform: scale(1); opacity: 1; }
+        @keyframes slideInUp {
+            from { opacity: 0; transform: translateY(100px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
-        @keyframes rotate-in {
-            from { transform: rotate(-180deg) scale(0); opacity: 0; }
-            to { transform: rotate(0) scale(1); opacity: 1; }
+        @keyframes slideInDown {
+            from { opacity: 0; transform: translateY(-100px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
-        @keyframes bounce {
+        @keyframes zoomIn {
+            from { opacity: 0; transform: scale(0.5); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        @keyframes scaleIn {
+            from { opacity: 0; transform: scale(0.8); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        @keyframes rotateIn {
+            from { opacity: 0; transform: rotate(-180deg) scale(0.5); }
+            to { opacity: 1; transform: rotate(0deg) scale(1); }
+        }
+
+        @keyframes bounceIn {
+            0% { opacity: 0; transform: scale(0.3); }
+            50% { opacity: 1; transform: scale(1.05); }
+            70% { transform: scale(0.9); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes flipIn {
+            from { opacity: 0; transform: perspective(400px) rotateY(90deg); }
+            to { opacity: 1; transform: perspective(400px) rotateY(0deg); }
+        }
+
+        .anim-fadeIn, .anim-fade-in { animation-name: fadeIn; animation-fill-mode: both; }
+        .anim-slideInLeft, .anim-slide-in-left, .anim-slide-left { animation-name: slideInLeft; animation-fill-mode: both; }
+        .anim-slideInRight, .anim-slide-in-right, .anim-slide-right { animation-name: slideInRight; animation-fill-mode: both; }
+        .anim-slideInUp, .anim-slide-in-up, .anim-slide-up { animation-name: slideInUp; animation-fill-mode: both; }
+        .anim-slideInDown, .anim-slide-in-down, .anim-slide-down { animation-name: slideInDown; animation-fill-mode: both; }
+        .anim-zoomIn, .anim-zoom-in { animation-name: zoomIn; animation-fill-mode: both; }
+        .anim-scaleIn, .anim-scale-in { animation-name: scaleIn; animation-fill-mode: both; }
+        .anim-rotateIn, .anim-rotate-in { animation-name: rotateIn; animation-fill-mode: both; }
+        .anim-bounceIn, .anim-bounce-in { animation-name: bounceIn; animation-fill-mode: both; }
+        .anim-flipIn, .anim-flip-in { animation-name: flipIn; animation-fill-mode: both; }
+
+        /* Display Animations */
+        @keyframes displayPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        @keyframes displayBounce {
             0%, 100% { transform: translateY(0); }
-            25% { transform: translateY(-20px); }
-            50% { transform: translateY(0); }
-            75% { transform: translateY(-10px); }
+            50% { transform: translateY(-10px); }
         }
 
-        @keyframes flip {
-            from { transform: rotateY(90deg); opacity: 0; }
-            to { transform: rotateY(0); opacity: 1; }
+        @keyframes displayShake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
         }
 
-        @keyframes scroll-left {
-            0% { transform: translateX(100%); }
-            100% { transform: translateX(-100%); }
+        @keyframes displayFloat {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
         }
 
-        @keyframes typewriter-blink {
-            0%, 100% { opacity: 1; }
+        @keyframes displayGlow {
+            0%, 100% { filter: brightness(1) drop-shadow(0 4px 12px rgba(0, 0, 0, 0.3)); }
+            50% { filter: brightness(1.3) drop-shadow(0 4px 20px rgba(255, 215, 0, 0.6)); }
+        }
+
+        @keyframes displayRotate {
+            from { transform: rotateY(0deg); }
+            to { transform: rotateY(360deg); }
+        }
+
+        @keyframes displayFlip {
+            0%, 100% { transform: rotateY(0deg); }
+            50% { transform: rotateY(180deg); }
+        }
+
+        @keyframes displayZoom {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        @keyframes displayPan {
+            0%, 100% { transform: translateX(0) scale(1.05); }
+            50% { transform: translateX(-5%) scale(1.05); }
+        }
+
+        @keyframes displayTilt {
+            0%, 100% { transform: rotate(0deg); }
+            25% { transform: rotate(-3deg); }
+            75% { transform: rotate(3deg); }
+        }
+
+        @keyframes displaySwing {
+            0%, 100% { transform: rotate(0deg); }
+            25% { transform: rotate(-5deg); }
+            75% { transform: rotate(5deg); }
+        }
+
+        .display-pulse { animation: displayPulse 2s ease-in-out infinite; }
+        .display-bounce { animation: displayBounce 2s ease-in-out infinite; }
+        .display-shake { animation: displayShake 2s ease-in-out infinite; }
+        .display-float { animation: displayFloat 3s ease-in-out infinite; }
+        .display-glow { animation: displayGlow 3s ease-in-out infinite; }
+        .display-rotate-slow { animation: displayRotate 10s linear infinite; }
+        .display-flip { animation: displayFlip 4s ease-in-out infinite; }
+        .display-flip-slow { animation: displayRotate 12s linear infinite; }
+        .display-zoom-slow { animation: displayZoom 8s ease-in-out infinite; }
+        .display-pan { animation: displayPan 10s ease-in-out infinite; }
+        .display-tilt { animation: displayTilt 3s ease-in-out infinite; }
+        .display-swing { animation: displaySwing 2s ease-in-out infinite; }
+
+        /* Text Animations */
+        @keyframes textPulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.02); opacity: 0.9; }
+        }
+
+        @keyframes textGlow {
+            0%, 100% { text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2); }
+            50% { text-shadow: 0 0 25px currentColor, 0 2px 10px rgba(0, 0, 0, 0.2); }
+        }
+
+        @keyframes textFloat {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+
+        @keyframes textBounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+
+        @keyframes textShake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-3px); }
+            75% { transform: translateX(3px); }
+        }
+
+        @keyframes textZoom {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+
+        .text-pulse { animation: textPulse 2s ease-in-out infinite; }
+        .text-glow { animation: textGlow 2s ease-in-out infinite; }
+        .text-float { animation: textFloat 3s ease-in-out infinite; }
+        .text-bounce { animation: textBounce 2s ease-in-out infinite; }
+        .text-shake { animation: textShake 2s ease-in-out infinite; }
+        .text-zoom { animation: textZoom 2s ease-in-out infinite; }
+
+        /* Typewriter cursor */
+        .typewriter-cursor {
+            display: inline-block;
+            width: 2px;
+            height: 1em;
+            background-color: currentColor;
+            margin-left: 2px;
+            animation: blink 1s step-start infinite;
+            vertical-align: text-bottom;
+        }
+
+        @keyframes blink {
             50% { opacity: 0; }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            #category-image {
+                width: 80px !important;
+                height: 80px !important;
+            }
         }
     </style>
 </head>
 <body>
-    {% if settings.company_logo and settings.show_company_logo %}
-    <img id="company-logo"
-         src="{{ url_for('static', filename=settings.company_logo) }}"
-         alt="Company Logo"
-         class="logo-standalone">
-    {% endif %}
+    <!-- Company Logo -->
+    <div id="company-logo-container">
+        <img id="company-logo" src="" alt="Company Logo">
+    </div>
 
-    <div id="overlay-container" {% if not settings.is_visible %}class="hidden"{% endif %}>
-        <div class="lower-third">
-            <div class="lower-third-bg">
-                <div class="corner-accent top-left"></div>
-                <div class="corner-accent top-right"></div>
-                <div class="corner-accent bottom-left"></div>
-                <div class="corner-accent bottom-right"></div>
+    <!-- Main Overlay Container -->
+    <div id="overlay-container">
+        <div id="overlay-inner">
+            <!-- Decorative Corner Badges -->
+            <div class="corner-badge badge-top-left"></div>
+            <div class="corner-badge badge-top-right"></div>
+            <div class="corner-badge badge-bottom-left"></div>
+            <div class="corner-badge badge-bottom-right"></div>
+
+            <!-- Category Image (TOP CENTER) -->
+            <div id="category-image-container">
+                <img id="category-image" src="" alt="Category Image">
             </div>
 
-            {% if settings.category_image and settings.show_category_image %}
-            <div class="image-section">
-                <img id="category-image"
-                     src="{{ url_for('static', filename=settings.category_image) }}"
-                     alt="Ceremony Image"
-                     class="category-image">
-            </div>
-            {% endif %}
+            <!-- Decorative Line -->
+            <div class="line-separator"></div>
 
-            <div class="content-section">
-                <div class="text-content">
-                    <div id="main-text" class="main-text"></div>
-                    <div id="secondary-text-container" class="secondary-text-container"></div>
-                    <div id="company-name" class="company-name"></div>
+            <!-- Text Content (BELOW IMAGE) -->
+            <div id="text-content">
+                <div id="main-text"></div>
+                <div id="secondary-text-container">
+                    <div id="secondary-text"></div>
                 </div>
+                <div id="company-name"></div>
             </div>
-        </div>
 
-        <div class="ticker-container">
-            <div id="ticker-text" class="ticker-text">
-                {{ settings.ticker_text or 'Welcome to this special occasion celebrating excellence and achievement.' }}
-            </div>
+            <!-- Decorative Line -->
+            <div class="line-separator"></div>
         </div>
     </div>
 
-    <script src="{{ url_for('static', filename='js/overlay-display.js') }}"></script>
-    <script>
-        document.documentElement.style.setProperty('--accent-color', '{{ settings.accent_color }}');
+    <!-- Ticker Container -->
+    <div id="ticker-container">
+        <div id="ticker-wrapper">
+            <div id="ticker-content"></div>
+        </div>
+    </div>
 
-        function decodeHTML(html) {
-            const txt = document.createElement('textarea');
-            txt.innerHTML = html;
-            return txt.value;
+    <script>
+        const category = new URLSearchParams(window.location.search).get('category') || 'ceremony';
+
+        const overlayContainer = document.getElementById('overlay-container');
+        const overlayInner = document.getElementById('overlay-inner');
+        const mainText = document.getElementById('main-text');
+        const secondaryTextContainer = document.getElementById('secondary-text-container');
+        const secondaryText = document.getElementById('secondary-text');
+        const companyName = document.getElementById('company-name');
+        const categoryImageContainer = document.getElementById('category-image-container');
+        const categoryImage = document.getElementById('category-image');
+        const companyLogoContainer = document.getElementById('company-logo-container');
+        const companyLogo = document.getElementById('company-logo');
+        const tickerContainer = document.getElementById('ticker-container');
+        const tickerContent = document.getElementById('ticker-content');
+        const lineSeparators = document.querySelectorAll('.line-separator');
+        const cornerBadges = document.querySelectorAll('.corner-badge');
+
+        let currentSettings = {};
+        let secondaryPhrases = [];
+        let phraseIndex = 0;
+        let rotationInterval = null;
+        let tickerAnimation = null;
+        let textAnimationTimeout = null;
+
+        let typewriterIntervals = { main: null, secondary: null, company: null };
+
+        function calculateSecondaryTextDimensions(phrases, fontSize, fontFamily, lineHeight, containerMaxWidth, hasBg, bgPadding) {
+            if (!phrases || phrases.length === 0) return { width: 0, height: 0 };
+
+            const temp = document.createElement('div');
+            temp.style.position = 'absolute';
+            temp.style.visibility = 'hidden';
+            temp.style.fontSize = fontSize + 'px';
+            temp.style.fontFamily = fontFamily;
+            temp.style.fontWeight = '400';
+            temp.style.letterSpacing = '0.5px';
+            temp.style.lineHeight = lineHeight;
+            temp.style.wordWrap = 'break-word';
+            temp.style.overflowWrap = 'break-word';
+            temp.style.maxWidth = containerMaxWidth + 'px';
+            temp.style.textAlign = 'center';
+
+            if (hasBg && bgPadding) {
+                temp.style.padding = bgPadding;
+                temp.style.borderRadius = '6px';
+                temp.style.display = 'inline-block';
+            }
+
+            document.body.appendChild(temp);
+
+            let maxWidth = 0;
+            let maxHeight = 0;
+
+            phrases.forEach(phrase => {
+                temp.textContent = phrase;
+                const rect = temp.getBoundingClientRect();
+                if (rect.width > maxWidth) maxWidth = rect.width;
+                if (rect.height > maxHeight) maxHeight = rect.height;
+            });
+
+            document.body.removeChild(temp);
+            return { width: Math.ceil(maxWidth), height: Math.ceil(maxHeight) };
         }
 
-        const settings = {
-            entrance_animation: '{{ settings.entrance_animation }}',
-            entrance_duration: {{ settings.entrance_duration }},
-            entrance_delay: {{ settings.entrance_delay }},
-            text_animation: '{{ settings.text_animation }}',
-            text_animation_speed: {{ settings.text_animation_speed }},
-            image_animation: '{{ settings.image_animation }}',
-            image_animation_delay: {{ settings.image_animation_delay }},
-            logo_animation: '{{ settings.logo_animation }}',
-            logo_animation_delay: {{ settings.logo_animation_delay }},
-            ticker_entrance: '{{ settings.ticker_entrance }}',
-            ticker_entrance_delay: {{ settings.ticker_entrance_delay }},
-            ticker_speed: {{ settings.ticker_speed }},
-            main_text: decodeHTML('{{ settings.main_text or "Special Ceremony" }}'),
-            secondary_phrases: {{ settings.get_secondary_phrases_list()|tojson }},
-            secondary_rotation_enabled: {{ 'true' if settings.secondary_rotation_enabled else 'false' }},
-            secondary_display_duration: {{ settings.secondary_display_duration }},
-            secondary_transition_type: '{{ settings.secondary_transition_type }}',
-            secondary_transition_duration: {{ settings.secondary_transition_duration }},
-            company_name: decodeHTML('{{ settings.company_name or "Event Services" }}'),
-            company_logo: '{{ settings.company_logo or "" }}',
-            show_company_logo: {{ 'true' if settings.show_company_logo else 'false' }},
-            category_image: '{{ settings.category_image or "" }}',
-            show_category_image: {{ 'true' if settings.show_category_image else 'false' }},
-            is_visible: {{ 'true' if settings.is_visible else 'false' }},
-            bg_color: '{{ settings.bg_color }}',
-            accent_color: '{{ settings.accent_color }}',
-            text_color: '{{ settings.text_color }}',
-            opacity: {{ settings.opacity }},
-            main_font_size: {{ settings.main_font_size }},
-            secondary_font_size: {{ settings.secondary_font_size }},
-            ticker_font_size: {{ settings.ticker_font_size }},
-            border_radius: {{ settings.border_radius }},
-            font_family: '{{ settings.font_family }}',
-            logo_size: {{ settings.logo_size }},
-            show_decorative_elements: {{ 'true' if settings.show_decorative_elements else 'false' }},
-            // Position & Size settings
-            vertical_position: '{{ settings.vertical_position }}',
-            horizontal_position: '{{ settings.horizontal_position }}',
-            custom_top: {{ settings.custom_top }},
-            custom_bottom: {{ settings.custom_bottom }},
-            custom_left: {{ settings.custom_left }},
-            custom_right: {{ settings.custom_right }},
-            container_width: '{{ settings.container_width }}',
-            custom_width: {{ settings.custom_width }},
-            container_max_width: {{ settings.container_max_width }},
-            container_min_width: {{ settings.container_min_width }},
-            container_height: '{{ settings.container_height }}',
-            custom_height: {{ settings.custom_height }},
-            container_padding: {{ settings.container_padding }},
-            // Text scaling settings
-            text_scale_mode: '{{ settings.text_scale_mode }}',
-            text_line_height: {{ settings.text_line_height }},
-            text_max_lines: {{ settings.text_max_lines }},
-            enable_text_truncation: {{ 'true' if settings.enable_text_truncation else 'false' }}
-        };
+        async function updateDisplay() {
+            try {
+                const response = await fetch(`/api/poll/${category}`);
+                const data = await response.json();
 
-        initOverlay('ceremony', settings);
+                if (data.settings) {
+                    const newSettings = data.settings;
+                    if (JSON.stringify(newSettings) !== JSON.stringify(currentSettings)) {
+                        currentSettings = newSettings;
+                        secondaryPhrases = newSettings.secondary_phrases || [];
+                        applySettings();
+                    }
+                }
+            } catch (error) {
+                console.error('Error fetching settings:', error);
+            }
+        }
+
+        function applySettings() {
+            const s = currentSettings;
+
+            if (s.is_visible) {
+                overlayContainer.classList.add('visible');
+            } else {
+                overlayContainer.classList.remove('visible');
+            }
+
+            applyPositioning();
+            applyStyling();
+            applyTextContent();
+            applyDecorations();
+            applyAnimations();
+
+            if (s.secondary_rotation_enabled && secondaryPhrases.length > 0) {
+                startSecondaryRotation();
+            } else {
+                stopSecondaryRotation();
+            }
+
+            if (s.show_category_image && s.category_image) {
+                categoryImage.src = `/static/${s.category_image}`;
+                categoryImageContainer.classList.add('visible');
+            } else {
+                categoryImageContainer.classList.remove('visible');
+            }
+
+            if (s.show_company_logo && s.company_logo) {
+                companyLogo.src = `/static/${s.company_logo}`;
+                companyLogoContainer.classList.add('visible');
+            } else {
+                companyLogoContainer.classList.remove('visible');
+            }
+
+            if (s.show_ticker && s.ticker_text) {
+                tickerContent.textContent = s.ticker_text;
+                tickerContainer.classList.add('visible');
+                overlayContainer.classList.add('ticker-active');
+                startTicker();
+            } else {
+                tickerContainer.classList.remove('visible');
+                overlayContainer.classList.remove('ticker-active');
+                stopTicker();
+            }
+        }
+
+        function applyPositioning() {
+            const s = currentSettings;
+
+            switch (s.vertical_position) {
+                case 'top':
+                    overlayContainer.style.top = '20px';
+                    overlayContainer.style.bottom = 'auto';
+                    overlayContainer.style.transform = 'none';
+                    break;
+                case 'middle':
+                    overlayContainer.style.top = '50%';
+                    overlayContainer.style.transform = 'translateY(-50%)';
+                    overlayContainer.style.bottom = 'auto';
+                    break;
+                case 'bottom':
+                    overlayContainer.style.bottom = '20px';
+                    overlayContainer.style.top = 'auto';
+                    overlayContainer.style.transform = 'none';
+                    break;
+                case 'custom':
+                    if (s.custom_top !== null && s.custom_top !== undefined) {
+                        overlayContainer.style.top = s.custom_top + 'px';
+                        overlayContainer.style.bottom = 'auto';
+                        overlayContainer.style.transform = 'none';
+                    } else if (s.custom_bottom !== null && s.custom_bottom !== undefined) {
+                        overlayContainer.style.bottom = s.custom_bottom + 'px';
+                        overlayContainer.style.top = 'auto';
+                        overlayContainer.style.transform = 'none';
+                    }
+                    break;
+            }
+
+            switch (s.horizontal_position) {
+                case 'left':
+                    overlayContainer.style.left = '20px';
+                    overlayContainer.style.right = 'auto';
+                    if (s.vertical_position !== 'middle') {
+                        overlayContainer.style.transform = 'none';
+                    }
+                    break;
+                case 'center':
+                    overlayContainer.style.left = '50%';
+                    if (s.vertical_position === 'middle') {
+                        overlayContainer.style.transform = 'translate(-50%, -50%)';
+                    } else {
+                        overlayContainer.style.transform = 'translateX(-50%)';
+                    }
+                    overlayContainer.style.right = 'auto';
+                    break;
+                case 'right':
+                    overlayContainer.style.right = '20px';
+                    overlayContainer.style.left = 'auto';
+                    if (s.vertical_position !== 'middle') {
+                        overlayContainer.style.transform = 'none';
+                    }
+                    break;
+                case 'custom':
+                    if (s.custom_left !== null && s.custom_left !== undefined) {
+                        overlayContainer.style.left = s.custom_left + 'px';
+                        overlayContainer.style.right = 'auto';
+                    } else if (s.custom_right !== null && s.custom_right !== undefined) {
+                        overlayContainer.style.right = s.custom_right + 'px';
+                        overlayContainer.style.left = 'auto';
+                    }
+                    if (s.vertical_position !== 'middle') {
+                        overlayContainer.style.transform = 'none';
+                    }
+                    break;
+            }
+
+            if (s.container_width === 'full') {
+                overlayContainer.style.width = '100%';
+            } else if (s.container_width === 'custom' && s.custom_width) {
+                overlayContainer.style.width = s.custom_width + 'px';
+            } else {
+                overlayContainer.style.width = 'auto';
+                overlayContainer.style.maxWidth = (s.container_max_width || 900) + 'px';
+                overlayContainer.style.minWidth = (s.container_min_width || 400) + 'px';
+            }
+
+            if (s.container_height === 'custom' && s.custom_height) {
+                overlayContainer.style.height = s.custom_height + 'px';
+            } else {
+                overlayContainer.style.height = 'auto';
+            }
+
+            const containerPadding = s.container_padding || 25;
+            overlayInner.style.padding = containerPadding + 'px';
+
+            if (s.logo_size) {
+                companyLogo.style.width = s.logo_size + 'px';
+                companyLogo.style.height = 'auto';
+            }
+
+            companyLogo.style.opacity = s.logo_opacity || 1;
+            companyLogo.style.borderRadius = (s.logo_border_radius || 0) + 'px';
+
+            if (s.logo_shadow) {
+                companyLogo.style.filter = 'drop-shadow(0 4px 12px rgba(0, 0, 0, 0.3))';
+            } else {
+                companyLogo.style.filter = 'none';
+            }
+        }
+
+        function applyStyling() {
+            const s = currentSettings;
+
+            overlayContainer.style.backgroundColor = hexToRgba(
+                s.overlay_bg_color || '#1a237e',
+                s.overlay_bg_opacity || 0.9
+            );
+            overlayContainer.style.borderRadius = (s.border_radius || 15) + 'px';
+            overlayContainer.style.opacity = s.opacity !== undefined ? s.opacity : 0.9;
+
+            if (s.border_width && s.border_width > 0) {
+                overlayContainer.style.border = `${s.border_width}px solid ${s.border_color || '#FFD700'}`;
+            } else {
+                overlayContainer.style.border = 'none';
+            }
+
+            const imageBorderColor1 = s.accent_color || '#FFD700';
+            const imageBorderColor2 = s.border_color || '#FFA500';
+            document.documentElement.style.setProperty('--image-border-color-1', imageBorderColor1);
+            document.documentElement.style.setProperty('--image-border-color-2', imageBorderColor2);
+            document.documentElement.style.setProperty('--accent-color', s.accent_color || '#FFD700');
+
+            mainText.style.fontSize = (s.main_font_size || 48) + 'px';
+            mainText.style.color = s.main_text_color || '#FFFFFF';
+            mainText.style.fontFamily = s.font_family || 'Segoe UI, sans-serif';
+            mainText.style.lineHeight = s.text_line_height || 1.2;
+
+            if (s.main_text_bg_color && s.main_text_bg_color !== 'transparent' && s.main_text_bg_opacity > 0) {
+                mainText.style.backgroundColor = hexToRgba(s.main_text_bg_color, s.main_text_bg_opacity || 0);
+                mainText.style.padding = '10px 15px';
+                mainText.style.borderRadius = '8px';
+                mainText.style.display = 'inline-block';
+            } else {
+                mainText.style.backgroundColor = 'transparent';
+                mainText.style.padding = '0';
+                mainText.style.display = 'block';
+            }
+
+            const secondaryFontSize = s.secondary_font_size || 28;
+            const secondaryFontFamily = s.font_family || 'Segoe UI, sans-serif';
+            const secondaryLineHeight = s.text_line_height || 1.4;
+
+            secondaryText.style.fontSize = secondaryFontSize + 'px';
+            secondaryText.style.color = s.secondary_text_color || '#FFD700';
+            secondaryText.style.fontFamily = secondaryFontFamily;
+            secondaryText.style.lineHeight = secondaryLineHeight;
+
+            const hasSecondaryBg = s.secondary_text_bg_color && s.secondary_text_bg_color !== 'transparent' && (s.secondary_text_bg_opacity || 0) > 0;
+            const secondaryBgPadding = hasSecondaryBg ? '8px 12px' : '0';
+
+            if (s.secondary_rotation_enabled && secondaryPhrases.length > 0) {
+                const containerMaxWidth = (s.container_max_width || 900) - (s.container_padding || 25) * 2;
+
+                const dims = calculateSecondaryTextDimensions(
+                    secondaryPhrases,
+                    secondaryFontSize,
+                    secondaryFontFamily,
+                    secondaryLineHeight,
+                    containerMaxWidth,
+                    hasSecondaryBg,
+                    secondaryBgPadding
+                );
+
+                if (dims.width > 0 && dims.height > 0) {
+                    secondaryTextContainer.style.minWidth = dims.width + 'px';
+                    secondaryTextContainer.style.minHeight = dims.height + 'px';
+                }
+            } else {
+                secondaryTextContainer.style.minWidth = 'auto';
+                secondaryTextContainer.style.minHeight = 'auto';
+            }
+
+            if (hasSecondaryBg) {
+                secondaryText.style.backgroundColor = hexToRgba(s.secondary_text_bg_color, s.secondary_text_bg_opacity || 0);
+                secondaryText.style.padding = '8px 12px';
+                secondaryText.style.borderRadius = '6px';
+                secondaryText.style.display = 'inline-block';
+            } else {
+                secondaryText.style.backgroundColor = 'transparent';
+                secondaryText.style.padding = '0';
+                secondaryText.style.display = 'block';
+            }
+
+            companyName.style.fontSize = (s.company_name_font_size || 20) + 'px';
+            companyName.style.color = s.company_name_color || '#FFD700';
+            companyName.style.fontFamily = s.font_family || 'Segoe UI, sans-serif';
+
+            if (s.company_name_bg_color && s.company_name_bg_color !== 'transparent' && (s.company_name_bg_opacity || 0) > 0) {
+                companyName.style.backgroundColor = hexToRgba(s.company_name_bg_color, s.company_name_bg_opacity || 0);
+                companyName.style.padding = '6px 10px';
+                companyName.style.borderRadius = '5px';
+                companyName.style.display = 'inline-block';
+            } else {
+                companyName.style.backgroundColor = 'transparent';
+                companyName.style.padding = '0';
+                companyName.style.display = 'block';
+            }
+
+            if (s.show_ticker) {
+                tickerContent.style.fontSize = (s.ticker_font_size || 18) + 'px';
+                tickerContent.style.color = s.ticker_text_color || '#FFFFFF';
+                tickerContent.style.fontFamily = s.font_family || 'Segoe UI, sans-serif';
+                tickerContainer.style.backgroundColor = hexToRgba(s.ticker_bg_color || '#0d47a1', s.ticker_bg_opacity || 0.8);
+            }
+        }
+
+        function applyTextContent() {
+            const s = currentSettings;
+            const textAnimation = s.text_animation;
+
+            Object.keys(typewriterIntervals).forEach(key => {
+                if (typewriterIntervals[key]) {
+                    clearInterval(typewriterIntervals[key]);
+                    typewriterIntervals[key] = null;
+                }
+            });
+
+            if (textAnimation === 'typewriter') {
+                applyTypewriterEffect(mainText, s.main_text || '', 'main', s.text_animation_speed || 1.0);
+                secondaryText.textContent = s.secondary_text || '';
+                companyName.textContent = s.company_name || '';
+            } else if (textAnimation === 'fade-in-words') {
+                applyFadeInWords(mainText, s.main_text || '', s.text_animation_speed || 1.0);
+                secondaryText.textContent = s.secondary_text || '';
+                companyName.textContent = s.company_name || '';
+            } else if (textAnimation === 'slide-in-words') {
+                applySlideInWords(mainText, s.main_text || '', s.text_animation_speed || 1.0);
+                secondaryText.textContent = s.secondary_text || '';
+                companyName.textContent = s.company_name || '';
+            } else {
+                mainText.textContent = s.main_text || '';
+                secondaryText.textContent = s.secondary_text || '';
+                companyName.textContent = s.company_name || '';
+            }
+        }
+
+        function applyTypewriterEffect(element, text, key, speed) {
+            if (!text) {
+                element.innerHTML = '';
+                return;
+            }
+            element.innerHTML = '<span class="typewriter-cursor"></span>';
+            let index = 0;
+            const baseDelay = 100 / speed;
+            typewriterIntervals[key] = setInterval(() => {
+                if (index < text.length) {
+                    const cursor = element.querySelector('.typewriter-cursor');
+                    const textNode = document.createTextNode(text.charAt(index));
+                    element.insertBefore(textNode, cursor);
+                    index++;
+                } else {
+                    clearInterval(typewriterIntervals[key]);
+                    typewriterIntervals[key] = null;
+                    setTimeout(() => {
+                        const cursor = element.querySelector('.typewriter-cursor');
+                        if (cursor) cursor.remove();
+                    }, 1000);
+                }
+            }, baseDelay);
+        }
+
+        function applyFadeInWords(element, text, speed) {
+            if (!text) {
+                element.innerHTML = '';
+                return;
+            }
+            const words = text.split(' ');
+            element.innerHTML = '';
+            const baseDelay = 200 / speed;
+            words.forEach((word, index) => {
+                const span = document.createElement('span');
+                span.textContent = word;
+                span.style.opacity = '0';
+                span.style.display = 'inline-block';
+                span.style.marginRight = '0.3em';
+                span.style.transition = 'opacity 0.5s ease-in';
+                element.appendChild(span);
+                setTimeout(() => { span.style.opacity = '1'; }, index * baseDelay);
+            });
+        }
+
+        function applySlideInWords(element, text, speed) {
+            if (!text) {
+                element.innerHTML = '';
+                return;
+            }
+            const words = text.split(' ');
+            element.innerHTML = '';
+            const baseDelay = 200 / speed;
+            words.forEach((word, index) => {
+                const span = document.createElement('span');
+                span.textContent = word;
+                span.style.opacity = '0';
+                span.style.transform = 'translateX(-20px)';
+                span.style.display = 'inline-block';
+                span.style.marginRight = '0.3em';
+                span.style.transition = 'all 0.5s ease-out';
+                element.appendChild(span);
+                setTimeout(() => {
+                    span.style.opacity = '1';
+                    span.style.transform = 'translateX(0)';
+                }, index * baseDelay);
+            });
+        }
+
+        function applyDecorations() {
+            const s = currentSettings;
+            if (s.show_decorative_elements) {
+                lineSeparators.forEach(line => line.style.display = 'block');
+                cornerBadges.forEach(badge => badge.style.display = 'block');
+            } else {
+                lineSeparators.forEach(line => line.style.display = 'none');
+                cornerBadges.forEach(badge => badge.style.display = 'none');
+            }
+        }
+
+        function applyAnimations() {
+            const s = currentSettings;
+
+            if (textAnimationTimeout) {
+                clearTimeout(textAnimationTimeout);
+                textAnimationTimeout = null;
+            }
+
+            let maxEntranceDuration = 0;
+            const entranceDuration = s.entrance_duration || 1;
+            const entranceDelay = s.entrance_delay || 0;
+            const logoAnimDelay = s.logo_animation_delay || 0.3;
+            const imageAnimDelay = s.image_animation_delay || 0.2;
+            const tickerEntranceDelay = s.ticker_entrance_delay || 0.5;
+
+            if (s.entrance_animation && s.entrance_animation !== 'none') {
+                maxEntranceDuration = Math.max(maxEntranceDuration, entranceDuration + entranceDelay);
+            }
+            if (s.logo_animation && s.logo_animation !== 'none' && s.show_company_logo) {
+                maxEntranceDuration = Math.max(maxEntranceDuration, entranceDuration + logoAnimDelay);
+            }
+            if (s.image_animation && s.image_animation !== 'none' && s.show_category_image) {
+                maxEntranceDuration = Math.max(maxEntranceDuration, entranceDuration + imageAnimDelay);
+            }
+            if (s.ticker_entrance && s.ticker_entrance !== 'none' && s.show_ticker) {
+                maxEntranceDuration = Math.max(maxEntranceDuration, entranceDuration + tickerEntranceDelay);
+            }
+
+            if (s.entrance_animation && s.entrance_animation !== 'none') {
+                overlayContainer.className = overlayContainer.className.split(' ').filter(c => !c.startsWith('anim-')).join(' ');
+                overlayContainer.classList.add('anim-' + s.entrance_animation);
+                overlayContainer.style.animationDuration = entranceDuration + 's';
+                overlayContainer.style.animationDelay = entranceDelay + 's';
+            }
+
+            if (s.logo_animation && s.logo_animation !== 'none') {
+                companyLogo.className = companyLogo.className.split(' ').filter(c => !c.startsWith('anim-')).join(' ');
+                companyLogo.classList.add('anim-' + s.logo_animation);
+                companyLogo.style.animationDuration = entranceDuration + 's';
+                companyLogo.style.animationDelay = logoAnimDelay + 's';
+            }
+
+            if (s.image_animation && s.image_animation !== 'none') {
+                categoryImage.className = categoryImage.className.split(' ').filter(c => !c.startsWith('anim-')).join(' ');
+                categoryImage.classList.add('anim-' + s.image_animation);
+                categoryImage.style.animationDuration = entranceDuration + 's';
+                categoryImage.style.animationDelay = imageAnimDelay + 's';
+            }
+
+            if (s.ticker_entrance && s.ticker_entrance !== 'none') {
+                tickerContainer.className = tickerContainer.className.split(' ').filter(c => !c.startsWith('anim-')).join(' ');
+                tickerContainer.classList.add('anim-' + s.ticker_entrance);
+                tickerContainer.style.animationDuration = entranceDuration + 's';
+                tickerContainer.style.animationDelay = tickerEntranceDelay + 's';
+            }
+
+            const textAnimation = s.text_animation;
+            if (textAnimation && textAnimation !== 'none' && !['typewriter', 'fade-in-words', 'slide-in-words'].includes(textAnimation)) {
+                const delayMs = (maxEntranceDuration * 1000) + 100;
+                textAnimationTimeout = setTimeout(() => {
+                    [mainText, secondaryText, companyName].forEach(element => {
+                        if (!element.textContent) return;
+                        element.className = element.className.split(' ').filter(c => !c.startsWith('text-')).join(' ');
+                        let animClass = textAnimation;
+                        if (['pulse', 'glow', 'float', 'bounce', 'shake', 'zoom'].includes(animClass)) {
+                            animClass = 'text-' + animClass;
+                        }
+                        element.classList.add(animClass);
+                        element.style.animationDuration = (s.text_animation_speed || 2) + 's';
+                    });
+                }, delayMs);
+            }
+
+            if (s.logo_display_animation_enabled && s.logo_display_animation && s.logo_display_animation !== 'none') {
+                companyLogo.className = companyLogo.className.split(' ').filter(c => !c.startsWith('display-')).join(' ');
+                companyLogo.classList.add('display-' + s.logo_display_animation);
+                if (s.logo_display_animation_duration) {
+                    companyLogo.style.animationDuration = s.logo_display_animation_duration + 's';
+                }
+            }
+
+            if (s.image_display_animation_enabled && s.image_display_animation && s.image_display_animation !== 'none') {
+                categoryImage.className = categoryImage.className.split(' ').filter(c => !c.startsWith('display-')).join(' ');
+                categoryImage.classList.add('display-' + s.image_display_animation);
+                if (s.image_display_animation_duration) {
+                    categoryImage.style.animationDuration = s.image_display_animation_duration + 's';
+                }
+            }
+        }
+
+        function startSecondaryRotation() {
+            stopSecondaryRotation();
+            if (!secondaryPhrases.length) return;
+            const s = currentSettings;
+            const duration = (s.secondary_display_duration || 3) * 1000;
+            rotationInterval = setInterval(() => {
+                phraseIndex = (phraseIndex + 1) % secondaryPhrases.length;
+                const newText = secondaryPhrases[phraseIndex];
+                const transitionType = s.secondary_transition_type || 'fade';
+                const transitionDuration = (s.secondary_transition_duration || 0.5) * 1000;
+                if (transitionType === 'fade') {
+                    secondaryText.style.transition = `opacity ${transitionDuration}ms`;
+                    secondaryText.style.opacity = '0';
+                    setTimeout(() => {
+                        secondaryText.textContent = newText;
+                        secondaryText.style.opacity = '1';
+                    }, transitionDuration);
+                } else if (transitionType === 'slide') {
+                    secondaryText.style.transition = `transform ${transitionDuration}ms, opacity ${transitionDuration}ms`;
+                    secondaryText.style.transform = 'translateX(-50px)';
+                    secondaryText.style.opacity = '0';
+                    setTimeout(() => {
+                        secondaryText.textContent = newText;
+                        secondaryText.style.transform = 'translateX(0)';
+                        secondaryText.style.opacity = '1';
+                    }, transitionDuration);
+                } else {
+                    secondaryText.textContent = newText;
+                }
+            }, duration);
+        }
+
+        function stopSecondaryRotation() {
+            if (rotationInterval) {
+                clearInterval(rotationInterval);
+                rotationInterval = null;
+            }
+        }
+
+        function startTicker() {
+            stopTicker();
+            const s = currentSettings;
+            const containerWidth = tickerContainer.offsetWidth;
+            const contentWidth = tickerContent.scrollWidth;
+            if (contentWidth <= containerWidth) {
+                tickerContent.style.transform = 'translateX(0)';
+                return;
+            }
+            const speed = s.ticker_speed || 50;
+            const pixelsPerSecond = speed * 2;
+            const totalDistance = contentWidth + containerWidth;
+            const duration = (totalDistance / pixelsPerSecond) * 1000;
+            let startTime = null;
+            let startPos = containerWidth;
+            function animate(timestamp) {
+                if (!startTime) startTime = timestamp;
+                const elapsed = timestamp - startTime;
+                const progress = elapsed / duration;
+                const currentPos = startPos - (totalDistance * progress);
+                tickerContent.style.transform = `translateX(${currentPos}px)`;
+                if (currentPos <= -contentWidth) {
+                    startTime = timestamp;
+                    startPos = containerWidth;
+                }
+                tickerAnimation = requestAnimationFrame(animate);
+            }
+            tickerAnimation = requestAnimationFrame(animate);
+        }
+
+        function stopTicker() {
+            if (tickerAnimation) {
+                cancelAnimationFrame(tickerAnimation);
+                tickerAnimation = null;
+            }
+        }
+
+        function hexToRgba(hex, alpha) {
+            if (!hex || hex === 'transparent' || hex === '') return 'transparent';
+            hex = hex.replace('#', '');
+            if (hex.length === 3) {
+                hex = hex.split('').map(c => c + c).join('');
+            }
+            const r = parseInt(hex.substring(0, 2), 16) || 0;
+            const g = parseInt(hex.substring(2, 4), 16) || 0;
+            const b = parseInt(hex.substring(4, 6), 16) || 0;
+            let a = parseFloat(alpha);
+            if (isNaN(a) || a === undefined || a === null) a = 1;
+            a = Math.max(0, Math.min(1, a));
+            return `rgba(${r}, ${g}, ${b}, ${a})`;
+        }
+
+        setInterval(updateDisplay, 2000);
+        updateDisplay();
     </script>
 </body>
 </html>

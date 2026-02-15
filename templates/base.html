@@ -1,232 +1,141 @@
-<!-- templates/base.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}{{ company_name }} Overlay System{% endblock %}</title>
-
+    <title>{% block title %}{{ company_name }} - Overlay Control{% endblock %}</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
-    <link rel="icon" href="{{ url_for('static', filename='images/lmn.png') }}" type="image/x-icon">
-
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
-        * {
+        body {
             font-family: 'Inter', sans-serif;
         }
 
-        body {
-            background: linear-gradient(135deg, #f8fafc 0%, #eef2f7 100%);
-            min-height: 100vh;
+        .toast {
+            animation: slideIn 0.3s ease-out;
         }
 
-        .nav-shadow {
-            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
         }
 
-        .card {
-            background: #ffffff;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px -1px rgba(15, 23, 42, 0.08),
-                        0 2px 4px -1px rgba(15, 23, 42, 0.05);
-            transition: all 0.25s ease;
+        .fade-out {
+            animation: fadeOut 0.3s ease-out forwards;
         }
 
-        .card:hover {
-            box-shadow: 0 12px 20px -6px rgba(15, 23, 42, 0.12);
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, #2563eb, #3b82f6);
-            transition: all 0.25s ease;
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 10px 18px -10px rgba(37, 99, 235, 0.45);
-        }
-
-        .btn-secondary {
-            background: linear-gradient(135deg, #64748b, #94a3b8);
-            transition: all 0.25s ease;
-        }
-
-        .btn-secondary:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 10px 18px -10px rgba(100, 116, 139, 0.4);
-        }
-
-        .nav-link {
-            position: relative;
-            transition: color 0.25s ease;
-        }
-
-        .nav-link::after {
-            content: '';
-            position: absolute;
-            bottom: -2px;
-            left: 0;
-            width: 0;
-            height: 2px;
-            background: linear-gradient(135deg, #2563eb, #3b82f6);
-            transition: width 0.25s ease;
-        }
-
-        .nav-link:hover::after,
-        .nav-link.active::after {
-            width: 100%;
-        }
-
-        input:focus,
-        select:focus,
-        textarea:focus {
-            outline: none;
-            border-color: #2563eb;
-            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
-        }
-
-        .toggle-switch {
-            position: relative;
-            width: 48px;
-            height: 24px;
-            background: #cbd5e1;
-            border-radius: 24px;
-            cursor: pointer;
-            transition: background 0.25s ease;
-        }
-
-        .toggle-switch.active {
-            background: linear-gradient(135deg, #2563eb, #3b82f6);
-        }
-
-        .toggle-switch-thumb {
-            position: absolute;
-            top: 2px;
-            left: 2px;
-            width: 20px;
-            height: 20px;
-            background: white;
-            border-radius: 50%;
-            transition: transform 0.25s ease;
-            box-shadow: 0 2px 4px rgba(15, 23, 42, 0.2);
-        }
-
-        .toggle-switch.active .toggle-switch-thumb {
-            transform: translateX(24px);
-        }
-
-        .status-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-
-        .status-online { background: #22c55e; }
-        .status-offline { background: #ef4444; }
-
-        .footer {
-            background: linear-gradient(135deg, #0f172a, #1e293b);
+        @keyframes fadeOut {
+            from {
+                opacity: 1;
+            }
+            to {
+                opacity: 0;
+                transform: translateX(100%);
+            }
         }
     </style>
-
-    {% block extra_head %}{% endblock %}
+    {% block extra_css %}{% endblock %}
 </head>
-
-<body>
-
-<!-- Navigation -->
-<nav class="bg-white nav-shadow sticky top-0 z-50">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between items-center h-16">
-
-            <!-- Logo -->
-            <div class="flex items-center space-x-3">
-                <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-600 to-blue-400 flex items-center justify-center">
-                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                              d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
-                    </svg>
-                </div>
-                <div>
-                    <h1 class="text-xl font-semibold text-slate-900">
-                        {{ company_name }}
-                    </h1>
-                    <p class="text-xs text-slate-500">Overlay System</p>
-                </div>
-            </div>
-
-            {% if session.user_id %}
-            <div class="hidden md:flex items-center space-x-4">
-                <a href="{{ url_for('control') }}"
-                   class="nav-link px-3 py-2 text-sm font-medium text-slate-600 hover:text-slate-900 {% if request.endpoint == 'control' %}active{% endif %}">
-                    Control Panel
-                </a>
-                {% if session.is_admin %}
-                <a href="{{ url_for('users') }}"
-                   class="nav-link px-3 py-2 text-sm font-medium text-slate-600 hover:text-slate-900 {% if request.endpoint == 'users' %}active{% endif %}">
-                    Users
-                </a>
-                {% endif %}
-                <div class="flex items-center space-x-2">
-                    <div class="status-dot status-online"></div>
-                    <span class="text-xs text-slate-500">Connected</span>
-                </div>
-            </div>
-            {% endif %}
-
-            {% if session.user_id %}
-            <div class="flex items-center space-x-4">
-                <div class="hidden sm:flex items-center space-x-3">
-                    <div class="text-right">
-                        <p class="text-sm font-medium text-slate-900">{{ session.user_email }}</p>
-                        <p class="text-xs text-slate-500">{% if session.is_admin %}Administrator{% else %}User{% endif %}</p>
+<body class="bg-gray-50 min-h-screen">
+    {% if session.user_id %}
+    <!-- Navigation -->
+    <nav class="bg-white shadow-lg border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex">
+                    <div class="flex-shrink-0 flex items-center">
+                        <h1 class="text-2xl font-bold text-indigo-600">{{ company_name }}</h1>
                     </div>
-                    <div class="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center">
-                        <span class="text-white font-semibold text-sm">
-                            {{ session.user_email[0].upper() }}
-                        </span>
+                    <div class="hidden sm:ml-6 sm:flex sm:space-x-8">
+                        <a href="{{ url_for('main.control') }}"
+                           class="{% if request.endpoint == 'main.control' %}border-indigo-500 text-gray-900{% else %}border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700{% endif %} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                            <i class="fas fa-broadcast-tower mr-2"></i> Stream Control
+                        </a>
+                        <a href="{{ url_for('ocr.index') }}"
+                           class="{% if request.endpoint and 'ocr' in request.endpoint %}border-indigo-500 text-gray-900{% else %}border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700{% endif %} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                            <i class="fas fa-file-text mr-2"></i> OCR
+                        </a>
+                        {% if session.is_admin %}
+                        <a href="{{ url_for('main.users') }}"
+                           class="{% if request.endpoint == 'main.users' %}border-indigo-500 text-gray-900{% else %}border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700{% endif %} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                            <i class="fas fa-users mr-2"></i> Users
+                        </a>
+                        {% endif %}
+                        <a href="{{ url_for('licensing.subscription') }}"
+                           class="{% if request.endpoint == 'licensing.subscription' %}border-indigo-500 text-gray-900{% else %}border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700{% endif %} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                            <i class="fas fa-crown mr-2"></i> Subscription
+                        </a>
                     </div>
                 </div>
-
-                <a href="{{ url_for('logout') }}"
-                   class="px-4 py-2 text-sm font-medium text-white bg-slate-800 rounded-lg hover:bg-slate-900 transition shadow">
-                    Logout
-                </a>
+                <div class="flex items-center">
+                    <span class="text-sm text-gray-700 mr-4">
+                        <i class="fas fa-user-circle mr-1"></i> {{ session.user_email }}
+                    </span>
+                    <a href="{{ url_for('auth.logout') }}"
+                       class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        <i class="fas fa-sign-out-alt mr-2"></i> Logout
+                    </a>
+                </div>
             </div>
+        </div>
+    </nav>
+    {% endif %}
+
+    <!-- Flash Messages -->
+    <div id="flash-container" class="fixed top-4 right-4 z-50 space-y-2">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                <div class="toast px-6 py-4 rounded-lg shadow-lg max-w-md {% if category == 'error' %}bg-red-500{% elif category == 'success' %}bg-green-500{% elif category == 'info' %}bg-blue-500{% else %}bg-gray-800{% endif %} text-white">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <i class="fas {% if category == 'error' %}fa-exclamation-circle{% elif category == 'success' %}fa-check-circle{% elif category == 'info' %}fa-info-circle{% else %}fa-bell{% endif %} mr-3"></i>
+                            <span>{{ message }}</span>
+                        </div>
+                        <button onclick="this.parentElement.parentElement.classList.add('fade-out')" class="ml-4 text-white hover:text-gray-200">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+                {% endfor %}
             {% endif %}
-        </div>
+        {% endwith %}
     </div>
-</nav>
 
-<!-- Main -->
-<main class="min-h-[calc(100vh-64px-80px)]">
-    {% block content %}{% endblock %}
-</main>
+    <!-- Main Content -->
+    <main class="{% if session.user_id %}py-6{% endif %}">
+        {% block content %}{% endblock %}
+    </main>
 
-<!-- Footer -->
-<footer class="footer mt-12">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div class="flex flex-col md:flex-row justify-between items-center space-y-3 md:space-y-0">
-            <div class="text-slate-300 text-sm">
-                <p class="font-medium text-white">{{ company_name }} Overlay System</p>
-                <p class="text-xs text-slate-400 mt-1">Professional Broadcasting Solution</p>
-            </div>
-            <div class="text-slate-400 text-sm text-center md:text-right">
-                <p>Powered by <span class="font-semibold text-white">LMN</span></p>
-                <p class="text-xs mt-1">&copy; 2024 All rights reserved</p>
-            </div>
+    <!-- Footer -->
+    <footer class="bg-white border-t border-gray-200 mt-auto">
+        <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+            <p class="text-center text-gray-500 text-sm">
+                &copy; {{ current_year }} {{ company_name }}. All rights reserved.
+            </p>
         </div>
-    </div>
-</footer>
+    </footer>
 
-{% block scripts %}{% endblock %}
+    <script>
+        // Auto-hide flash messages after 5 seconds
+        document.addEventListener('DOMContentLoaded', function() {
+            const toasts = document.querySelectorAll('.toast');
+            toasts.forEach(toast => {
+                setTimeout(() => {
+                    toast.classList.add('fade-out');
+                    setTimeout(() => toast.remove(), 300);
+                }, 5000);
+            });
+        });
+    </script>
+    {% block extra_js %}{% endblock %}
 </body>
 </html>

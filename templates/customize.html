@@ -1,0 +1,1179 @@
+{% extends "base.html" %}
+
+{% block title %}Customize {{ category_name }} - {{ company_name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .settings-section {
+        background: white;
+        border-radius: 0.5rem;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    .settings-section h3 {
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: #1F2937;
+        margin-bottom: 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid #E5E7EB;
+    }
+    .form-group {
+        margin-bottom: 1rem;
+    }
+    .form-label {
+        display: block;
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: #374151;
+        margin-bottom: 0.25rem;
+    }
+    .form-input {
+        width: 100%;
+        padding: 0.5rem 0.75rem;
+        border: 1px solid #D1D5DB;
+        border-radius: 0.375rem;
+        font-size: 0.875rem;
+        transition: all 0.2s;
+    }
+    .form-input:focus {
+        outline: none;
+        border-color: #4F46E5;
+    }
+    .color-input-group {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+    }
+    .color-input {
+        width: 60px;
+        height: 40px;
+        padding: 2px;
+        border: 1px solid #D1D5DB;
+        border-radius: 0.375rem;
+        cursor: pointer;
+    }
+    .toggle-checkbox {
+        width: 44px;
+        height: 24px;
+        background: #CBD5E1;
+        border-radius: 24px;
+        position: relative;
+        cursor: pointer;
+        transition: 0.3s;
+    }
+    .toggle-checkbox::before {
+        content: '';
+        position: absolute;
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background: white;
+        top: 3px;
+        left: 3px;
+        transition: 0.3s;
+    }
+    .toggle-checkbox.checked {
+        background: #10B981;
+    }
+    .toggle-checkbox.checked::before {
+        left: 23px;
+    }
+    .preview-frame {
+        position: sticky;
+        top: 20px;
+        background: #000;
+        border-radius: 0.5rem;
+        overflow: hidden;
+        aspect-ratio: 16/9;
+    }
+    .tab-button {
+        padding: 0.75rem 1.5rem;
+        border: none;
+        background: transparent;
+        color: #6B7280;
+        font-weight: 500;
+        cursor: pointer;
+        border-bottom: 2px solid transparent;
+        transition: all 0.2s;
+    }
+    .tab-button.active {
+        color: #4F46E5;
+        border-bottom-color: #4F46E5;
+    }
+    .tab-content {
+        display: none;
+    }
+    .tab-content.active {
+        display: block;
+    }
+    .grid-2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <!-- Back Navigation -->
+    <div class="mb-6">
+        <a href="{{ url_for('main.control') }}" class="inline-flex items-center text-indigo-600 hover:text-indigo-700">
+            <i class="fas fa-arrow-left mr-2"></i>
+            Back to Control Panel
+        </a>
+    </div>
+
+    <!-- Page Header -->
+    <div class="mb-8 flex items-center justify-between">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">
+                <i class="fas {% if category == 'funeral' %}fa-dove{% elif category == 'wedding' %}fa-rings-wedding{% else %}fa-trophy{% endif %} text-indigo-600 mr-3"></i>
+                {{ category_name }} Customization
+            </h1>
+            <p class="text-gray-600">Customize appearance, animations, and behavior</p>
+        </div>
+        <div class="flex gap-3">
+            <button onclick="resetToDefaults()" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
+                <i class="fas fa-undo mr-2"></i>Reset to Defaults
+            </button>
+            <a href="{{ url_for('main.display', category=category) }}" target="_blank"
+               class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">
+                <i class="fas fa-external-link-alt mr-2"></i>Open Preview
+            </a>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Settings Panel -->
+        <div class="lg:col-span-2">
+            <!-- Tab Navigation -->
+            <div class="bg-white rounded-t-lg border-b border-gray-200 flex overflow-x-auto">
+                <button class="tab-button active" onclick="switchTab('content')">
+                    <i class="fas fa-text mr-2"></i>Content
+                </button>
+                <button class="tab-button" onclick="switchTab('appearance')">
+                    <i class="fas fa-palette mr-2"></i>Appearance
+                </button>
+                <button class="tab-button" onclick="switchTab('animations')">
+                    <i class="fas fa-magic mr-2"></i>Animations
+                </button>
+                <button class="tab-button" onclick="switchTab('layout')">
+                    <i class="fas fa-th-large mr-2"></i>Layout
+                </button>
+                <button class="tab-button" onclick="switchTab('assets')">
+                    <i class="fas fa-images mr-2"></i>Assets
+                </button>
+            </div>
+
+            <!-- Tab Contents -->
+            <div class="tab-panels">
+                <!-- CONTENT TAB -->
+                <div id="content-tab" class="tab-content active">
+                    <!-- Main Text -->
+                    <div class="settings-section">
+                        <h3><i class="fas fa-heading mr-2"></i>Main Text</h3>
+                        <div class="form-group">
+                            <label class="form-label">Text Content</label>
+                            <input type="text" id="main_text" class="form-input"
+                                   value="{{ settings.main_text or '' }}"
+                                   onchange="updateSetting('main_text', this.value)">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Font Size (px)</label>
+                            <input type="number" id="main_font_size" class="form-input"
+                                   value="{{ settings.main_font_size or 32 }}"
+                                   onchange="updateSetting('main_font_size', this.value)">
+                        </div>
+                    </div>
+
+                    <!-- Secondary Text -->
+                    <div class="settings-section">
+                        <h3><i class="fas fa-text mr-2"></i>Secondary Text</h3>
+                        <div class="form-group">
+                            <label class="form-label">Text Content</label>
+                            <input type="text" id="secondary_text" class="form-input"
+                                   value="{{ settings.secondary_text or '' }}"
+                                   onchange="updateSetting('secondary_text', this.value)">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Font Size (px)</label>
+                            <input type="number" id="secondary_font_size" class="form-input"
+                                   value="{{ settings.secondary_font_size or 24 }}"
+                                   onchange="updateSetting('secondary_font_size', this.value)">
+                        </div>
+
+                        <!-- Rotation Settings -->
+                        <div class="form-group">
+                            <label class="form-label flex items-center gap-2">
+                                Enable Rotation
+                                <div class="toggle-checkbox {% if settings.secondary_rotation_enabled %}checked{% endif %}"
+                                     id="secondary_rotation_toggle"
+                                     onclick="toggleSecondaryRotation(this)"></div>
+                            </label>
+                        </div>
+
+                        <div id="rotation_controls" style="display: {% if settings.secondary_rotation_enabled %}block{% else %}none{% endif %};">
+                            <div class="form-group">
+                                <label class="form-label">Display Duration (seconds)</label>
+                                <input type="number" step="0.1" id="secondary_display_duration" class="form-input"
+                                       value="{{ settings.secondary_display_duration or 3.0 }}"
+                                       onchange="updateSetting('secondary_display_duration', this.value)">
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Transition Type</label>
+                                <select id="secondary_transition_type" class="form-input" onchange="updateSetting('secondary_transition_type', this.value)">
+                                    <option value="fade" {% if settings.secondary_transition_type == 'fade' %}selected{% endif %}>Fade</option>
+                                    <option value="slide" {% if settings.secondary_transition_type == 'slide' %}selected{% endif %}>Slide</option>
+                                    <option value="none" {% if settings.secondary_transition_type == 'none' %}selected{% endif %}>None</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Transition Duration (seconds)</label>
+                                <input type="number" step="0.1" id="secondary_transition_duration" class="form-input"
+                                       value="{{ settings.secondary_transition_duration or 0.5 }}"
+                                       onchange="updateSetting('secondary_transition_duration', this.value)">
+                            </div>
+
+                            <!-- Rotating Phrases Manager -->
+                            <div class="form-group">
+                                <label class="form-label">Rotating Phrases</label>
+                                <p class="text-xs text-gray-500 mb-2">Add multiple phrases to rotate through</p>
+
+                                <div class="flex gap-2 mb-3">
+                                    <input type="text" id="new_phrase_input" class="form-input"
+                                           placeholder="Enter a new phrase..."
+                                           onkeypress="if(event.key==='Enter') addPhrase()">
+                                    <button onclick="addPhrase()"
+                                            class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 whitespace-nowrap">
+                                        <i class="fas fa-plus mr-1"></i> Add
+                                    </button>
+                                </div>
+
+                                <div id="phrases_list" class="space-y-2"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Ticker -->
+                    <div class="settings-section">
+                        <h3><i class="fas fa-scroll mr-2"></i>Ticker</h3>
+                        <div class="form-group">
+                            <label class="form-label flex items-center gap-2">
+                                Show Ticker
+                                <div class="toggle-checkbox {% if settings.show_ticker %}checked{% endif %}"
+                                     onclick="toggleBoolean(this, 'show_ticker')"></div>
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Ticker Text</label>
+                            <textarea id="ticker_text" class="form-input" rows="3"
+                                      onchange="updateSetting('ticker_text', this.value)">{{ settings.ticker_text or '' }}</textarea>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Font Size (px)</label>
+                            <input type="number" id="ticker_font_size" class="form-input"
+                                   value="{{ settings.ticker_font_size or 18 }}"
+                                   onchange="updateSetting('ticker_font_size', this.value)">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Scroll Speed (1-100)</label>
+                            <input type="range" min="10" max="100" id="ticker_speed" class="w-full"
+                                   value="{{ settings.ticker_speed or 50 }}"
+                                   oninput="this.nextElementSibling.textContent = this.value; updateSetting('ticker_speed', this.value)">
+                            <div class="text-sm text-gray-500 text-center">{{ settings.ticker_speed or 50 }}</div>
+                        </div>
+                    </div>
+
+                    <!-- Company Name -->
+                    <div class="settings-section">
+                        <h3><i class="fas fa-building mr-2"></i>Company Name</h3>
+                        <div class="form-group">
+                            <label class="form-label">Company Name</label>
+                            <input type="text" id="company_name" class="form-input"
+                                   value="{{ settings.company_name or '' }}"
+                                   onchange="updateSetting('company_name', this.value)">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Font Size (px)</label>
+                            <input type="number" id="company_name_font_size" class="form-input"
+                                   value="{{ settings.company_name_font_size or 18 }}"
+                                   onchange="updateSetting('company_name_font_size', this.value)">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- APPEARANCE TAB -->
+                <div id="appearance-tab" class="tab-content">
+                    <!-- Colors Section -->
+                    <div class="settings-section">
+                        <h3><i class="fas fa-palette mr-2"></i>Colors</h3>
+
+                        <!-- Overlay Background -->
+                        <div class="form-group">
+                            <label class="form-label">Overlay Background Color</label>
+                            <div class="color-input-group">
+                                <input type="color" id="overlay_bg_color_picker" class="color-input"
+                                       value="{{ settings.overlay_bg_color or '#000000' }}"
+                                       onchange="document.getElementById('overlay_bg_color').value = this.value; updateSetting('overlay_bg_color', this.value)">
+                                <input type="text" id="overlay_bg_color" class="form-input"
+                                       value="{{ settings.overlay_bg_color or '#000000' }}"
+                                       onchange="updateSetting('overlay_bg_color', this.value)">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Overlay Background Opacity</label>
+                            <input type="range" min="0" max="1" step="0.1" id="overlay_bg_opacity" class="w-full"
+                                   value="{{ settings.overlay_bg_opacity or 0.9 }}"
+                                   oninput="this.nextElementSibling.textContent = this.value; updateSetting('overlay_bg_opacity', this.value)">
+                            <div class="text-sm text-gray-500 text-center">{{ settings.overlay_bg_opacity or 0.9 }}</div>
+                        </div>
+
+                        <!-- Main Text Colors -->
+                        <div class="form-group">
+                            <label class="form-label">Main Text Color</label>
+                            <div class="color-input-group">
+                                <input type="color" id="main_text_color_picker" class="color-input"
+                                       value="{{ settings.main_text_color or '#FFFFFF' }}"
+                                       onchange="document.getElementById('main_text_color').value = this.value; updateSetting('main_text_color', this.value)">
+                                <input type="text" id="main_text_color" class="form-input"
+                                       value="{{ settings.main_text_color or '#FFFFFF' }}"
+                                       onchange="updateSetting('main_text_color', this.value)">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Main Text Background Color</label>
+                            <div class="color-input-group">
+                                <input type="color" id="main_text_bg_color_picker" class="color-input"
+                                       value="{{ settings.main_text_bg_color or '#000000' }}"
+                                       onchange="document.getElementById('main_text_bg_color').value = this.value; updateSetting('main_text_bg_color', this.value)">
+                                <input type="text" id="main_text_bg_color" class="form-input"
+                                       value="{{ settings.main_text_bg_color or 'transparent' }}"
+                                       onchange="updateSetting('main_text_bg_color', this.value)">
+                            </div>
+                        </div>
+
+                        <!-- Secondary Text Colors -->
+                        <div class="form-group">
+                            <label class="form-label">Secondary Text Color</label>
+                            <div class="color-input-group">
+                                <input type="color" id="secondary_text_color_picker" class="color-input"
+                                       value="{{ settings.secondary_text_color or '#FFD700' }}"
+                                       onchange="document.getElementById('secondary_text_color').value = this.value; updateSetting('secondary_text_color', this.value)">
+                                <input type="text" id="secondary_text_color" class="form-input"
+                                       value="{{ settings.secondary_text_color or '#FFD700' }}"
+                                       onchange="updateSetting('secondary_text_color', this.value)">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Secondary Text Background Color</label>
+                            <div class="color-input-group">
+                                <input type="color" id="secondary_text_bg_color_picker" class="color-input"
+                                       value="{{ settings.secondary_text_bg_color or '#000000' }}"
+                                       onchange="document.getElementById('secondary_text_bg_color').value = this.value; updateSetting('secondary_text_bg_color', this.value)">
+                                <input type="text" id="secondary_text_bg_color" class="form-input"
+                                       value="{{ settings.secondary_text_bg_color or 'transparent' }}"
+                                       onchange="updateSetting('secondary_text_bg_color', this.value)">
+                            </div>
+                        </div>
+
+                        <!-- Ticker Colors -->
+                        <div class="form-group">
+                            <label class="form-label">Ticker Text Color</label>
+                            <div class="color-input-group">
+                                <input type="color" id="ticker_text_color_picker" class="color-input"
+                                       value="{{ settings.ticker_text_color or '#FFFFFF' }}"
+                                       onchange="document.getElementById('ticker_text_color').value = this.value; updateSetting('ticker_text_color', this.value)">
+                                <input type="text" id="ticker_text_color" class="form-input"
+                                       value="{{ settings.ticker_text_color or '#FFFFFF' }}"
+                                       onchange="updateSetting('ticker_text_color', this.value)">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Ticker Background Color</label>
+                            <div class="color-input-group">
+                                <input type="color" id="ticker_bg_color_picker" class="color-input"
+                                       value="{{ settings.ticker_bg_color or '#1a1a1a' }}"
+                                       onchange="document.getElementById('ticker_bg_color').value = this.value; updateSetting('ticker_bg_color', this.value)">
+                                <input type="text" id="ticker_bg_color" class="form-input"
+                                       value="{{ settings.ticker_bg_color or '#1a1a1a' }}"
+                                       onchange="updateSetting('ticker_bg_color', this.value)">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Ticker Background Opacity</label>
+                            <input type="range" min="0" max="1" step="0.1" id="ticker_bg_opacity" class="w-full"
+                                   value="{{ settings.ticker_bg_opacity or 0.8 }}"
+                                   oninput="this.nextElementSibling.textContent = this.value; updateSetting('ticker_bg_opacity', this.value)">
+                            <div class="text-sm text-gray-500 text-center">{{ settings.ticker_bg_opacity or 0.8 }}</div>
+                        </div>
+
+                        <!-- Company Name Colors -->
+                        <div class="form-group">
+                            <label class="form-label">Company Name Color</label>
+                            <div class="color-input-group">
+                                <input type="color" id="company_name_color_picker" class="color-input"
+                                       value="{{ settings.company_name_color or '#FFD700' }}"
+                                       onchange="document.getElementById('company_name_color').value = this.value; updateSetting('company_name_color', this.value)">
+                                <input type="text" id="company_name_color" class="form-input"
+                                       value="{{ settings.company_name_color or '#FFD700' }}"
+                                       onchange="updateSetting('company_name_color', this.value)">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Company Name Background Color</label>
+                            <div class="color-input-group">
+                                <input type="color" id="company_name_bg_color_picker" class="color-input"
+                                       value="{{ settings.company_name_bg_color or '#000000' }}"
+                                       onchange="document.getElementById('company_name_bg_color').value = this.value; updateSetting('company_name_bg_color', this.value)">
+                                <input type="text" id="company_name_bg_color" class="form-input"
+                                       value="{{ settings.company_name_bg_color or 'transparent' }}"
+                                       onchange="updateSetting('company_name_bg_color', this.value)">
+                            </div>
+                        </div>
+
+                        <!-- Border -->
+                        <div class="form-group">
+                            <label class="form-label">Border Color</label>
+                            <div class="color-input-group">
+                                <input type="color" id="border_color_picker" class="color-input"
+                                       value="{{ settings.border_color or '#FFD700' }}"
+                                       onchange="document.getElementById('border_color').value = this.value; updateSetting('border_color', this.value)">
+                                <input type="text" id="border_color" class="form-input"
+                                       value="{{ settings.border_color or '#FFD700' }}"
+                                       onchange="updateSetting('border_color', this.value)">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Border Width (px)</label>
+                            <input type="number" id="border_width" class="form-input"
+                                   value="{{ settings.border_width or 0 }}"
+                                   onchange="updateSetting('border_width', this.value)">
+                        </div>
+
+                        <!-- Accent Color -->
+                        <div class="form-group">
+                            <label class="form-label">Accent Color</label>
+                            <div class="color-input-group">
+                                <input type="color" id="accent_color_picker" class="color-input"
+                                       value="{{ settings.accent_color or '#FFD700' }}"
+                                       onchange="document.getElementById('accent_color').value = this.value; updateSetting('accent_color', this.value)">
+                                <input type="text" id="accent_color" class="form-input"
+                                       value="{{ settings.accent_color or '#FFD700' }}"
+                                       onchange="updateSetting('accent_color', this.value)">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Typography -->
+                    <div class="settings-section">
+                        <h3><i class="fas fa-font mr-2"></i>Typography</h3>
+
+                        <div class="form-group">
+                            <label class="form-label">Font Family</label>
+                            <select id="font_family" class="form-input" onchange="updateSetting('font_family', this.value)">
+                                <option value="Arial, sans-serif" {% if settings.font_family == 'Arial, sans-serif' %}selected{% endif %}>Arial</option>
+                                <option value="'Times New Roman', serif" {% if settings.font_family == "'Times New Roman', serif" %}selected{% endif %}>Times New Roman</option>
+                                <option value="'Georgia', serif" {% if settings.font_family == "'Georgia', serif" %}selected{% endif %}>Georgia</option>
+                                <option value="'Courier New', monospace" {% if settings.font_family == "'Courier New', monospace" %}selected{% endif %}>Courier New</option>
+                                <option value="'Verdana', sans-serif" {% if settings.font_family == "'Verdana', sans-serif" %}selected{% endif %}>Verdana</option>
+                                <option value="'Trebuchet MS', sans-serif" {% if settings.font_family == "'Trebuchet MS', sans-serif" %}selected{% endif %}>Trebuchet MS</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Line Height</label>
+                            <input type="number" step="0.1" id="text_line_height" class="form-input"
+                                   value="{{ settings.text_line_height or 1.4 }}"
+                                   onchange="updateSetting('text_line_height', this.value)">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Border Radius (px)</label>
+                            <input type="number" id="border_radius" class="form-input"
+                                   value="{{ settings.border_radius or 10 }}"
+                                   onchange="updateSetting('border_radius', this.value)">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Container Opacity</label>
+                            <input type="range" min="0" max="1" step="0.1" id="opacity" class="w-full"
+                                   value="{{ settings.opacity or 0.9 }}"
+                                   oninput="this.nextElementSibling.textContent = this.value; updateSetting('opacity', this.value)">
+                            <div class="text-sm text-gray-500 text-center">{{ settings.opacity or 0.9 }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ANIMATIONS TAB -->
+                <div id="animations-tab" class="tab-content">
+                    <!-- Entrance Animations -->
+                    <div class="settings-section">
+                        <h3><i class="fas fa-play mr-2"></i>Entrance Animations</h3>
+
+                        <div class="form-group">
+                            <label class="form-label">Container Entrance</label>
+                            <select id="entrance_animation" class="form-input" onchange="updateSetting('entrance_animation', this.value)">
+                                <option value="fade-in" {% if settings.entrance_animation == 'fade-in' %}selected{% endif %}>Fade In</option>
+                                <option value="slide-in-left" {% if settings.entrance_animation == 'slide-in-left' %}selected{% endif %}>Slide In Left</option>
+                                <option value="slide-in-right" {% if settings.entrance_animation == 'slide-in-right' %}selected{% endif %}>Slide In Right</option>
+                                <option value="slide-in-up" {% if settings.entrance_animation == 'slide-in-up' %}selected{% endif %}>Slide In Up</option>
+                                <option value="slide-in-down" {% if settings.entrance_animation == 'slide-in-down' %}selected{% endif %}>Slide In Down</option>
+                                <option value="zoom-in" {% if settings.entrance_animation == 'zoom-in' %}selected{% endif %}>Zoom In</option>
+                                <option value="scale-in" {% if settings.entrance_animation == 'scale-in' %}selected{% endif %}>Scale In</option>
+                                <option value="rotate-in" {% if settings.entrance_animation == 'rotate-in' %}selected{% endif %}>Rotate In</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Entrance Delay (seconds)</label>
+                            <input type="number" step="0.1" id="entrance_delay" class="form-input"
+                                   value="{{ settings.entrance_delay or 0 }}"
+                                   onchange="updateSetting('entrance_delay', this.value)">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Logo Entrance</label>
+                            <select id="logo_animation" class="form-input" onchange="updateSetting('logo_animation', this.value)">
+                                <option value="fade-in" {% if settings.logo_animation == 'fade-in' %}selected{% endif %}>Fade In</option>
+                                <option value="slide-in-left" {% if settings.logo_animation == 'slide-in-left' %}selected{% endif %}>Slide In Left</option>
+                                <option value="slide-in-right" {% if settings.logo_animation == 'slide-in-right' %}selected{% endif %}>Slide In Right</option>
+                                <option value="zoom-in" {% if settings.logo_animation == 'zoom-in' %}selected{% endif %}>Zoom In</option>
+                                <option value="scale-in" {% if settings.logo_animation == 'scale-in' %}selected{% endif %}>Scale In</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Logo Entrance Delay (seconds)</label>
+                            <input type="number" step="0.1" id="logo_animation_delay" class="form-input"
+                                   value="{{ settings.logo_animation_delay or 0 }}"
+                                   onchange="updateSetting('logo_animation_delay', this.value)">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Image Entrance</label>
+                            <select id="image_animation" class="form-input" onchange="updateSetting('image_animation', this.value)">
+                                <option value="fade-in" {% if settings.image_animation == 'fade-in' %}selected{% endif %}>Fade In</option>
+                                <option value="slide-in-left" {% if settings.image_animation == 'slide-in-left' %}selected{% endif %}>Slide In Left</option>
+                                <option value="zoom-in" {% if settings.image_animation == 'zoom-in' %}selected{% endif %}>Zoom In</option>
+                                <option value="scale-in" {% if settings.image_animation == 'scale-in' %}selected{% endif %}>Scale In</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Image Entrance Delay (seconds)</label>
+                            <input type="number" step="0.1" id="image_animation_delay" class="form-input"
+                                   value="{{ settings.image_animation_delay or 0 }}"
+                                   onchange="updateSetting('image_animation_delay', this.value)">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Ticker Entrance</label>
+                            <select id="ticker_entrance" class="form-input" onchange="updateSetting('ticker_entrance', this.value)">
+                                <option value="slide-in-left" {% if settings.ticker_entrance == 'slide-in-left' %}selected{% endif %}>Slide In Left</option>
+                                <option value="slide-in-up" {% if settings.ticker_entrance == 'slide-in-up' %}selected{% endif %}>Slide In Up</option>
+                                <option value="fade-in" {% if settings.ticker_entrance == 'fade-in' %}selected{% endif %}>Fade In</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Ticker Entrance Delay (seconds)</label>
+                            <input type="number" step="0.1" id="ticker_entrance_delay" class="form-input"
+                                   value="{{ settings.ticker_entrance_delay or 0.5 }}"
+                                   onchange="updateSetting('ticker_entrance_delay', this.value)">
+                        </div>
+                    </div>
+
+                    <!-- Text Animations -->
+                    <div class="settings-section">
+                        <h3><i class="fas fa-text mr-2"></i>Text Animations</h3>
+
+                        <div class="form-group">
+                            <label class="form-label">Animation Type</label>
+                            <select id="text_animation" class="form-input" onchange="updateSetting('text_animation', this.value)">
+                                <option value="none" {% if settings.text_animation == 'none' %}selected{% endif %}>None</option>
+                                <option value="typewriter" {% if settings.text_animation == 'typewriter' %}selected{% endif %}>Typewriter</option>
+                                <option value="fade-in-words" {% if settings.text_animation == 'fade-in-words' %}selected{% endif %}>Fade In Words</option>
+                                <option value="slide-in-words" {% if settings.text_animation == 'slide-in-words' %}selected{% endif %}>Slide In Words</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Animation Speed</label>
+                            <input type="range" min="0.5" max="5" step="0.5" id="text_animation_speed" class="w-full"
+                                   value="{{ settings.text_animation_speed or 1.0 }}"
+                                   oninput="this.nextElementSibling.textContent = this.value + 'x'; updateSetting('text_animation_speed', this.value)">
+                            <div class="text-sm text-gray-500 text-center">{{ settings.text_animation_speed or 1.0 }}x</div>
+                        </div>
+                    </div>
+
+                    <!-- Display Animations -->
+                    <div class="settings-section">
+                        <h3><i class="fas fa-sync mr-2"></i>Display Animations (Continuous)</h3>
+
+                        <div class="form-group">
+                            <label class="form-label flex items-center gap-2">
+                                Enable Logo Display Animation
+                                <div class="toggle-checkbox {% if settings.logo_display_animation_enabled %}checked{% endif %}"
+                                     onclick="toggleBoolean(this, 'logo_display_animation_enabled')"></div>
+                            </label>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Logo Display Animation</label>
+                            <select id="logo_display_animation" class="form-input" onchange="updateSetting('logo_display_animation', this.value)">
+                                <option value="pulse" {% if settings.logo_display_animation == 'pulse' %}selected{% endif %}>Pulse</option>
+                                <option value="bounce" {% if settings.logo_display_animation == 'bounce' %}selected{% endif %}>Bounce</option>
+                                <option value="shake" {% if settings.logo_display_animation == 'shake' %}selected{% endif %}>Shake</option>
+                                <option value="float" {% if settings.logo_display_animation == 'float' %}selected{% endif %}>Float</option>
+                                <option value="glow" {% if settings.logo_display_animation == 'glow' %}selected{% endif %}>Glow</option>
+                                <option value="rotate-slow" {% if settings.logo_display_animation == 'rotate-slow' %}selected{% endif %}>Rotate Slow (Coin Flip)</option>
+                                <option value="flip" {% if settings.logo_display_animation == 'flip' %}selected{% endif %}>Flip</option>
+                                <option value="zoom-slow" {% if settings.logo_display_animation == 'zoom-slow' %}selected{% endif %}>Zoom Slow</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label flex items-center gap-2">
+                                Enable Image Display Animation
+                                <div class="toggle-checkbox {% if settings.image_display_animation_enabled %}checked{% endif %}"
+                                     onclick="toggleBoolean(this, 'image_display_animation_enabled')"></div>
+                            </label>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Image Display Animation</label>
+                            <select id="image_display_animation" class="form-input" onchange="updateSetting('image_display_animation', this.value)">
+                                <option value="pulse" {% if settings.image_display_animation == 'pulse' %}selected{% endif %}>Pulse</option>
+                                <option value="bounce" {% if settings.image_display_animation == 'bounce' %}selected{% endif %}>Bounce</option>
+                                <option value="float" {% if settings.image_display_animation == 'float' %}selected{% endif %}>Float</option>
+                                <option value="glow" {% if settings.image_display_animation == 'glow' %}selected{% endif %}>Glow</option>
+                                <option value="zoom-slow" {% if settings.image_display_animation == 'zoom-slow' %}selected{% endif %}>Zoom Slow</option>
+                                <option value="pan" {% if settings.image_display_animation == 'pan' %}selected{% endif %}>Pan</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- LAYOUT TAB -->
+                <div id="layout-tab" class="tab-content">
+                    <!-- Positioning -->
+                    <div class="settings-section">
+                        <h3><i class="fas fa-arrows-alt mr-2"></i>Position</h3>
+
+                        <div class="grid-2">
+                            <div class="form-group">
+                                <label class="form-label">Vertical Position</label>
+                                <select id="vertical_position" class="form-input" onchange="updateSetting('vertical_position', this.value)">
+                                    <option value="top" {% if settings.vertical_position == 'top' %}selected{% endif %}>Top</option>
+                                    <option value="center" {% if settings.vertical_position == 'center' %}selected{% endif %}>Center</option>
+                                    <option value="bottom" {% if settings.vertical_position == 'bottom' %}selected{% endif %}>Bottom</option>
+                                    <option value="custom" {% if settings.vertical_position == 'custom' %}selected{% endif %}>Custom</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Horizontal Position</label>
+                                <select id="horizontal_position" class="form-input" onchange="updateSetting('horizontal_position', this.value)">
+                                    <option value="left" {% if settings.horizontal_position == 'left' %}selected{% endif %}>Left</option>
+                                    <option value="center" {% if settings.horizontal_position == 'center' %}selected{% endif %}>Center</option>
+                                    <option value="right" {% if settings.horizontal_position == 'right' %}selected{% endif %}>Right</option>
+                                    <option value="custom" {% if settings.horizontal_position == 'custom' %}selected{% endif %}>Custom</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="grid-2">
+                            <div class="form-group">
+                                <label class="form-label">Custom Top (px)</label>
+                                <input type="number" id="custom_top" class="form-input"
+                                       value="{{ settings.custom_top or 20 }}"
+                                       onchange="updateSetting('custom_top', this.value)">
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Custom Bottom (px)</label>
+                                <input type="number" id="custom_bottom" class="form-input"
+                                       value="{{ settings.custom_bottom or 20 }}"
+                                       onchange="updateSetting('custom_bottom', this.value)">
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Custom Left (px)</label>
+                                <input type="number" id="custom_left" class="form-input"
+                                       value="{{ settings.custom_left or 350 }}"
+                                       onchange="updateSetting('custom_left', this.value)">
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Custom Right (px)</label>
+                                <input type="number" id="custom_right" class="form-input"
+                                       value="{{ settings.custom_right or 20 }}"
+                                       onchange="updateSetting('custom_right', this.value)">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sizing -->
+                    <div class="settings-section">
+                        <h3><i class="fas fa-expand-arrows-alt mr-2"></i>Size</h3>
+
+                        <div class="form-group">
+                            <label class="form-label">Container Width</label>
+                            <select id="container_width" class="form-input" onchange="updateSetting('container_width', this.value)">
+                                <option value="auto" {% if settings.container_width == 'auto' %}selected{% endif %}>Auto</option>
+                                <option value="full" {% if settings.container_width == 'full' %}selected{% endif %}>Full Width</option>
+                                <option value="custom" {% if settings.container_width == 'custom' %}selected{% endif %}>Custom</option>
+                            </select>
+                        </div>
+
+                        <div class="grid-2">
+                            <div class="form-group">
+                                <label class="form-label">Custom Width (px)</label>
+                                <input type="number" id="custom_width" class="form-input"
+                                       value="{{ settings.custom_width or 600 }}"
+                                       onchange="updateSetting('custom_width', this.value)">
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Max Width (px)</label>
+                                <input type="number" id="container_max_width" class="form-input"
+                                       value="{{ settings.container_max_width or 800 }}"
+                                       onchange="updateSetting('container_max_width', this.value)">
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Min Width (px)</label>
+                                <input type="number" id="container_min_width" class="form-input"
+                                       value="{{ settings.container_min_width or 300 }}"
+                                       onchange="updateSetting('container_min_width', this.value)">
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Container Padding (px)</label>
+                                <input type="number" id="container_padding" class="form-input"
+                                       value="{{ settings.container_padding or 20 }}"
+                                       onchange="updateSetting('container_padding', this.value)">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ASSETS TAB -->
+                <div id="assets-tab" class="tab-content">
+                    <!-- Logo -->
+                    <div class="settings-section">
+                        <h3><i class="fas fa-image mr-2"></i>Company Logo</h3>
+
+                        <div class="form-group">
+                            <label class="form-label flex items-center gap-2">
+                                Show Logo
+                                <div class="toggle-checkbox {% if settings.show_company_logo %}checked{% endif %}"
+                                     onclick="toggleBoolean(this, 'show_company_logo')"></div>
+                            </label>
+                        </div>
+
+                        {% if settings.company_logo %}
+                        <div class="mb-3">
+                            <img src="{{ url_for('static', filename=settings.company_logo) }}" alt="Logo" class="max-w-xs rounded">
+                        </div>
+                        {% endif %}
+
+                        <div class="form-group">
+                            <label class="form-label">Upload Logo</label>
+                            <input type="file" accept="image/*" onchange="uploadFile(this, '{{ category }}', 'logo')"
+                                   class="form-input">
+                        </div>
+
+                        {% if settings.company_logo %}
+                        <button onclick="removeFile('{{ category }}', 'logo')"
+                                class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700">
+                            Remove Logo
+                        </button>
+                        {% endif %}
+
+                        <div class="grid-2 mt-4">
+                            <div class="form-group">
+                                <label class="form-label">Logo Size (px)</label>
+                                <input type="number" id="logo_size" class="form-input"
+                                       value="{{ settings.logo_size or 80 }}"
+                                       onchange="updateSetting('logo_size', this.value)">
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Logo Opacity</label>
+                                <input type="range" min="0" max="1" step="0.1" id="logo_opacity" class="w-full"
+                                       value="{{ settings.logo_opacity or 1 }}"
+                                       oninput="this.nextElementSibling.textContent = this.value; updateSetting('logo_opacity', this.value)">
+                                <div class="text-sm text-gray-500 text-center">{{ settings.logo_opacity or 1 }}</div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Border Radius (px)</label>
+                                <input type="number" id="logo_border_radius" class="form-input"
+                                       value="{{ settings.logo_border_radius or 0 }}"
+                                       onchange="updateSetting('logo_border_radius', this.value)">
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label flex items-center gap-2">
+                                    Logo Shadow
+                                    <div class="toggle-checkbox {% if settings.logo_shadow %}checked{% endif %}"
+                                         onclick="toggleBoolean(this, 'logo_shadow')"></div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Category Image -->
+                    <div class="settings-section">
+                        <h3><i class="fas fa-images mr-2"></i>Category Image</h3>
+
+                        <div class="form-group">
+                            <label class="form-label flex items-center gap-2">
+                                Show Category Image
+                                <div class="toggle-checkbox {% if settings.show_category_image %}checked{% endif %}"
+                                     onclick="toggleBoolean(this, 'show_category_image')"></div>
+                            </label>
+                        </div>
+
+                        {% if settings.category_image %}
+                        <div class="mb-3">
+                            <img src="{{ url_for('static', filename=settings.category_image) }}" alt="Category" class="max-w-xs rounded">
+                        </div>
+                        {% endif %}
+
+                        <div class="form-group">
+                            <label class="form-label">Upload Category Image</label>
+                            <input type="file" accept="image/*" onchange="uploadFile(this, '{{ category }}', 'image')"
+                                   class="form-input">
+                        </div>
+
+                        {% if settings.category_image %}
+                        <button onclick="removeFile('{{ category }}', 'image')"
+                                class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700">
+                            Remove Image
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Live Preview -->
+        <div class="lg:col-span-1">
+            <div class="preview-frame">
+                <iframe id="preview-frame" src="{{ url_for('main.display', category=category) }}"
+                        class="w-full h-full border-0"></iframe>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const category = '{{ category }}';
+
+    function switchTab(tabName) {
+        document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+        event.target.classList.add('active');
+        document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+        document.getElementById(tabName + '-tab').classList.add('active');
+    }
+
+    function updateSetting(field, value) {
+        const formData = new FormData();
+        formData.append(field, value);
+
+        fetch(`/api/settings/${category}`, {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showToast('Setting updated', 'success');
+                setTimeout(refreshPreview, 500);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showToast('Failed to update setting', 'error');
+        });
+    }
+
+    function toggleBoolean(element, field) {
+        const isChecked = element.classList.contains('checked');
+        const newValue = !isChecked;
+
+        const formData = new FormData();
+        formData.append(field, newValue);
+
+        fetch(`/api/settings/${category}`, {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                element.classList.toggle('checked');
+                showToast('Setting updated', 'success');
+                setTimeout(refreshPreview, 500);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showToast('Failed to update setting', 'error');
+        });
+    }
+
+    function toggleSecondaryRotation(element) {
+        const isChecked = element.classList.contains('checked');
+        const newValue = !isChecked;
+
+        const formData = new FormData();
+        formData.append('secondary_rotation_enabled', newValue);
+
+        fetch(`/api/settings/${category}`, {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                element.classList.toggle('checked');
+
+                const rotationControls = document.getElementById('rotation_controls');
+                if (newValue) {
+                    rotationControls.style.display = 'block';
+                } else {
+                    rotationControls.style.display = 'none';
+                }
+
+                showToast('Rotation ' + (newValue ? 'enabled' : 'disabled'), 'success');
+                setTimeout(refreshPreview, 500);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showToast('Failed to update setting', 'error');
+        });
+    }
+
+    function uploadFile(input, category, fileType) {
+        const file = input.files[0];
+        if (!file) return;
+
+        const formData = new FormData();
+        formData.append('file', file);
+
+        fetch(`/api/upload/${category}/${fileType}`, {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showToast('File uploaded', 'success');
+                setTimeout(() => location.reload(), 1000);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showToast('Failed to upload file', 'error');
+        });
+    }
+
+    function removeFile(category, fileType) {
+        if (!confirm('Are you sure you want to remove this file?')) return;
+
+        fetch(`/api/remove-${fileType}/${category}`, {
+            method: 'POST'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showToast('File removed', 'success');
+                setTimeout(() => location.reload(), 1000);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showToast('Failed to remove file', 'error');
+        });
+    }
+
+    function resetToDefaults() {
+        if (!confirm('Reset all settings to default values? This cannot be undone.')) return;
+
+        fetch(`/api/settings/${category}/reset`, {
+            method: 'POST'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showToast('Settings reset to defaults', 'success');
+                setTimeout(() => location.reload(), 1000);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showToast('Failed to reset settings', 'error');
+        });
+    }
+
+    function refreshPreview() {
+        const iframe = document.getElementById('preview-frame');
+        iframe.src = iframe.src;
+    }
+
+    function showToast(message, type) {
+        const container = document.getElementById('flash-container');
+        const colorMap = {
+            'success': 'bg-green-500',
+            'error': 'bg-red-500',
+            'info': 'bg-blue-500'
+        };
+
+        const toast = document.createElement('div');
+        toast.className = `toast px-6 py-4 rounded-lg shadow-lg max-w-md ${colorMap[type]} text-white`;
+        toast.innerHTML = `
+            <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                    <i class="fas fa-${type === 'success' ? 'check' : type === 'error' ? 'exclamation' : 'info'}-circle mr-3"></i>
+                    <span>${message}</span>
+                </div>
+                <button onclick="this.parentElement.parentElement.remove()" class="ml-4 text-white hover:text-gray-200">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        `;
+
+        container.appendChild(toast);
+
+        setTimeout(() => {
+            toast.classList.add('fade-out');
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
+    }
+
+    // Secondary Phrases Management
+    let secondaryPhrases = [];
+
+    function loadPhrases() {
+        fetch(`/api/secondary-phrases/${category}`)
+            .then(response => response.json())
+            .then(data => {
+                secondaryPhrases = data.phrases || [];
+                renderPhrases();
+            })
+            .catch(error => {
+                console.error('Error loading phrases:', error);
+            });
+    }
+
+    function renderPhrases() {
+        const container = document.getElementById('phrases_list');
+        if (!container) return;
+
+        if (secondaryPhrases.length === 0) {
+            container.innerHTML = '<p class="text-sm text-gray-500 italic">No phrases added yet</p>';
+            return;
+        }
+
+        container.innerHTML = secondaryPhrases.map((phrase, index) => `
+            <div class="flex items-center gap-2 p-2 bg-gray-50 rounded border border-gray-200">
+                <span class="text-sm text-gray-600 font-mono">${index + 1}.</span>
+                <input type="text"
+                       value="${phrase}"
+                       class="flex-1 px-2 py-1 text-sm border border-gray-300 rounded"
+                       onchange="updatePhrase(${index}, this.value)">
+                <button onclick="movePhrase(${index}, -1)"
+                        ${index === 0 ? 'disabled' : ''}
+                        class="px-2 py-1 text-gray-600 hover:text-indigo-600 disabled:opacity-30">
+                    <i class="fas fa-arrow-up"></i>
+                </button>
+                <button onclick="movePhrase(${index}, 1)"
+                        ${index === secondaryPhrases.length - 1 ? 'disabled' : ''}
+                        class="px-2 py-1 text-gray-600 hover:text-indigo-600 disabled:opacity-30">
+                    <i class="fas fa-arrow-down"></i>
+                </button>
+                <button onclick="deletePhrase(${index})"
+                        class="px-2 py-1 text-red-600 hover:text-red-700">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        `).join('');
+    }
+
+    function addPhrase() {
+        const input = document.getElementById('new_phrase_input');
+        const phrase = input.value.trim();
+
+        if (!phrase) {
+            showToast('Please enter a phrase', 'error');
+            return;
+        }
+
+        secondaryPhrases.push(phrase);
+        savePhrases();
+        input.value = '';
+    }
+
+    function updatePhrase(index, newValue) {
+        secondaryPhrases[index] = newValue.trim();
+        savePhrases();
+    }
+
+    function deletePhrase(index) {
+        if (confirm('Delete this phrase?')) {
+            secondaryPhrases.splice(index, 1);
+            savePhrases();
+        }
+    }
+
+    function movePhrase(index, direction) {
+        const newIndex = index + direction;
+        if (newIndex < 0 || newIndex >= secondaryPhrases.length) return;
+
+        [secondaryPhrases[index], secondaryPhrases[newIndex]] =
+        [secondaryPhrases[newIndex], secondaryPhrases[index]];
+
+        savePhrases();
+    }
+
+    function savePhrases() {
+        fetch(`/api/secondary-phrases/${category}`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({phrases: secondaryPhrases})
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                renderPhrases();
+                showToast('Phrases updated', 'success');
+                setTimeout(refreshPreview, 500);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showToast('Failed to save phrases', 'error');
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        loadPhrases();
+    });
+</script>
+{% endblock %}

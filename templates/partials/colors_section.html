@@ -1,0 +1,100 @@
+<div class="space-y-4">
+    <div class="grid grid-cols-2 gap-4">
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Overlay BG</label>
+            <div class="flex gap-2">
+                <input type="color" name="overlay_bg_color"
+                       value="{{ settings[category].overlay_bg_color }}"
+                       class="h-10 w-16 rounded border border-gray-300">
+                <input type="number" name="overlay_bg_opacity"
+                       value="{{ settings[category].overlay_bg_opacity }}"
+                       min="0" max="1" step="0.1"
+                       class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                       placeholder="Opacity">
+            </div>
+        </div>
+
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Main Text</label>
+            <div class="flex gap-2">
+                <input type="color" name="main_text_color"
+                       value="{{ settings[category].main_text_color }}"
+                       class="h-10 w-16 rounded border border-gray-300">
+                <input type="color" name="main_text_bg_color"
+                       value="{{ settings[category].main_text_bg_color }}"
+                       class="h-10 w-16 rounded border border-gray-300"
+                       title="Background">
+            </div>
+        </div>
+
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Secondary Text</label>
+            <div class="flex gap-2">
+                <input type="color" name="secondary_text_color"
+                       value="{{ settings[category].secondary_text_color }}"
+                       class="h-10 w-16 rounded border border-gray-300">
+                <input type="color" name="secondary_text_bg_color"
+                       value="{{ settings[category].secondary_text_bg_color }}"
+                       class="h-10 w-16 rounded border border-gray-300"
+                       title="Background">
+            </div>
+        </div>
+
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Ticker</label>
+            <div class="flex gap-2">
+                <input type="color" name="ticker_text_color"
+                       value="{{ settings[category].ticker_text_color }}"
+                       class="h-10 w-16 rounded border border-gray-300">
+                <input type="color" name="ticker_bg_color"
+                       value="{{ settings[category].ticker_bg_color }}"
+                       class="h-10 w-16 rounded border border-gray-300"
+                       title="Background">
+            </div>
+        </div>
+
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Company Name</label>
+            <div class="flex gap-2">
+                <input type="color" name="company_name_color"
+                       value="{{ settings[category].company_name_color }}"
+                       class="h-10 w-16 rounded border border-gray-300">
+                <input type="color" name="company_name_bg_color"
+                       value="{{ settings[category].company_name_bg_color }}"
+                       class="h-10 w-16 rounded border border-gray-300"
+                       title="Background">
+            </div>
+        </div>
+
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Accent Color</label>
+            <input type="color" name="accent_color"
+                   value="{{ settings[category].accent_color }}"
+                   class="h-10 w-full rounded border border-gray-300">
+        </div>
+    </div>
+
+    <div class="pt-4 border-t border-gray-200">
+        <label class="block text-sm font-medium text-gray-700 mb-2">Border</label>
+        <div class="grid grid-cols-2 gap-4">
+            <input type="color" name="border_color"
+                   value="{{ settings[category].border_color }}"
+                   class="h-10 rounded border border-gray-300">
+            <input type="number" name="border_width"
+                   value="{{ settings[category].border_width }}"
+                   min="0" max="10"
+                   class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                   placeholder="Width (px)">
+        </div>
+    </div>
+
+    <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Border Radius</label>
+        <input type="range" name="border_radius"
+               value="{{ settings[category].border_radius }}"
+               min="0" max="50"
+               class="w-full"
+               oninput="this.nextElementSibling.textContent = this.value + 'px'">
+        <span class="text-sm text-gray-600">{{ settings[category].border_radius }}px</span>
+    </div>
+</div>

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Design 6 - Overlapping Cards</title>
+    <title>Memorial Service - Overlapping Cards</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
@@ -11,33 +11,13 @@
             padding: 0;
             background: transparent;
             font-family: 'Georgia', serif;
-        }
-
-        @keyframes cardSlide1 {
-            from {
-                transform: translateY(100px) rotate(5deg);
-                opacity: 0;
-            }
-            to {
-                transform: translateY(0) rotate(0deg);
-                opacity: 1;
-            }
-        }
-
-        @keyframes cardSlide2 {
-            from {
-                transform: translateY(100px) rotate(-3deg);
-                opacity: 0;
-            }
-            to {
-                transform: translateY(0) rotate(0deg);
-                opacity: 1;
-            }
+            min-height: 100vh;
+            overflow: hidden;
         }
 
         @keyframes cardSlide3 {
             from {
-                transform: translateY(100px) scale(0.8);
+                transform: translateY(20px) scale(0.95);
                 opacity: 0;
             }
             to {
@@ -46,7 +26,7 @@
             }
         }
 
-        @keyframes photoRevealCircle {
+        @keyframes photoReveal {
             from {
                 clip-path: circle(0% at 50% 50%);
                 filter: grayscale(1);
@@ -59,7 +39,7 @@
 
         @keyframes leafFloat {
             0%, 100% { transform: translateY(0) rotate(0deg); }
-            50% { transform: translateY(-10px) rotate(5deg); }
+            50% { transform: translateY(-8px) rotate(3deg); }
         }
 
         @keyframes scroll {
@@ -67,95 +47,86 @@
             to { transform: translateX(-50%); }
         }
 
-        .card-1 {
-            animation: cardSlide1 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-        }
-
-        .card-2 {
-            animation: cardSlide2 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55) 0.2s both;
+        @keyframes fadeInOut {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
         }
 
         .card-3 {
-            animation: cardSlide3 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55) 0.4s both;
+            animation: cardSlide3 0.9s cubic-bezier(0.68, -0.55, 0.265, 1.55) 0.3s both;
         }
 
         .photo-reveal {
-            animation: photoRevealCircle 1.5s ease-out 0.6s both;
+            animation: photoReveal 1.5s ease-out 0.7s both;
         }
 
         .leaf-icon {
-            animation: leafFloat 4s ease-in-out infinite;
+            animation: leafFloat 3.5s ease-in-out infinite;
         }
 
         .ticker-scroll {
-            animation: scroll 32s linear infinite;
+            animation: scroll 35s linear infinite;
         }
 
         #mainText, #subText {
-            transition: all 0.6s ease;
+            transition: opacity 0.6s ease;
+        }
+
+        .card-shadow {
+            box-shadow:
+                0 10px 40px rgba(0, 0, 0, 0.3),
+                0 2px 8px rgba(0, 0, 0, 0.2);
         }
     </style>
 </head>
 <body>
+    <!-- Logo at Top Right -->
+    <div class="fixed top-8 right-8 bg-emerald-900/90 backdrop-blur-sm rounded-xl px-6 py-5 border-2 border-emerald-400/40 shadow-2xl card-shadow"
+         style="z-index: 10; animation: cardSlide3 0.9s cubic-bezier(0.68, -0.55, 0.265, 1.55) 0.3s both;">
+        <img src="https://yt3.googleusercontent.com/hJD-YRx93VUY4VZG7sG0PjCh8iiBInbgY0S21liCJk0HLMeQhQmQKjcMrzUpKr22MGDr6YM0=s900-c-k-c0x00ffffff-no-rj"
+             class="h-16 w-auto opacity-90">
+    </div>
+
+    <!-- Lower Third Container -->
     <div class="fixed bottom-0 left-0 w-full">
-        <!-- Overlapping Cards Design -->
-        <div class="relative px-8 pb-2" style="padding-top: 20px;">
-            <!-- Card 1 - Background -->
-            <div class="card-1 absolute bottom-16 left-6 bg-gradient-to-br from-emerald-800 to-emerald-950 rounded-2xl px-8 py-5 shadow-2xl border border-emerald-600/30"
-                 style="width: 450px; transform-origin: bottom left;">
-                <div class="text-emerald-200 text-sm uppercase tracking-widest">Memorial Service</div>
-            </div>
+        <!-- Main Card -->
+        <div class="px-8 pb-2">
+            <div class="card-3 bg-gradient-to-br from-emerald-600 to-emerald-800 rounded-2xl card-shadow border-2 border-emerald-400/60"
+                 style="width: 650px; height: 220px; position: relative; margin-left: 50px;">
 
-            <!-- Card 2 - Middle -->
-            <div class="card-2 absolute bottom-10 left-16 bg-gradient-to-br from-emerald-700 to-emerald-900 rounded-2xl px-10 py-6 shadow-2xl border border-emerald-500/40"
-                 style="width: 550px; transform-origin: bottom left;">
-                <div class="flex items-center gap-4">
-                    <div class="leaf-icon text-emerald-300 text-3xl">🍃</div>
-                    <p class="text-emerald-100 text-base italic">A life bloomed with grace and love</p>
-                </div>
-            </div>
-
-            <!-- Card 3 - Front (Main Content) -->
-            <div class="card-3 relative bg-gradient-to-br from-emerald-600 to-emerald-800 rounded-2xl px-12 py-6 shadow-2xl border-2 border-emerald-400/50"
-                 style="margin-left: 150px; margin-right: 180px;">
                 <!-- Photo Circle -->
-                <div class="absolute -left-16 top-1/2 -translate-y-1/2 w-28 h-28 rounded-full bg-gradient-to-br from-emerald-300 to-emerald-500 p-1.5 shadow-xl">
-                    <div class="photo-reveal w-full h-full rounded-full overflow-hidden border-2 border-white/40">
+                <div class="absolute -left-16 top-1/2 -translate-y-1/2 w-32 h-32 rounded-full bg-gradient-to-br from-emerald-300 to-emerald-500 p-2 shadow-2xl"
+                     style="z-index: 4;">
+                    <div class="photo-reveal w-full h-full rounded-full overflow-hidden border-3 border-white/50">
                         <img src="https://img.freepik.com/free-photo/man-s-white-sweater-psd-mockup-casual-apparel-close-up_53876-148045.jpg?semt=ais_hybrid&w=740&q=80"
                              class="w-full h-full object-cover">
                     </div>
                 </div>
 
-                <!-- Text Content -->
-                <div class="pl-20">
-                    <h2 id="mainText" class="text-2xl font-bold text-white mb-2 tracking-wide">IN LOVING TRIBUTE</h2>
-                    <div class="flex items-center gap-2 mb-2">
+                <!-- Main Content -->
+                <div class="pl-24 pr-12 py-8 h-full flex flex-col justify-center">
+                    <h2 id="mainText" class="text-3xl font-bold text-white mb-3 tracking-wide">IN LOVING TRIBUTE</h2>
+                    <div class="flex items-center gap-2 mb-3">
                         <div class="w-16 h-0.5 bg-emerald-300"></div>
                         <div class="w-2 h-2 bg-emerald-300 rounded-full"></div>
                         <div class="w-16 h-0.5 bg-emerald-300"></div>
                     </div>
-                    <p id="subText" class="text-emerald-100 text-base">Forever rooted in our hearts</p>
-                </div>
-
-                <!-- Logo -->
-                <div class="absolute -right-16 top-1/2 -translate-y-1/2 bg-emerald-900/80 backdrop-blur-md rounded-xl px-5 py-4 border border-emerald-400/30 shadow-xl">
-                    <img src="https://yt3.googleusercontent.com/hJD-YRx93VUY4VZG7sG0PjCh8iiBInbgY0S21liCJk0HLMeQhQmQKjcMrzUpKr22MGDr6YM0=s900-c-k-c0x00ffffff-no-rj"
-                         class="h-14 w-auto">
+                    <p id="subText" class="text-emerald-50 text-lg font-light">Forever rooted in our hearts</p>
                 </div>
             </div>
         </div>
 
-        <!-- Ticker -->
-        <div class="bg-gradient-to-r from-emerald-950 via-emerald-900 to-emerald-950 py-2 overflow-hidden border-t border-emerald-600/40">
+        <!-- Ticker Bar -->
+        <div class="bg-gradient-to-r from-emerald-950 via-emerald-900 to-emerald-950 py-3 overflow-hidden border-t border-emerald-600/40 card-shadow">
             <div class="ticker-scroll flex whitespace-nowrap">
-                <span class="mx-10 text-emerald-200 text-sm">🌿 A garden of memories forever blooming</span>
-                <span class="mx-10 text-emerald-200 text-sm">🌿 Nurtured by love, remembered in peace</span>
-                <span class="mx-10 text-emerald-200 text-sm">🌿 May their spirit flourish eternal</span>
-                <span class="mx-10 text-emerald-200 text-sm">🌿 Growing forever in our hearts</span>
-                <span class="mx-10 text-emerald-200 text-sm">🌿 A garden of memories forever blooming</span>
-                <span class="mx-10 text-emerald-200 text-sm">🌿 Nurtured by love, remembered in peace</span>
-                <span class="mx-10 text-emerald-200 text-sm">🌿 May their spirit flourish eternal</span>
-                <span class="mx-10 text-emerald-200 text-sm">🌿 Growing forever in our hearts</span>
+                <span class="mx-12 text-emerald-200 text-sm tracking-wide">🌿 A garden of memories forever blooming</span>
+                <span class="mx-12 text-emerald-200 text-sm tracking-wide">🌿 Nurtured by love, remembered in peace</span>
+                <span class="mx-12 text-emerald-200 text-sm tracking-wide">🌿 May their spirit flourish eternal</span>
+                <span class="mx-12 text-emerald-200 text-sm tracking-wide">🌿 Growing forever in our hearts</span>
+                <span class="mx-12 text-emerald-200 text-sm tracking-wide">🌿 A garden of memories forever blooming</span>
+                <span class="mx-12 text-emerald-200 text-sm tracking-wide">🌿 Nurtured by love, remembered in peace</span>
+                <span class="mx-12 text-emerald-200 text-sm tracking-wide">🌿 May their spirit flourish eternal</span>
+                <span class="mx-12 text-emerald-200 text-sm tracking-wide">🌿 Growing forever in our hearts</span>
             </div>
         </div>
     </div>

@@ -1,0 +1,429 @@
+/* OBS Lower-Third Overlay Styles */
+/* Resolution: 1920x1080 - Transparent Background */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    width: 1920px;
+    height: 1080px;
+    overflow: hidden;
+    background: transparent;
+    font-family: Arial, sans-serif;
+    position: relative;
+}
+
+/* Main Overlay Container */
+.overlay-container {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    z-index: 1000;
+    transition: all 0.3s ease;
+}
+
+/* Positioning Classes */
+.position-top { top: 40px; }
+.position-middle { top: 50%; transform: translateY(-50%); }
+.position-bottom { bottom: 80px; } /* Proper lower third position */
+
+.position-left { left: 60px; }
+.position-center { left: 50%; transform: translateX(-50%); }
+.position-right { right: 60px; }
+
+.position-middle.position-center {
+    transform: translate(-50%, -50%);
+}
+
+/* Content Container */
+.content-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    position: relative;
+}
+
+/* Main Text Styling */
+.main-text {
+    font-size: 48px;
+    font-weight: 700;
+    padding: 12px 24px;
+    border-radius: 8px;
+    white-space: nowrap;
+    position: relative;
+    line-height: 1.2;
+}
+
+/* Secondary Text Styling */
+.secondary-text {
+    font-size: 28px;
+    font-weight: 500;
+    padding: 8px 20px;
+    border-radius: 6px;
+    white-space: nowrap;
+    position: relative;
+    line-height: 1.2;
+}
+
+/* Company Name/Footer */
+.company-name {
+    font-size: 20px;
+    font-weight: 600;
+    padding: 6px 16px;
+    border-radius: 4px;
+    white-space: nowrap;
+    position: relative;
+    line-height: 1.2;
+}
+
+/* Logo Styling */
+.logo-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.logo-container img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    transition: all 0.3s ease;
+}
+
+/* Category Background Image */
+.category-image {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: -1;
+    border-radius: inherit;
+}
+
+/* Ticker Styling */
+.ticker-wrapper {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    overflow: hidden;
+    z-index: 999;
+    transition: all 0.3s ease;
+}
+
+.ticker-content {
+    display: inline-block;
+    white-space: nowrap;
+    padding: 10px 0;
+    font-size: 24px;
+    font-weight: 500;
+    animation: ticker-scroll linear infinite;
+}
+
+@keyframes ticker-scroll {
+    0% {
+        transform: translateX(100%);
+    }
+    100% {
+        transform: translateX(-100%);
+    }
+}
+
+/* Decorative Elements */
+.decorative-line {
+    position: absolute;
+    height: 3px;
+    background: currentColor;
+    transition: all 0.3s ease;
+}
+
+.decorative-corner {
+    position: absolute;
+    width: 30px;
+    height: 30px;
+    border: 3px solid currentColor;
+    transition: all 0.3s ease;
+}
+
+/* Entrance Animations */
+@keyframes slideInLeft {
+    from {
+        transform: translateX(-100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideInBottom {
+    from {
+        transform: translateY(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideInTop {
+    from {
+        transform: translateY(-100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes zoomIn {
+    from {
+        transform: scale(0);
+        opacity: 0;
+    }
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+@keyframes rotateIn {
+    from {
+        transform: rotate(-180deg) scale(0);
+        opacity: 0;
+    }
+    to {
+        transform: rotate(0) scale(1);
+        opacity: 1;
+    }
+}
+
+/* Text Animations */
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.7;
+    }
+}
+
+@keyframes glow {
+    0%, 100% {
+        text-shadow: 0 0 10px currentColor;
+    }
+    50% {
+        text-shadow: 0 0 20px currentColor, 0 0 30px currentColor;
+    }
+}
+
+@keyframes bounce {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
+/* Display Animations for Logo */
+@keyframes logoSpin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes logoPulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.1);
+    }
+}
+
+@keyframes logoShake {
+    0%, 100% {
+        transform: translateX(0);
+    }
+    25% {
+        transform: translateX(-5px);
+    }
+    75% {
+        transform: translateX(5px);
+    }
+}
+
+@keyframes logoBounce {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-15px);
+    }
+}
+
+/* Display Animations for Image */
+@keyframes imageZoom {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+}
+
+@keyframes imageFade {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.7;
+    }
+}
+
+/* Secondary Text Transitions */
+@keyframes fadeTransition {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0;
+    }
+}
+
+@keyframes slideTransition {
+    0% {
+        transform: translateY(0);
+        opacity: 1;
+    }
+    50% {
+        transform: translateY(-20px);
+        opacity: 0;
+    }
+    51% {
+        transform: translateY(20px);
+        opacity: 0;
+    }
+    100% {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* Responsive Text Scaling */
+.text-responsive .main-text {
+    font-size: clamp(32px, 4vw, 72px);
+}
+
+.text-responsive .secondary-text {
+    font-size: clamp(20px, 2.5vw, 48px);
+}
+
+.text-responsive .company-name {
+    font-size: clamp(16px, 1.5vw, 36px);
+}
+
+/* Text Truncation */
+.text-truncate {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+}
+
+/* Hidden State */
+.hidden {
+    display: none !important;
+}
+
+/* Layout Styles */
+.layout-minimal .decorative-line,
+.layout-minimal .decorative-corner {
+    display: none;
+}
+
+.layout-elegant {
+    font-family: 'Georgia', serif;
+}
+
+.layout-elegant .main-text {
+    font-style: italic;
+    letter-spacing: 1px;
+}
+
+.layout-modern {
+    font-family: 'Verdana', sans-serif;
+}
+
+.layout-modern .content-wrapper {
+    gap: 4px;
+}
+
+.layout-modern .main-text,
+.layout-modern .secondary-text,
+.layout-modern .company-name {
+    border-radius: 2px;
+}
+
+/* Shadow Effects */
+.shadow-text {
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.shadow-logo {
+    filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.3));
+}
+
+.shadow-container {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* Border Styles */
+.bordered {
+    border-style: solid;
+}
+
+/* Visibility Toggle */
+.visibility-hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.visibility-visible {
+    opacity: 1;
+}

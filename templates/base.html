@@ -7,12 +7,13 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
         body {
             font-family: 'Inter', sans-serif;
         }
 
+        /* Toast Animations */
         .toast {
             animation: slideIn 0.3s ease-out;
         }
@@ -41,23 +42,102 @@
                 transform: translateX(100%);
             }
         }
+
+        /* Mobile Menu - Sidebar Animations */
+        .mobile-sidebar {
+            position: fixed;
+            top: 0;
+            right: -100%;
+            width: 280px;
+            height: 100vh;
+            background: white;
+            box-shadow: -2px 0 8px rgba(0, 0, 0, 0.1);
+            transition: right 0.3s ease-out;
+            z-index: 1000;
+            overflow-y: auto;
+        }
+
+        .mobile-sidebar.open {
+            right: 0;
+        }
+
+        .mobile-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease-out, visibility 0.3s ease-out;
+            z-index: 999;
+        }
+
+        .mobile-overlay.open {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* Better scrollbar for webkit browsers */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+        /* Smooth transitions */
+        * {
+            transition-property: background-color, border-color, color, fill, stroke;
+            transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+            transition-duration: 150ms;
+        }
+
+        /* Mobile-optimized flash messages */
+        @media (max-width: 640px) {
+            #flash-container {
+                left: 1rem;
+                right: 1rem;
+                top: 1rem;
+            }
+
+            .toast {
+                max-width: 100%;
+            }
+        }
     </style>
     {% block extra_css %}{% endblock %}
 </head>
-<body class="bg-gray-50 min-h-screen">
+<body class="bg-gray-50 min-h-screen flex flex-col">
     {% if session.user_id %}
     <!-- Navigation -->
-    <nav class="bg-white shadow-lg border-b border-gray-200">
+    <nav class="bg-white shadow-lg border-b border-gray-200 sticky top-0 z-40">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16">
+                <!-- Logo and Desktop Nav -->
                 <div class="flex">
                     <div class="flex-shrink-0 flex items-center">
-                        <h1 class="text-2xl font-bold text-indigo-600">{{ company_name }}</h1>
+                        <a href="{{ url_for('main.control') }}" class="text-xl sm:text-2xl font-bold text-indigo-600 hover:text-indigo-700 transition-colors">
+                            {{ company_name }}
+                        </a>
                     </div>
-                    <div class="hidden sm:ml-6 sm:flex sm:space-x-8">
+
+                    <!-- Desktop Navigation -->
+                    <div class="hidden md:ml-6 md:flex md:space-x-8">
                         <a href="{{ url_for('main.control') }}"
-                           class="{% if request.endpoint == 'main.control' %}border-indigo-500 text-gray-900{% else %}border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700{% endif %} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
-                            <i class="fas fa-broadcast-tower mr-2"></i> Stream Control
+                           class="{% if request.endpoint == 'main.control' %}border-indigo-500 text-gray-900{% else %}border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700{% endif %} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium whitespace-nowrap">
+                            <i class="fas fa-broadcast-tower mr-2"></i>
+                            <span class="hidden lg:inline">Stream Control</span>
+                            <span class="lg:hidden">Control</span>
                         </a>
                         <a href="{{ url_for('ocr.index') }}"
                            class="{% if request.endpoint and 'ocr' in request.endpoint %}border-indigo-500 text-gray-900{% else %}border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700{% endif %} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
@@ -70,22 +150,117 @@
                         </a>
                         {% endif %}
                         <a href="{{ url_for('licensing.subscription') }}"
-                           class="{% if request.endpoint == 'licensing.subscription' %}border-indigo-500 text-gray-900{% else %}border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700{% endif %} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
-                            <i class="fas fa-crown mr-2"></i> Subscription
+                           class="{% if request.endpoint == 'licensing.subscription' %}border-indigo-500 text-gray-900{% else %}border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700{% endif %} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium whitespace-nowrap">
+                            <i class="fas fa-crown mr-2"></i>
+                            <span class="hidden lg:inline">Subscription</span>
+                            <span class="lg:hidden">Sub</span>
                         </a>
                     </div>
                 </div>
-                <div class="flex items-center">
-                    <span class="text-sm text-gray-700 mr-4">
-                        <i class="fas fa-user-circle mr-1"></i> {{ session.user_email }}
+
+                <!-- Desktop User Menu -->
+                <div class="hidden md:flex md:items-center md:space-x-4">
+                    <span class="text-xs lg:text-sm text-gray-700 truncate max-w-[150px] lg:max-w-none">
+                        <i class="fas fa-user-circle mr-1"></i>
+                        <span class="hidden lg:inline">{{ session.user_email }}</span>
+                        <span class="lg:hidden">{{ session.user_email.split('@')[0] }}</span>
                     </span>
                     <a href="{{ url_for('auth.logout') }}"
-                       class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                        <i class="fas fa-sign-out-alt mr-2"></i> Logout
+                       class="inline-flex items-center px-3 lg:px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        <i class="fas fa-sign-out-alt lg:mr-2"></i>
+                        <span class="hidden lg:inline">Logout</span>
                     </a>
+                </div>
+
+                <!-- Mobile menu button -->
+                <div class="flex items-center md:hidden">
+                    <button onclick="toggleMobileSidebar()"
+                            class="inline-flex items-center justify-center p-2 rounded-md text-gray-700 hover:text-gray-900 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500"
+                            aria-expanded="false"
+                            aria-label="Toggle navigation menu">
+                        <span class="sr-only">Open main menu</span>
+                        <i id="mobile-menu-icon" class="fas fa-bars text-xl"></i>
+                    </button>
                 </div>
             </div>
         </div>
+    </nav>
+
+    <!-- Mobile Sidebar Overlay -->
+    <div id="mobile-overlay" class="mobile-overlay md:hidden" onclick="closeMobileSidebar()"></div>
+
+    <!-- Mobile Sidebar Navigation -->
+    <div id="mobile-sidebar" class="mobile-sidebar md:hidden">
+        <div class="flex flex-col h-full">
+            <!-- Sidebar Header -->
+            <div class="flex items-center justify-between p-4 border-b border-gray-200">
+                <a href="{{ url_for('main.control') }}" class="text-xl font-bold text-indigo-600">
+                    {{ company_name }}
+                </a>
+                <button onclick="closeMobileSidebar()"
+                        class="p-2 rounded-md text-gray-500 hover:text-gray-700 hover:bg-gray-100"
+                        aria-label="Close navigation menu">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+
+            <!-- User Info -->
+            <div class="p-4 border-b border-gray-200 bg-gray-50">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center">
+                            <i class="fas fa-user text-indigo-600"></i>
+                        </div>
+                    </div>
+                    <div class="ml-3 flex-1 min-w-0">
+                        <p class="text-sm font-medium text-gray-900 truncate">{{ session.user_email }}</p>
+                        {% if session.is_admin %}
+                        <p class="text-xs text-indigo-600">Administrator</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Navigation Links -->
+            <nav class="flex-1 px-2 py-4 space-y-1 overflow-y-auto">
+                <a href="{{ url_for('main.control') }}"
+                   onclick="closeMobileSidebar()"
+                   class="{% if request.endpoint == 'main.control' %}bg-indigo-50 border-indigo-500 text-indigo-700{% else %}border-transparent text-gray-600 hover:bg-gray-50 hover:text-gray-900{% endif %} group flex items-center px-3 py-3 text-base font-medium rounded-md border-l-4 transition-colors">
+                    <i class="fas fa-broadcast-tower mr-3 flex-shrink-0 h-6 w-6 flex items-center justify-center"></i>
+                    <span>Stream Control</span>
+                </a>
+                <a href="{{ url_for('ocr.index') }}"
+                   onclick="closeMobileSidebar()"
+                   class="{% if request.endpoint and 'ocr' in request.endpoint %}bg-indigo-50 border-indigo-500 text-indigo-700{% else %}border-transparent text-gray-600 hover:bg-gray-50 hover:text-gray-900{% endif %} group flex items-center px-3 py-3 text-base font-medium rounded-md border-l-4 transition-colors">
+                    <i class="fas fa-file-text mr-3 flex-shrink-0 h-6 w-6 flex items-center justify-center"></i>
+                    <span>OCR</span>
+                </a>
+                {% if session.is_admin %}
+                <a href="{{ url_for('main.users') }}"
+                   onclick="closeMobileSidebar()"
+                   class="{% if request.endpoint == 'main.users' %}bg-indigo-50 border-indigo-500 text-indigo-700{% else %}border-transparent text-gray-600 hover:bg-gray-50 hover:text-gray-900{% endif %} group flex items-center px-3 py-3 text-base font-medium rounded-md border-l-4 transition-colors">
+                    <i class="fas fa-users mr-3 flex-shrink-0 h-6 w-6 flex items-center justify-center"></i>
+                    <span>Users</span>
+                </a>
+                {% endif %}
+                <a href="{{ url_for('licensing.subscription') }}"
+                   onclick="closeMobileSidebar()"
+                   class="{% if request.endpoint == 'licensing.subscription' %}bg-indigo-50 border-indigo-500 text-indigo-700{% else %}border-transparent text-gray-600 hover:bg-gray-50 hover:text-gray-900{% endif %} group flex items-center px-3 py-3 text-base font-medium rounded-md border-l-4 transition-colors">
+                    <i class="fas fa-crown mr-3 flex-shrink-0 h-6 w-6 flex items-center justify-center"></i>
+                    <span>Subscription</span>
+                </a>
+            </nav>
+
+            <!-- Logout Button -->
+            <div class="p-4 border-t border-gray-200">
+                <a href="{{ url_for('auth.logout') }}"
+                   class="flex items-center justify-center w-full px-4 py-3 text-base font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 transition-colors">
+                    <i class="fas fa-sign-out-alt mr-2"></i>
+                    <span>Logout</span>
+                </a>
+            </div>
+        </div>
+    </div>
     </nav>
     {% endif %}
 
@@ -94,13 +269,14 @@
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 {% for category, message in messages %}
-                <div class="toast px-6 py-4 rounded-lg shadow-lg max-w-md {% if category == 'error' %}bg-red-500{% elif category == 'success' %}bg-green-500{% elif category == 'info' %}bg-blue-500{% else %}bg-gray-800{% endif %} text-white">
+                <div class="toast px-4 sm:px-6 py-3 sm:py-4 rounded-lg shadow-lg w-full sm:max-w-md {% if category == 'error' %}bg-red-500{% elif category == 'success' %}bg-green-500{% elif category == 'info' %}bg-blue-500{% else %}bg-gray-800{% endif %} text-white">
                     <div class="flex items-center justify-between">
-                        <div class="flex items-center">
-                            <i class="fas {% if category == 'error' %}fa-exclamation-circle{% elif category == 'success' %}fa-check-circle{% elif category == 'info' %}fa-info-circle{% else %}fa-bell{% endif %} mr-3"></i>
-                            <span>{{ message }}</span>
+                        <div class="flex items-center flex-1 mr-2">
+                            <i class="fas {% if category == 'error' %}fa-exclamation-circle{% elif category == 'success' %}fa-check-circle{% elif category == 'info' %}fa-info-circle{% else %}fa-bell{% endif %} mr-2 sm:mr-3 flex-shrink-0"></i>
+                            <span class="text-sm sm:text-base break-words">{{ message }}</span>
                         </div>
-                        <button onclick="this.parentElement.parentElement.classList.add('fade-out')" class="ml-4 text-white hover:text-gray-200">
+                        <button onclick="this.parentElement.parentElement.classList.add('fade-out')"
+                                class="ml-2 text-white hover:text-gray-200 flex-shrink-0">
                             <i class="fas fa-times"></i>
                         </button>
                     </div>
@@ -111,20 +287,63 @@
     </div>
 
     <!-- Main Content -->
-    <main class="{% if session.user_id %}py-6{% endif %}">
+    <main class="flex-1 {% if session.user_id %}py-4 sm:py-6{% endif %}">
         {% block content %}{% endblock %}
     </main>
 
     <!-- Footer -->
     <footer class="bg-white border-t border-gray-200 mt-auto">
-        <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-            <p class="text-center text-gray-500 text-sm">
+        <div class="max-w-7xl mx-auto py-4 sm:py-6 px-4 sm:px-6 lg:px-8">
+            <p class="text-center text-gray-500 text-xs sm:text-sm">
                 &copy; {{ current_year }} {{ company_name }}. All rights reserved.
             </p>
         </div>
     </footer>
 
     <script>
+        // Mobile sidebar toggle
+        function toggleMobileSidebar() {
+            const sidebar = document.getElementById('mobile-sidebar');
+            const overlay = document.getElementById('mobile-overlay');
+            const icon = document.getElementById('mobile-menu-icon');
+
+            if (sidebar.classList.contains('open')) {
+                closeMobileSidebar();
+            } else {
+                sidebar.classList.add('open');
+                overlay.classList.add('open');
+                icon.classList.remove('fa-bars');
+                icon.classList.add('fa-times');
+                // Prevent body scroll when sidebar is open
+                document.body.style.overflow = 'hidden';
+            }
+        }
+
+        function closeMobileSidebar() {
+            const sidebar = document.getElementById('mobile-sidebar');
+            const overlay = document.getElementById('mobile-overlay');
+            const icon = document.getElementById('mobile-menu-icon');
+
+            sidebar.classList.remove('open');
+            overlay.classList.remove('open');
+            icon.classList.remove('fa-times');
+            icon.classList.add('fa-bars');
+            // Restore body scroll
+            document.body.style.overflow = '';
+        }
+
+        // Handle orientation changes on mobile
+        window.addEventListener('orientationchange', function() {
+            closeMobileSidebar();
+        });
+
+        // Close sidebar on window resize to desktop
+        window.addEventListener('resize', function() {
+            if (window.innerWidth >= 768) { // md breakpoint
+                closeMobileSidebar();
+            }
+        });
+
         // Auto-hide flash messages after 5 seconds
         document.addEventListener('DOMContentLoaded', function() {
             const toasts = document.querySelectorAll('.toast');

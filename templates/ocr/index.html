@@ -11,28 +11,28 @@
 {% endblock %}
 
 {% block content %}
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
     <!-- Header -->
-    <div class="flex justify-between items-center mb-8">
+    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6 sm:mb-8">
         <div>
-            <h1 class="text-3xl font-bold text-gray-900">OCR Text Extraction</h1>
-            <p class="text-gray-600 mt-1">Extract text from images for use in tickers</p>
+            <h1 class="text-2xl sm:text-3xl font-bold text-gray-900">OCR Text Extraction</h1>
+            <p class="text-sm sm:text-base text-gray-600 mt-1">Extract text from images for use in tickers</p>
         </div>
         <button onclick="openCreateModal()"
-                class="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
+                class="w-full sm:w-auto px-4 sm:px-6 py-2 sm:py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm sm:text-base font-medium">
             <i class="fas fa-plus mr-2"></i> New Session
         </button>
     </div>
 
     {% if sessions %}
     <!-- Sessions Grid -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         {% for session in sessions %}
-        <div class="session-card bg-white rounded-lg shadow border border-gray-200 p-6 transition-shadow">
-            <div class="flex justify-between items-start mb-4">
+        <div class="session-card bg-white rounded-lg shadow border border-gray-200 p-4 sm:p-6 transition-shadow">
+            <div class="flex justify-between items-start mb-4 gap-3">
                 <div class="flex-1 min-w-0">
-                    <h3 class="text-lg font-semibold text-gray-900 truncate">{{ session.name }}</h3>
-                    <div class="flex gap-2 mt-2">
+                    <h3 class="text-base sm:text-lg font-semibold text-gray-900 truncate">{{ session.name }}</h3>
+                    <div class="flex flex-wrap gap-2 mt-2">
                         <span class="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded">
                             {{ session.category }}
                         </span>
@@ -41,7 +41,7 @@
                         </span>
                     </div>
                 </div>
-                <span class="px-2 py-1 text-xs rounded
+                <span class="px-2 py-1 text-xs rounded flex-shrink-0
                     {% if session.status == 'completed' %}bg-green-100 text-green-800
                     {% elif session.status == 'active' %}bg-blue-100 text-blue-800
                     {% else %}bg-gray-100 text-gray-800{% endif %}">
@@ -50,23 +50,23 @@
             </div>
 
             {% if session.used_in_ticker %}
-            <div class="mb-3 px-3 py-2 bg-green-50 border border-green-200 rounded text-sm text-green-800">
+            <div class="mb-3 px-3 py-2 bg-green-50 border border-green-200 rounded text-xs sm:text-sm text-green-800">
                 <i class="fas fa-check-circle mr-1"></i> Applied to ticker
             </div>
             {% endif %}
 
             {% if session.combined_text %}
-            <p class="text-sm text-gray-600 mb-4 line-clamp-2">{{ session.combined_text }}</p>
+            <p class="text-xs sm:text-sm text-gray-600 mb-4 line-clamp-2">{{ session.combined_text }}</p>
             {% endif %}
 
             <div class="flex gap-2">
                 <a href="{{ url_for('ocr.view_session', session_id=session.id) }}"
-                   class="flex-1 px-4 py-2 bg-indigo-600 text-white text-center rounded hover:bg-indigo-700">
+                   class="flex-1 px-3 sm:px-4 py-2 bg-indigo-600 text-white text-center rounded hover:bg-indigo-700 text-xs sm:text-sm font-medium">
                     View
                 </a>
                 <button onclick="deleteSession({{ session.id }})"
-                        class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">
-                    <i class="fas fa-trash"></i>
+                        class="px-3 sm:px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 flex-shrink-0">
+                    <i class="fas fa-trash text-xs sm:text-sm"></i>
                 </button>
             </div>
 
@@ -79,11 +79,11 @@
     {% else %}
     <!-- Empty State -->
     <div class="text-center py-12 bg-white rounded-lg border border-gray-200">
-        <i class="fas fa-file-image text-gray-400 text-5xl mb-4"></i>
-        <h3 class="text-xl font-semibold text-gray-900 mb-2">No OCR Sessions</h3>
-        <p class="text-gray-600 mb-6">Create a session to start extracting text from images</p>
+        <i class="fas fa-file-image text-gray-400 text-4xl sm:text-5xl mb-4"></i>
+        <h3 class="text-lg sm:text-xl font-semibold text-gray-900 mb-2">No OCR Sessions</h3>
+        <p class="text-sm sm:text-base text-gray-600 mb-6 px-4">Create a session to start extracting text from images</p>
         <button onclick="openCreateModal()"
-                class="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
+                class="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm sm:text-base font-medium">
             <i class="fas fa-plus mr-2"></i> Create Session
         </button>
     </div>
@@ -92,33 +92,33 @@
 
 <!-- Create Session Modal -->
 <div id="createModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-lg shadow-xl max-w-md w-full">
-        <div class="px-6 py-4 border-b">
-            <h3 class="text-xl font-semibold text-gray-900">Create OCR Session</h3>
+    <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+        <div class="px-4 sm:px-6 py-4 border-b">
+            <h3 class="text-lg sm:text-xl font-semibold text-gray-900">Create OCR Session</h3>
         </div>
-        <form id="createForm" onsubmit="createSession(event)" class="p-6">
+        <form id="createForm" onsubmit="createSession(event)" class="p-4 sm:p-6">
             <div class="mb-4">
                 <label class="block text-sm font-medium text-gray-700 mb-2">Session Name</label>
                 <input type="text" name="name" required
-                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                       class="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                        placeholder="e.g., Wedding Names">
             </div>
-            <div class="mb-4">
+            <div class="mb-6">
                 <label class="block text-sm font-medium text-gray-700 mb-2">Category</label>
                 <select name="category"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
+                        class="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
                     {% for cat in categories %}
                     <option value="{{ cat }}">{{ cat.title() }}</option>
                     {% endfor %}
                 </select>
             </div>
-            <div class="flex gap-3">
+            <div class="flex flex-col sm:flex-row gap-3">
                 <button type="button" onclick="closeCreateModal()"
-                        class="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+                        class="w-full sm:flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm sm:text-base font-medium">
                     Cancel
                 </button>
                 <button type="submit"
-                        class="flex-1 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
+                        class="w-full sm:flex-1 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm sm:text-base font-medium">
                     Create
                 </button>
             </div>
@@ -138,6 +138,13 @@ function closeCreateModal() {
 
 document.getElementById('createModal').addEventListener('click', function(e) {
     if (e.target === this) closeCreateModal();
+});
+
+// Close modal on escape key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeCreateModal();
+    }
 });
 
 async function createSession(event) {

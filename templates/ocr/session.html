@@ -11,27 +11,36 @@
         border-color: #4F46E5;
         background-color: #EEF2FF;
     }
+
+    /* Mobile-optimized sticky sidebar */
+    @media (min-width: 1024px) {
+        .sticky-sidebar {
+            position: sticky;
+            top: 5rem;
+            max-height: calc(100vh - 6rem);
+        }
+    }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
     <!-- Header -->
-    <div class="mb-6">
-        <a href="{{ url_for('ocr.index') }}" class="text-indigo-600 hover:text-indigo-800 mb-2 inline-block">
+    <div class="mb-4 sm:mb-6">
+        <a href="{{ url_for('ocr.index') }}" class="text-indigo-600 hover:text-indigo-800 mb-2 inline-flex items-center text-sm sm:text-base">
             <i class="fas fa-arrow-left mr-2"></i> Back to Sessions
         </a>
-        <div class="flex justify-between items-start mt-4">
-            <div>
-                <h1 class="text-3xl font-bold text-gray-900">{{ session.name }}</h1>
-                <div class="flex gap-2 mt-2">
-                    <span class="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded">
+        <div class="flex flex-col lg:flex-row lg:justify-between lg:items-start gap-4 mt-4">
+            <div class="min-w-0">
+                <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 break-words">{{ session.name }}</h1>
+                <div class="flex flex-wrap gap-2 mt-2">
+                    <span class="px-2 sm:px-3 py-1 bg-gray-100 text-gray-700 text-xs sm:text-sm rounded">
                         {{ session.category }}
                     </span>
-                    <span class="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded">
+                    <span class="px-2 sm:px-3 py-1 bg-gray-100 text-gray-700 text-xs sm:text-sm rounded">
                         {{ session.image_count }} images
                     </span>
-                    <span class="px-3 py-1 text-sm rounded
+                    <span class="px-2 sm:px-3 py-1 text-xs sm:text-sm rounded
                         {% if session.status == 'completed' %}bg-green-100 text-green-800
                         {% elif session.status == 'active' %}bg-blue-100 text-blue-800
                         {% else %}bg-gray-100 text-gray-800{% endif %}">
@@ -39,14 +48,15 @@
                     </span>
                 </div>
             </div>
-            <div class="flex gap-2">
+            <div class="flex flex-col sm:flex-row gap-2 w-full lg:w-auto">
                 <button onclick="document.getElementById('fileInput').click()"
-                        class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
+                        class="w-full sm:w-auto px-3 sm:px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm sm:text-base font-medium whitespace-nowrap">
                     <i class="fas fa-upload mr-2"></i> Upload Images
                 </button>
                 <button onclick="processImages()"
-                        class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
-                        {% if not images %}disabled class="opacity-50"{% endif %}>
+                        class="w-full sm:w-auto px-3 sm:px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm sm:text-base font-medium whitespace-nowrap
+                        {% if not images %}opacity-50 cursor-not-allowed{% endif %}"
+                        {% if not images %}disabled{% endif %}>
                     <i class="fas fa-cog mr-2"></i> Process OCR
                 </button>
             </div>
@@ -55,36 +65,37 @@
 
     <input type="file" id="fileInput" multiple accept="image/*" class="hidden" onchange="uploadImages(event)">
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         <!-- Images Column -->
         <div class="lg:col-span-2">
-            <div class="bg-white rounded-lg shadow border border-gray-200 p-6">
-                <h2 class="text-xl font-semibold text-gray-900 mb-4">
-                    Images <span class="text-sm font-normal text-gray-500">(Drag to reorder)</span>
+            <div class="bg-white rounded-lg shadow border border-gray-200 p-4 sm:p-6">
+                <h2 class="text-lg sm:text-xl font-semibold text-gray-900 mb-4">
+                    Images
+                    <span class="text-xs sm:text-sm font-normal text-gray-500 ml-2">(Drag to reorder)</span>
                 </h2>
 
                 <div id="imagesList" class="space-y-3">
                     {% if images %}
                         {% for image in images %}
-                        <div class="bg-gray-50 rounded-lg p-4 cursor-move border border-gray-200 hover:shadow"
+                        <div class="bg-gray-50 rounded-lg p-3 sm:p-4 cursor-move border border-gray-200 hover:shadow transition-shadow"
                              draggable="true"
                              data-image-id="{{ image.id }}"
                              ondragstart="dragStart(event)"
                              ondragover="dragOver(event)"
                              ondrop="drop(event)"
                              ondragend="dragEnd(event)">
-                            <div class="flex items-center gap-4">
-                                <div class="flex-shrink-0">
+                            <div class="flex items-start gap-2 sm:gap-4">
+                                <div class="flex-shrink-0 hidden sm:block">
                                     <i class="fas fa-grip-vertical text-gray-400"></i>
                                 </div>
                                 <div class="flex-shrink-0">
                                     <img src="{{ url_for('static', filename=image.filepath) }}"
                                          alt="{{ image.filename }}"
-                                         class="h-20 w-20 object-cover rounded">
+                                         class="h-16 w-16 sm:h-20 sm:w-20 object-cover rounded">
                                 </div>
                                 <div class="flex-1 min-w-0">
-                                    <p class="text-sm font-medium text-gray-900 truncate">{{ image.filename }}</p>
-                                    <div class="flex items-center gap-2 mt-1">
+                                    <p class="text-xs sm:text-sm font-medium text-gray-900 truncate">{{ image.filename }}</p>
+                                    <div class="flex flex-wrap items-center gap-2 mt-1">
                                         <span class="text-xs px-2 py-1 rounded
                                             {% if image.status == 'completed' %}bg-green-100 text-green-800
                                             {% elif image.status == 'processing' %}bg-yellow-100 text-yellow-800
@@ -95,30 +106,31 @@
                                         <span class="text-xs text-gray-500">#{{ image.order_index + 1 }}</span>
                                     </div>
                                     {% if image.extracted_text %}
-                                    <p class="text-xs text-gray-600 mt-2">{{ image.extracted_text[:100] }}...</p>
+                                    <p class="text-xs text-gray-600 mt-2 line-clamp-2">{{ image.extracted_text[:100] }}...</p>
                                     {% endif %}
                                     {% if image.error_message %}
                                     <p class="text-xs text-red-600 mt-2">{{ image.error_message }}</p>
                                     {% endif %}
                                 </div>
-                                <div class="flex-shrink-0 flex gap-2">
+                                <div class="flex-shrink-0 flex flex-col sm:flex-row gap-1 sm:gap-2">
                                     <button onclick="viewText('{{ image.filename }}', `{{ image.extracted_text|replace('`', '\\`') }}`)"
-                                            class="p-2 text-indigo-600 hover:bg-indigo-50 rounded"
-                                            {% if not image.extracted_text %}disabled class="opacity-40"{% endif %}>
-                                        <i class="fas fa-eye"></i>
+                                            class="p-2 text-indigo-600 hover:bg-indigo-50 rounded
+                                            {% if not image.extracted_text %}opacity-40 cursor-not-allowed{% endif %}"
+                                            {% if not image.extracted_text %}disabled{% endif %}>
+                                        <i class="fas fa-eye text-sm"></i>
                                     </button>
                                     <button onclick="deleteImage({{ image.id }})"
                                             class="p-2 text-red-600 hover:bg-red-50 rounded">
-                                        <i class="fas fa-trash"></i>
+                                        <i class="fas fa-trash text-sm"></i>
                                     </button>
                                 </div>
                             </div>
                         </div>
                         {% endfor %}
                     {% else %}
-                        <div class="text-center py-12">
-                            <i class="fas fa-images text-gray-400 text-5xl mb-4"></i>
-                            <p class="text-gray-600">No images uploaded yet</p>
+                        <div class="text-center py-8 sm:py-12">
+                            <i class="fas fa-images text-gray-400 text-4xl sm:text-5xl mb-4"></i>
+                            <p class="text-sm sm:text-base text-gray-600">No images uploaded yet</p>
                         </div>
                     {% endif %}
                 </div>
@@ -127,33 +139,36 @@
 
         <!-- Text Column -->
         <div>
-            <div class="bg-white rounded-lg shadow border border-gray-200 p-6 sticky top-6">
-                <h2 class="text-xl font-semibold text-gray-900 mb-4">Extracted Text</h2>
+            <div class="bg-white rounded-lg shadow border border-gray-200 p-4 sm:p-6 sticky-sidebar">
+                <h2 class="text-lg sm:text-xl font-semibold text-gray-900 mb-4">Extracted Text</h2>
 
                 <textarea id="combinedText"
-                          class="w-full h-64 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 font-mono text-sm mb-4"
+                          class="w-full h-48 sm:h-64 px-3 py-2 text-xs sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 font-mono mb-4"
                           placeholder="Processed text will appear here...">{{ session.combined_text or '' }}</textarea>
 
                 <div class="space-y-2">
                     <button onclick="saveCombinedText()"
-                            class="w-full px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
-                            {% if not session.combined_text %}disabled class="opacity-50"{% endif %}>
+                            class="w-full px-3 sm:px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm sm:text-base font-medium
+                            {% if not session.combined_text %}opacity-50 cursor-not-allowed{% endif %}"
+                            {% if not session.combined_text %}disabled{% endif %}>
                         <i class="fas fa-save mr-2"></i> Save Text
                     </button>
                     <button onclick="openApplyModal()"
-                            class="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
-                            {% if not session.combined_text %}disabled class="opacity-50"{% endif %}>
+                            class="w-full px-3 sm:px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm sm:text-base font-medium
+                            {% if not session.combined_text %}opacity-50 cursor-not-allowed{% endif %}"
+                            {% if not session.combined_text %}disabled{% endif %}>
                         <i class="fas fa-check mr-2"></i> Apply to Ticker
                     </button>
                     <button onclick="copyText()"
-                            class="w-full px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
-                            {% if not session.combined_text %}disabled class="opacity-50"{% endif %}>
+                            class="w-full px-3 sm:px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 text-sm sm:text-base font-medium
+                            {% if not session.combined_text %}opacity-50 cursor-not-allowed{% endif %}"
+                            {% if not session.combined_text %}disabled{% endif %}>
                         <i class="fas fa-copy mr-2"></i> Copy
                     </button>
                 </div>
 
                 {% if session.used_in_ticker %}
-                <div class="mt-4 px-3 py-2 bg-green-50 border border-green-200 rounded text-sm text-green-800">
+                <div class="mt-4 px-3 py-2 bg-green-50 border border-green-200 rounded text-xs sm:text-sm text-green-800">
                     <i class="fas fa-check-circle mr-1"></i> Applied to ticker
                 </div>
                 {% endif %}
@@ -164,16 +179,16 @@
 
 <!-- View Text Modal -->
 <div id="viewModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-hidden">
-        <div class="px-6 py-4 border-b">
-            <h3 class="text-xl font-semibold text-gray-900" id="modalTitle">Extracted Text</h3>
+    <div class="bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-hidden mx-4">
+        <div class="px-4 sm:px-6 py-4 border-b">
+            <h3 class="text-lg sm:text-xl font-semibold text-gray-900" id="modalTitle">Extracted Text</h3>
         </div>
-        <div class="p-6 overflow-y-auto max-h-[60vh]">
-            <pre id="modalText" class="whitespace-pre-wrap font-mono text-sm text-gray-800"></pre>
+        <div class="p-4 sm:p-6 overflow-y-auto max-h-[60vh]">
+            <pre id="modalText" class="whitespace-pre-wrap font-mono text-xs sm:text-sm text-gray-800"></pre>
         </div>
-        <div class="px-6 py-4 border-t">
+        <div class="px-4 sm:px-6 py-4 border-t">
             <button onclick="closeViewModal()"
-                    class="w-full px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
+                    class="w-full px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm sm:text-base font-medium">
                 Close
             </button>
         </div>
@@ -182,38 +197,36 @@
 
 <!-- Apply to Ticker Modal -->
 <div id="applyModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-lg shadow-xl max-w-md w-full">
-        <div class="px-6 py-4 border-b">
-            <h3 class="text-xl font-semibold text-gray-900">Apply to Ticker</h3>
+    <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+        <div class="px-4 sm:px-6 py-4 border-b">
+            <h3 class="text-lg sm:text-xl font-semibold text-gray-900">Apply to Ticker</h3>
         </div>
-        <div class="p-6">
+        <div class="p-4 sm:p-6">
             <label class="block text-sm font-medium text-gray-700 mb-2">Select Category</label>
             <select id="tickerCategory"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
+                    class="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 mb-4">
                 {% for cat in categories %}
                 <option value="{{ cat }}" {% if cat == session.category %}selected{% endif %}>{{ cat.title() }}</option>
                 {% endfor %}
             </select>
-        </div>
-        <div class="px-6 py-4 border-t flex gap-3">
-            <button onclick="closeApplyModal()"
-                    class="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
-                Cancel
-            </button>
-            <button onclick="applyToTicker()"
-                    class="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
-                Apply
-            </button>
+            <div class="flex flex-col sm:flex-row gap-3">
+                <button onclick="closeApplyModal()"
+                        class="w-full sm:flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm sm:text-base font-medium">
+                    Cancel
+                </button>
+                <button onclick="applyToTicker()"
+                        class="w-full sm:flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm sm:text-base font-medium">
+                    Apply
+                </button>
+            </div>
         </div>
     </div>
 </div>
 
 <script>
-let draggedElement = null;
-
 function dragStart(e) {
-    draggedElement = e.target;
     e.target.classList.add('dragging');
+    e.dataTransfer.effectAllowed = 'move';
 }
 
 function dragOver(e) {
@@ -405,6 +418,14 @@ document.getElementById('viewModal').addEventListener('click', function(e) {
 });
 document.getElementById('applyModal').addEventListener('click', function(e) {
     if (e.target === this) closeApplyModal();
+});
+
+// Close modals on escape key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeViewModal();
+        closeApplyModal();
+    }
 });
 </script>
 {% endblock %}

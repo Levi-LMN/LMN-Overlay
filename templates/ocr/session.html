@@ -4,59 +4,49 @@
 
 {% block extra_css %}
 <style>
-.dragging {
-    opacity: 0.5;
-}
-
-.drag-over {
-    border: 2px dashed #4F46E5;
-    background-color: #EEF2FF;
-}
-
-.image-card {
-    transition: all 0.2s;
-}
-
-.image-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-}
+    .dragging {
+        opacity: 0.5;
+    }
+    .drag-over {
+        border-color: #4F46E5;
+        background-color: #EEF2FF;
+    }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <!-- Header -->
-    <div class="mb-8">
-        <div class="flex justify-between items-start mb-4">
+    <div class="mb-6">
+        <a href="{{ url_for('ocr.index') }}" class="text-indigo-600 hover:text-indigo-800 mb-2 inline-block">
+            <i class="fas fa-arrow-left mr-2"></i> Back to Sessions
+        </a>
+        <div class="flex justify-between items-start mt-4">
             <div>
-                <a href="{{ url_for('ocr.index') }}" class="text-indigo-600 hover:text-indigo-800 mb-2 inline-block">
-                    <i class="fas fa-arrow-left mr-2"></i> Back to Sessions
-                </a>
                 <h1 class="text-3xl font-bold text-gray-900">{{ session.name }}</h1>
-                <div class="flex items-center gap-3 mt-2">
-                    <span class="px-3 py-1 bg-gray-100 rounded-full text-sm">
-                        <i class="fas fa-tag mr-1"></i>{{ session.category }}
+                <div class="flex gap-2 mt-2">
+                    <span class="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded">
+                        {{ session.category }}
                     </span>
-                    <span class="px-3 py-1 bg-gray-100 rounded-full text-sm">
-                        <i class="fas fa-images mr-1"></i>{{ session.image_count }} images
+                    <span class="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded">
+                        {{ session.image_count }} images
                     </span>
-                    <span class="px-3 py-1 rounded-full text-sm
-                               {% if session.status == 'completed' %}bg-green-100 text-green-800
-                               {% elif session.status == 'active' %}bg-blue-100 text-blue-800
-                               {% else %}bg-gray-100 text-gray-800{% endif %}">
+                    <span class="px-3 py-1 text-sm rounded
+                        {% if session.status == 'completed' %}bg-green-100 text-green-800
+                        {% elif session.status == 'active' %}bg-blue-100 text-blue-800
+                        {% else %}bg-gray-100 text-gray-800{% endif %}">
                         {{ session.status }}
                     </span>
                 </div>
             </div>
             <div class="flex gap-2">
                 <button onclick="document.getElementById('fileInput').click()"
-                        class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">
+                        class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
                     <i class="fas fa-upload mr-2"></i> Upload Images
                 </button>
                 <button onclick="processImages()"
-                        class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-                        {% if not images %}disabled{% endif %}>
+                        class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                        {% if not images %}disabled class="opacity-50"{% endif %}>
                     <i class="fas fa-cog mr-2"></i> Process OCR
                 </button>
             </div>
@@ -68,16 +58,15 @@
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- Images Column -->
         <div class="lg:col-span-2">
-            <div class="bg-white rounded-lg shadow-lg p-6">
+            <div class="bg-white rounded-lg shadow border border-gray-200 p-6">
                 <h2 class="text-xl font-semibold text-gray-900 mb-4">
-                    <i class="fas fa-images mr-2 text-indigo-600"></i> Images
-                    <span class="text-sm font-normal text-gray-500 ml-2">(Drag to reorder)</span>
+                    Images <span class="text-sm font-normal text-gray-500">(Drag to reorder)</span>
                 </h2>
 
                 <div id="imagesList" class="space-y-3">
                     {% if images %}
                         {% for image in images %}
-                        <div class="image-card bg-gray-50 rounded-lg p-4 cursor-move border border-gray-200"
+                        <div class="bg-gray-50 rounded-lg p-4 cursor-move border border-gray-200 hover:shadow"
                              draggable="true"
                              data-image-id="{{ image.id }}"
                              ondragstart="dragStart(event)"
@@ -86,7 +75,7 @@
                              ondragend="dragEnd(event)">
                             <div class="flex items-center gap-4">
                                 <div class="flex-shrink-0">
-                                    <i class="fas fa-grip-vertical text-gray-400 text-xl"></i>
+                                    <i class="fas fa-grip-vertical text-gray-400"></i>
                                 </div>
                                 <div class="flex-shrink-0">
                                     <img src="{{ url_for('static', filename=image.filepath) }}"
@@ -97,22 +86,25 @@
                                     <p class="text-sm font-medium text-gray-900 truncate">{{ image.filename }}</p>
                                     <div class="flex items-center gap-2 mt-1">
                                         <span class="text-xs px-2 py-1 rounded
-                                                   {% if image.status == 'completed' %}bg-green-100 text-green-800
-                                                   {% elif image.status == 'processing' %}bg-yellow-100 text-yellow-800
-                                                   {% elif image.status == 'failed' %}bg-red-100 text-red-800
-                                                   {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                            {% if image.status == 'completed' %}bg-green-100 text-green-800
+                                            {% elif image.status == 'processing' %}bg-yellow-100 text-yellow-800
+                                            {% elif image.status == 'failed' %}bg-red-100 text-red-800
+                                            {% else %}bg-gray-100 text-gray-800{% endif %}">
                                             {{ image.status }}
                                         </span>
-                                        <span class="text-xs text-gray-500">Order: {{ image.order_index + 1 }}</span>
+                                        <span class="text-xs text-gray-500">#{{ image.order_index + 1 }}</span>
                                     </div>
                                     {% if image.extracted_text %}
-                                    <p class="text-xs text-gray-600 mt-2 line-clamp-2">{{ image.extracted_text[:100] }}...</p>
+                                    <p class="text-xs text-gray-600 mt-2">{{ image.extracted_text[:100] }}...</p>
+                                    {% endif %}
+                                    {% if image.error_message %}
+                                    <p class="text-xs text-red-600 mt-2">{{ image.error_message }}</p>
                                     {% endif %}
                                 </div>
-                                <div class="flex-shrink-0">
-                                    <button onclick="viewImageText({{ image.id }})"
+                                <div class="flex-shrink-0 flex gap-2">
+                                    <button onclick="viewText('{{ image.filename }}', `{{ image.extracted_text|replace('`', '\\`') }}`)"
                                             class="p-2 text-indigo-600 hover:bg-indigo-50 rounded"
-                                            {% if not image.extracted_text %}disabled{% endif %}>
+                                            {% if not image.extracted_text %}disabled class="opacity-40"{% endif %}>
                                         <i class="fas fa-eye"></i>
                                     </button>
                                     <button onclick="deleteImage({{ image.id }})"
@@ -127,48 +119,42 @@
                         <div class="text-center py-12">
                             <i class="fas fa-images text-gray-400 text-5xl mb-4"></i>
                             <p class="text-gray-600">No images uploaded yet</p>
-                            <p class="text-gray-500 text-sm mt-2">Click "Upload Images" to get started</p>
                         </div>
                     {% endif %}
                 </div>
             </div>
         </div>
 
-        <!-- Combined Text Column -->
+        <!-- Text Column -->
         <div>
-            <div class="bg-white rounded-lg shadow-lg p-6 sticky top-6">
-                <h2 class="text-xl font-semibold text-gray-900 mb-4">
-                    <i class="fas fa-file-alt mr-2 text-indigo-600"></i> Extracted Text
-                </h2>
+            <div class="bg-white rounded-lg shadow border border-gray-200 p-6 sticky top-6">
+                <h2 class="text-xl font-semibold text-gray-900 mb-4">Extracted Text</h2>
 
-                <div class="mb-4">
-                    <textarea id="combinedText"
-                              class="w-full h-64 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 font-mono text-sm"
-                              placeholder="Processed text will appear here...">{{ session.combined_text or '' }}</textarea>
-                </div>
+                <textarea id="combinedText"
+                          class="w-full h-64 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 font-mono text-sm mb-4"
+                          placeholder="Processed text will appear here...">{{ session.combined_text or '' }}</textarea>
 
                 <div class="space-y-2">
                     <button onclick="saveCombinedText()"
-                            class="w-full px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
-                            {% if not session.combined_text %}disabled{% endif %}>
+                            class="w-full px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
+                            {% if not session.combined_text %}disabled class="opacity-50"{% endif %}>
                         <i class="fas fa-save mr-2"></i> Save Text
                     </button>
-                    <button onclick="openApplyToTickerModal()"
-                            class="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-                            {% if not session.combined_text %}disabled{% endif %}>
+                    <button onclick="openApplyModal()"
+                            class="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                            {% if not session.combined_text %}disabled class="opacity-50"{% endif %}>
                         <i class="fas fa-check mr-2"></i> Apply to Ticker
                     </button>
                     <button onclick="copyText()"
-                            class="w-full px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-                            {% if not session.combined_text %}disabled{% endif %}>
-                        <i class="fas fa-copy mr-2"></i> Copy to Clipboard
+                            class="w-full px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+                            {% if not session.combined_text %}disabled class="opacity-50"{% endif %}>
+                        <i class="fas fa-copy mr-2"></i> Copy
                     </button>
                 </div>
 
                 {% if session.used_in_ticker %}
-                <div class="mt-4 px-3 py-2 bg-green-50 border border-green-200 rounded-lg">
-                    <i class="fas fa-check-circle text-green-600 mr-2"></i>
-                    <span class="text-sm text-green-800">Applied to ticker</span>
+                <div class="mt-4 px-3 py-2 bg-green-50 border border-green-200 rounded text-sm text-green-800">
+                    <i class="fas fa-check-circle mr-1"></i> Applied to ticker
                 </div>
                 {% endif %}
             </div>
@@ -176,10 +162,28 @@
     </div>
 </div>
 
+<!-- View Text Modal -->
+<div id="viewModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-hidden">
+        <div class="px-6 py-4 border-b">
+            <h3 class="text-xl font-semibold text-gray-900" id="modalTitle">Extracted Text</h3>
+        </div>
+        <div class="p-6 overflow-y-auto max-h-[60vh]">
+            <pre id="modalText" class="whitespace-pre-wrap font-mono text-sm text-gray-800"></pre>
+        </div>
+        <div class="px-6 py-4 border-t">
+            <button onclick="closeViewModal()"
+                    class="w-full px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
+                Close
+            </button>
+        </div>
+    </div>
+</div>
+
 <!-- Apply to Ticker Modal -->
-<div id="applyToTickerModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
-    <div class="bg-white rounded-lg shadow-2xl max-w-md w-full mx-4">
-        <div class="px-6 py-4 border-b border-gray-200">
+<div id="applyModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-lg shadow-xl max-w-md w-full">
+        <div class="px-6 py-4 border-b">
             <h3 class="text-xl font-semibold text-gray-900">Apply to Ticker</h3>
         </div>
         <div class="p-6">
@@ -191,14 +195,14 @@
                 {% endfor %}
             </select>
         </div>
-        <div class="px-6 py-4 bg-gray-50 flex justify-end gap-3 border-t border-gray-200">
-            <button onclick="closeApplyToTickerModal()"
-                    class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors">
+        <div class="px-6 py-4 border-t flex gap-3">
+            <button onclick="closeApplyModal()"
+                    class="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
                 Cancel
             </button>
             <button onclick="applyToTicker()"
-                    class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
-                <i class="fas fa-check mr-2"></i> Apply
+                    class="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
+                Apply
             </button>
         </div>
     </div>
@@ -207,39 +211,39 @@
 <script>
 let draggedElement = null;
 
-function dragStart(event) {
-    draggedElement = event.target;
-    event.target.classList.add('dragging');
+function dragStart(e) {
+    draggedElement = e.target;
+    e.target.classList.add('dragging');
 }
 
-function dragOver(event) {
-    event.preventDefault();
-    const afterElement = getDragAfterElement(event.clientY);
-    const container = document.getElementById('imagesList');
-    
+function dragOver(e) {
+    e.preventDefault();
+    const afterElement = getDragAfterElement(e.currentTarget.parentElement, e.clientY);
+    const dragging = document.querySelector('.dragging');
     if (afterElement == null) {
-        container.appendChild(draggedElement);
+        e.currentTarget.parentElement.appendChild(dragging);
     } else {
-        container.insertBefore(draggedElement, afterElement);
+        e.currentTarget.parentElement.insertBefore(dragging, afterElement);
     }
+    e.currentTarget.classList.add('drag-over');
 }
 
-function drop(event) {
-    event.preventDefault();
+function drop(e) {
+    e.preventDefault();
+    e.currentTarget.classList.remove('drag-over');
 }
 
-function dragEnd(event) {
-    event.target.classList.remove('dragging');
+function dragEnd(e) {
+    e.target.classList.remove('dragging');
+    document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
     updateImageOrder();
 }
 
-function getDragAfterElement(y) {
-    const draggableElements = [...document.querySelectorAll('.image-card:not(.dragging)')];
-    
+function getDragAfterElement(container, y) {
+    const draggableElements = [...container.querySelectorAll('[draggable="true"]:not(.dragging)')];
     return draggableElements.reduce((closest, child) => {
         const box = child.getBoundingClientRect();
         const offset = y - box.top - box.height / 2;
-        
         if (offset < 0 && offset > closest.offset) {
             return { offset: offset, element: child };
         } else {
@@ -249,182 +253,158 @@ function getDragAfterElement(y) {
 }
 
 async function updateImageOrder() {
-    const imageCards = document.querySelectorAll('.image-card');
+    const imageCards = document.querySelectorAll('[data-image-id]');
     const order = Array.from(imageCards).map(card => parseInt(card.dataset.imageId));
-    
+
     try {
         const response = await fetch('/ocr/reorder/{{ session.id }}', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ order: order })
         });
-        
         const result = await response.json();
-        
         if (result.success) {
             document.getElementById('combinedText').value = result.combined_text;
-            showToast('Images reordered successfully', 'success');
         }
     } catch (error) {
         console.error('Error:', error);
-        showToast('Error reordering images', 'error');
     }
 }
 
 async function uploadImages(event) {
     const files = event.target.files;
     if (!files.length) return;
-    
+
     const formData = new FormData();
     for (let file of files) {
         formData.append('files', file);
     }
-    
+
     try {
         const response = await fetch('/ocr/upload/{{ session.id }}', {
             method: 'POST',
             body: formData
         });
-        
         const result = await response.json();
-        
         if (result.success) {
-            showToast(result.message, 'success');
+            alert(result.message);
             location.reload();
         }
     } catch (error) {
         console.error('Error:', error);
-        showToast('Error uploading images', 'error');
+        alert('Error uploading images');
     }
 }
 
 async function processImages() {
-    if (!confirm('Process all images with OCR? This may take a few moments.')) {
-        return;
-    }
-    
-    showToast('Processing images...', 'info');
-    
+    if (!confirm('Process all images with OCR?')) return;
+
     try {
         const response = await fetch('/ocr/process/{{ session.id }}', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ language: 'eng' })
         });
-        
         const result = await response.json();
-        
         if (result.success) {
             document.getElementById('combinedText').value = result.combined_text;
-            showToast(result.message, 'success');
-            setTimeout(() => location.reload(), 1500);
+            alert('OCR processing completed');
+            setTimeout(() => location.reload(), 1000);
         }
     } catch (error) {
         console.error('Error:', error);
-        showToast('Error processing images', 'error');
+        alert('Error processing images');
     }
 }
 
 async function deleteImage(imageId) {
     if (!confirm('Delete this image?')) return;
-    
+
     try {
         const response = await fetch(`/ocr/image/${imageId}/delete`, {
             method: 'POST'
         });
-        
         const result = await response.json();
-        
         if (result.success) {
-            showToast('Image deleted', 'success');
             location.reload();
         }
     } catch (error) {
         console.error('Error:', error);
-        showToast('Error deleting image', 'error');
+        alert('Error deleting image');
     }
 }
 
 async function saveCombinedText() {
     const text = document.getElementById('combinedText').value;
-    
+
     try {
         const response = await fetch('/ocr/session/{{ session.id }}/edit-text', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ text: text })
         });
-        
         const result = await response.json();
-        
         if (result.success) {
-            showToast('Text saved successfully', 'success');
+            alert('Text saved');
         }
     } catch (error) {
         console.error('Error:', error);
-        showToast('Error saving text', 'error');
+        alert('Error saving text');
     }
 }
 
-function openApplyToTickerModal() {
-    document.getElementById('applyToTickerModal').classList.remove('hidden');
+function viewText(filename, text) {
+    document.getElementById('modalTitle').textContent = filename;
+    document.getElementById('modalText').textContent = text || 'No text extracted';
+    document.getElementById('viewModal').classList.remove('hidden');
 }
 
-function closeApplyToTickerModal() {
-    document.getElementById('applyToTickerModal').classList.add('hidden');
+function closeViewModal() {
+    document.getElementById('viewModal').classList.add('hidden');
+}
+
+function openApplyModal() {
+    document.getElementById('applyModal').classList.remove('hidden');
+}
+
+function closeApplyModal() {
+    document.getElementById('applyModal').classList.add('hidden');
 }
 
 async function applyToTicker() {
     const category = document.getElementById('tickerCategory').value;
-    
+
     try {
         const response = await fetch('/ocr/session/{{ session.id }}/apply-to-ticker', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ category: category })
         });
-        
         const result = await response.json();
-        
         if (result.success) {
-            showToast(result.message, 'success');
-            closeApplyToTickerModal();
-            setTimeout(() => location.reload(), 1000);
+            alert(result.message);
+            closeApplyModal();
+            setTimeout(() => location.reload(), 500);
         }
     } catch (error) {
         console.error('Error:', error);
-        showToast('Error applying to ticker', 'error');
+        alert('Error applying to ticker');
     }
 }
 
 function copyText() {
     const text = document.getElementById('combinedText').value;
     navigator.clipboard.writeText(text).then(() => {
-        showToast('Text copied to clipboard', 'success');
+        alert('Text copied to clipboard');
     });
 }
 
-function showToast(message, type) {
-    // Simple toast notification
-    const toast = document.createElement('div');
-    toast.className = `fixed top-4 right-4 px-6 py-4 rounded-lg shadow-lg text-white z-50 ${
-        type === 'success' ? 'bg-green-500' :
-        type === 'error' ? 'bg-red-500' : 'bg-blue-500'
-    }`;
-    toast.textContent = message;
-    document.body.appendChild(toast);
-    
-    setTimeout(() => {
-        toast.remove();
-    }, 3000);
-}
+// Close modals on click outside
+document.getElementById('viewModal').addEventListener('click', function(e) {
+    if (e.target === this) closeViewModal();
+});
+document.getElementById('applyModal').addEventListener('click', function(e) {
+    if (e.target === this) closeApplyModal();
+});
 </script>
 {% endblock %}

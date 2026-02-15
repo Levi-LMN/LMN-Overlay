@@ -118,7 +118,7 @@ def process_session(session_id):
 
     # Get processing options
     data = request.get_json() if request.is_json else {}
-    lang = data.get('language', 'eng')
+    lang = data.get('language', 'en')  # Changed from 'eng' to 'en' for Google Vision
     use_multiple_strategies = data.get('use_multiple_strategies', True)
 
     results = []
@@ -131,32 +131,59 @@ def process_session(session_id):
         # Construct full path
         full_path = os.path.join(current_app.root_path, 'static', image.filepath)
 
-        # Perform OCR with enhanced processing
-        if use_multiple_strategies:
-            result = ocr_service.extract_text_with_multiple_strategies(full_path, lang=lang)
-        else:
-            result = ocr_service.extract_text_from_image(full_path, lang=lang, preprocessing='advanced')
+        try:
+            # Perform OCR with enhanced processing
+            if use_multiple_strategies:
+                result = ocr_service.extract_text_with_multiple_strategies(full_path, lang=lang)
+            else:
+                result = ocr_service.extract_text_from_image(full_path, lang=lang, preprocessing='basic')
 
-        if result['success'] and result['text']:
-            image.extracted_text = ocr_service.clean_text(result['text'])
-            image.status = 'completed'
-            combined_text_parts.append(image.extracted_text)
-        else:
+            # Check if result has the expected structure
+            if not isinstance(result, dict):
+                result = {
+                    'success': False,
+                    'text': '',
+                    'confidence': 0,
+                    'error': 'Invalid result format'
+                }
+
+            if result.get('success') and result.get('text'):
+                image.extracted_text = ocr_service.clean_text(result['text'])
+                image.status = 'completed'
+                combined_text_parts.append(image.extracted_text)
+            else:
+                image.status = 'failed'
+                image.error_message = result.get('error', 'No text extracted')
+
+            image.updated_at = datetime.utcnow()
+            db.session.commit()
+
+            results.append({
+                'image_id': image.id,
+                'filename': image.filename,
+                'status': image.status,
+                'text': image.extracted_text,
+                'confidence': result.get('confidence', 0),
+                'strategy': result.get('strategy', 'unknown'),
+                'error': result.get('error', None)
+            })
+
+        except Exception as e:
+            # Handle any unexpected errors
             image.status = 'failed'
-            image.error_message = result.get('error', 'No text extracted')
+            image.error_message = str(e)
+            image.updated_at = datetime.utcnow()
+            db.session.commit()
 
-        image.updated_at = datetime.utcnow()
-        db.session.commit()
-
-        results.append({
-            'image_id': image.id,
-            'filename': image.filename,
-            'status': image.status,
-            'text': image.extracted_text,
-            'confidence': result.get('confidence', 0),
-            'strategy': result.get('strategy', 'unknown'),
-            'psm_used': result.get('psm_used', 'N/A')
-        })
+            results.append({
+                'image_id': image.id,
+                'filename': image.filename,
+                'status': 'failed',
+                'text': '',
+                'confidence': 0,
+                'strategy': 'error',
+                'error': str(e)
+            })
 
     # Combine all text
     session_obj.combined_text = '\n\n'.join(combined_text_parts)
@@ -324,28 +351,50 @@ def reprocess_single_image(image_id):
     image = OCRImage.query.get_or_404(image_id)
     data = request.get_json() if request.is_json else {}
 
-    lang = data.get('language', 'eng')
-    preprocessing = data.get('preprocessing', 'advanced')
+    lang = data.get('language', 'en')
+    preprocessing = data.get('preprocessing', 'basic')
 
     # Construct full path
     full_path = os.path.join(current_app.root_path, 'static', image.filepath)
 
-    # Perform OCR
-    result = ocr_service.extract_text_from_image(full_path, lang=lang, preprocessing=preprocessing)
+    try:
+        # Perform OCR
+        result = ocr_service.extract_text_from_image(full_path, lang=lang, preprocessing=preprocessing)
 
-    if result['success'] and result['text']:
-        image.extracted_text = ocr_service.clean_text(result['text'])
-        image.status = 'completed'
-    else:
+        if not isinstance(result, dict):
+            result = {
+                'success': False,
+                'text': '',
+                'confidence': 0,
+                'error': 'Invalid result format'
+            }
+
+        if result.get('success') and result.get('text'):
+            image.extracted_text = ocr_service.clean_text(result['text'])
+            image.status = 'completed'
+        else:
+            image.status = 'failed'
+            image.error_message = result.get('error', 'No text extracted')
+
+        image.updated_at = datetime.utcnow()
+        db.session.commit()
+
+        return jsonify({
+            'success': result.get('success', False),
+            'text': image.extracted_text,
+            'confidence': result.get('confidence', 0),
+            'message': 'Image reprocessed'
+        })
+
+    except Exception as e:
         image.status = 'failed'
-        image.error_message = result.get('error', 'No text extracted')
+        image.error_message = str(e)
+        image.updated_at = datetime.utcnow()
+        db.session.commit()
 
-    image.updated_at = datetime.utcnow()
-    db.session.commit()
-
-    return jsonify({
-        'success': result['success'],
-        'text': image.extracted_text,
-        'confidence': result.get('confidence', 0),
-        'message': 'Image reprocessed'
-    })
+        return jsonify({
+            'success': False,
+            'text': '',
+            'confidence': 0,
+            'error': str(e)
+        }), 500

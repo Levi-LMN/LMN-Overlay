@@ -21,6 +21,13 @@ class Config:
     GOOGLE_CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID', 'your-google-client-id')
     GOOGLE_CLIENT_SECRET = os.environ.get('GOOGLE_CLIENT_SECRET', 'your-google-client-secret')
 
+    # Google Cloud Vision API
+    # Set this to the path of your service account JSON key file
+    GOOGLE_APPLICATION_CREDENTIALS = os.environ.get(
+        'GOOGLE_APPLICATION_CREDENTIALS',
+        'path/to/your-service-account-key.json'
+    )
+
     # M-Pesa Configuration
     MPESA_CONSUMER_KEY = os.environ.get('MPESA_CONSUMER_KEY')
     MPESA_CONSUMER_SECRET = os.environ.get('MPESA_CONSUMER_SECRET')

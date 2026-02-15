@@ -1,17 +1,29 @@
+# Core Flask dependencies
 Flask==3.0.0
-Flask-SocketIO==5.3.5
 Flask-SQLAlchemy==3.1.1
-Authlib==1.3.0
 Werkzeug==3.0.1
-python-socketio==5.10.0
-python-engineio==4.8.0
-simple-websocket==1.0.0
-requests==2.31.0
-python-dotenv==1.0.0
-gunicorn==21.2.0
 
-# OCR Dependencies - Python 3.12 compatible with numpy 1.x for OpenCV
-pytesseract==0.3.10
-Pillow==10.1.0
-numpy<2.0.0
-opencv-python==4.10.0.84
+# Authentication
+Authlib==1.3.0
+cryptography==41.0.7
+
+# Google Cloud Vision API
+google-cloud-vision==3.7.0
+google-auth==2.26.2
+google-api-core==2.15.0
+
+# Image processing
+Pillow==10.2.0
+
+# Database
+SQLAlchemy==2.0.25
+
+# Environment variables
+python-dotenv==1.0.0
+
+# HTTP requests (for M-Pesa)
+requests==2.31.0
+
+# Optional: For advanced image preprocessing (if needed)
+# opencv-python==4.9.0.80
+# numpy==1.26.3

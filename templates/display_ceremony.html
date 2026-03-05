@@ -773,7 +773,7 @@
 
             mainText.style.fontSize = (s.main_font_size || 48) + 'px';
             mainText.style.color = s.main_text_color || '#FFFFFF';
-            mainText.style.fontFamily = s.font_family || 'Segoe UI, sans-serif';
+            mainText.style.fontFamily = s.main_font_family || s.font_family || 'Segoe UI, sans-serif';
             mainText.style.lineHeight = s.text_line_height || 1.2;
 
             if (s.main_text_bg_color && s.main_text_bg_color !== 'transparent' && s.main_text_bg_opacity > 0) {
@@ -788,7 +788,7 @@
             }
 
             const secondaryFontSize = s.secondary_font_size || 28;
-            const secondaryFontFamily = s.font_family || 'Segoe UI, sans-serif';
+            const secondaryFontFamily = s.secondary_font_family || s.font_family || 'Segoe UI, sans-serif';
             const secondaryLineHeight = s.text_line_height || 1.4;
 
             secondaryText.style.fontSize = secondaryFontSize + 'px';
@@ -834,7 +834,8 @@
 
             companyName.style.fontSize = (s.company_name_font_size || 20) + 'px';
             companyName.style.color = s.company_name_color || '#FFD700';
-            companyName.style.fontFamily = s.font_family || 'Segoe UI, sans-serif';
+            companyName.style.fontFamily = s.company_name_font_family || s.font_family || 'Segoe UI, sans-serif';
+            companyName.style.fontStyle = (s.company_name_italic !== false) ? 'italic' : 'normal';
 
             if (s.company_name_bg_color && s.company_name_bg_color !== 'transparent' && (s.company_name_bg_opacity || 0) > 0) {
                 companyName.style.backgroundColor = hexToRgba(s.company_name_bg_color, s.company_name_bg_opacity || 0);
@@ -850,7 +851,7 @@
             if (s.show_ticker) {
                 tickerContent.style.fontSize = (s.ticker_font_size || 18) + 'px';
                 tickerContent.style.color = s.ticker_text_color || '#FFFFFF';
-                tickerContent.style.fontFamily = s.font_family || 'Segoe UI, sans-serif';
+                tickerContent.style.fontFamily = s.ticker_font_family || s.font_family || 'Segoe UI, sans-serif';
                 tickerContainer.style.backgroundColor = hexToRgba(s.ticker_bg_color || '#0d47a1', s.ticker_bg_opacity || 0.8);
             }
 

@@ -316,6 +316,24 @@
                                    value="{{ settings.main_font_size or 32 }}"
                                    onchange="updateSetting('main_font_size', this.value)">
                         </div>
+                        <div class="form-group per-section-font" id="main_font_family_group" style="display: {% if settings.main_font_family or settings.secondary_font_family or settings.ticker_font_family or settings.company_name_font_family %}block{% else %}none{% endif %};">
+                            <label class="form-label">Font Family</label>
+                            <select id="main_font_family" class="form-input" onchange="updateSetting('main_font_family', this.value)">
+                                <option value="" {% if not settings.main_font_family %}selected{% endif %}>— Same as global —</option>
+                                                                <option value="Arial, sans-serif" {% if settings.main_font_family == "Arial, sans-serif" %}selected{% endif %}>Arial</option>
+                                <option value="'Times New Roman', serif" {% if settings.main_font_family == "'Times New Roman', serif" %}selected{% endif %}>Times New Roman</option>
+                                <option value="'Georgia', serif" {% if settings.main_font_family == "'Georgia', serif" %}selected{% endif %}>Georgia</option>
+                                <option value="'Courier New', monospace" {% if settings.main_font_family == "'Courier New', monospace" %}selected{% endif %}>Courier New</option>
+                                <option value="'Verdana', sans-serif" {% if settings.main_font_family == "'Verdana', sans-serif" %}selected{% endif %}>Verdana</option>
+                                <option value="'Trebuchet MS', sans-serif" {% if settings.main_font_family == "'Trebuchet MS', sans-serif" %}selected{% endif %}>Trebuchet MS</option>
+                                <option value="'Palatino Linotype', serif" {% if settings.main_font_family == "'Palatino Linotype', serif" %}selected{% endif %}>Palatino</option>
+                                <option value="'Garamond', serif" {% if settings.main_font_family == "'Garamond', serif" %}selected{% endif %}>Garamond</option>
+                                <option value="'Gill Sans', sans-serif" {% if settings.main_font_family == "'Gill Sans', sans-serif" %}selected{% endif %}>Gill Sans</option>
+                                <option value="'Impact', sans-serif" {% if settings.main_font_family == "'Impact', sans-serif" %}selected{% endif %}>Impact</option>
+                                <option value="'Lucida Console', monospace" {% if settings.main_font_family == "'Lucida Console', monospace" %}selected{% endif %}>Lucida Console</option>
+                                <option value="'Tahoma', sans-serif" {% if settings.main_font_family == "'Tahoma', sans-serif" %}selected{% endif %}>Tahoma</option>
+                            </select>
+                        </div>
                     </div>
 
                     <!-- Secondary Text -->
@@ -332,6 +350,24 @@
                             <input type="number" id="secondary_font_size" class="form-input"
                                    value="{{ settings.secondary_font_size or 24 }}"
                                    onchange="updateSetting('secondary_font_size', this.value)">
+                        </div>
+                        <div class="form-group per-section-font" id="secondary_font_family_group" style="display: {% if settings.main_font_family or settings.secondary_font_family or settings.ticker_font_family or settings.company_name_font_family %}block{% else %}none{% endif %};">
+                            <label class="form-label">Font Family</label>
+                            <select id="secondary_font_family" class="form-input" onchange="updateSetting('secondary_font_family', this.value)">
+                                <option value="" {% if not settings.secondary_font_family %}selected{% endif %}>— Same as global —</option>
+                                                                <option value="Arial, sans-serif" {% if settings.secondary_font_family == "Arial, sans-serif" %}selected{% endif %}>Arial</option>
+                                <option value="'Times New Roman', serif" {% if settings.secondary_font_family == "'Times New Roman', serif" %}selected{% endif %}>Times New Roman</option>
+                                <option value="'Georgia', serif" {% if settings.secondary_font_family == "'Georgia', serif" %}selected{% endif %}>Georgia</option>
+                                <option value="'Courier New', monospace" {% if settings.secondary_font_family == "'Courier New', monospace" %}selected{% endif %}>Courier New</option>
+                                <option value="'Verdana', sans-serif" {% if settings.secondary_font_family == "'Verdana', sans-serif" %}selected{% endif %}>Verdana</option>
+                                <option value="'Trebuchet MS', sans-serif" {% if settings.secondary_font_family == "'Trebuchet MS', sans-serif" %}selected{% endif %}>Trebuchet MS</option>
+                                <option value="'Palatino Linotype', serif" {% if settings.secondary_font_family == "'Palatino Linotype', serif" %}selected{% endif %}>Palatino</option>
+                                <option value="'Garamond', serif" {% if settings.secondary_font_family == "'Garamond', serif" %}selected{% endif %}>Garamond</option>
+                                <option value="'Gill Sans', sans-serif" {% if settings.secondary_font_family == "'Gill Sans', sans-serif" %}selected{% endif %}>Gill Sans</option>
+                                <option value="'Impact', sans-serif" {% if settings.secondary_font_family == "'Impact', sans-serif" %}selected{% endif %}>Impact</option>
+                                <option value="'Lucida Console', monospace" {% if settings.secondary_font_family == "'Lucida Console', monospace" %}selected{% endif %}>Lucida Console</option>
+                                <option value="'Tahoma', sans-serif" {% if settings.secondary_font_family == "'Tahoma', sans-serif" %}selected{% endif %}>Tahoma</option>
+                            </select>
                         </div>
 
                         <!-- Rotation Settings -->
@@ -409,6 +445,24 @@
                                    value="{{ settings.ticker_font_size or 18 }}"
                                    onchange="updateSetting('ticker_font_size', this.value)">
                         </div>
+                        <div class="form-group per-section-font" id="ticker_font_family_group" style="display: {% if settings.main_font_family or settings.secondary_font_family or settings.ticker_font_family or settings.company_name_font_family %}block{% else %}none{% endif %};">
+                            <label class="form-label">Font Family</label>
+                            <select id="ticker_font_family" class="form-input" onchange="updateSetting('ticker_font_family', this.value)">
+                                <option value="" {% if not settings.ticker_font_family %}selected{% endif %}>— Same as global —</option>
+                                                                <option value="Arial, sans-serif" {% if settings.ticker_font_family == "Arial, sans-serif" %}selected{% endif %}>Arial</option>
+                                <option value="'Times New Roman', serif" {% if settings.ticker_font_family == "'Times New Roman', serif" %}selected{% endif %}>Times New Roman</option>
+                                <option value="'Georgia', serif" {% if settings.ticker_font_family == "'Georgia', serif" %}selected{% endif %}>Georgia</option>
+                                <option value="'Courier New', monospace" {% if settings.ticker_font_family == "'Courier New', monospace" %}selected{% endif %}>Courier New</option>
+                                <option value="'Verdana', sans-serif" {% if settings.ticker_font_family == "'Verdana', sans-serif" %}selected{% endif %}>Verdana</option>
+                                <option value="'Trebuchet MS', sans-serif" {% if settings.ticker_font_family == "'Trebuchet MS', sans-serif" %}selected{% endif %}>Trebuchet MS</option>
+                                <option value="'Palatino Linotype', serif" {% if settings.ticker_font_family == "'Palatino Linotype', serif" %}selected{% endif %}>Palatino</option>
+                                <option value="'Garamond', serif" {% if settings.ticker_font_family == "'Garamond', serif" %}selected{% endif %}>Garamond</option>
+                                <option value="'Gill Sans', sans-serif" {% if settings.ticker_font_family == "'Gill Sans', sans-serif" %}selected{% endif %}>Gill Sans</option>
+                                <option value="'Impact', sans-serif" {% if settings.ticker_font_family == "'Impact', sans-serif" %}selected{% endif %}>Impact</option>
+                                <option value="'Lucida Console', monospace" {% if settings.ticker_font_family == "'Lucida Console', monospace" %}selected{% endif %}>Lucida Console</option>
+                                <option value="'Tahoma', sans-serif" {% if settings.ticker_font_family == "'Tahoma', sans-serif" %}selected{% endif %}>Tahoma</option>
+                            </select>
+                        </div>
                         <div class="form-group">
                             <label class="form-label">Scroll Speed (1-100)</label>
                             <input type="range" min="10" max="100" id="ticker_speed" class="w-full"
@@ -432,6 +486,31 @@
                             <input type="number" id="company_name_font_size" class="form-input"
                                    value="{{ settings.company_name_font_size or 18 }}"
                                    onchange="updateSetting('company_name_font_size', this.value)">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label flex items-center gap-2">
+                                Italic Style
+                                <div class="toggle-checkbox {% if settings.company_name_italic is not false %}checked{% endif %}"
+                                     onclick="toggleBoolean(this, 'company_name_italic')"></div>
+                            </label>
+                        </div>
+                        <div class="form-group per-section-font" id="company_name_font_family_group" style="display: {% if settings.main_font_family or settings.secondary_font_family or settings.ticker_font_family or settings.company_name_font_family %}block{% else %}none{% endif %};">
+                            <label class="form-label">Font Family</label>
+                            <select id="company_name_font_family" class="form-input" onchange="updateSetting('company_name_font_family', this.value)">
+                                <option value="" {% if not settings.company_name_font_family %}selected{% endif %}>— Same as global —</option>
+                                                                <option value="Arial, sans-serif" {% if settings.company_name_font_family == "Arial, sans-serif" %}selected{% endif %}>Arial</option>
+                                <option value="'Times New Roman', serif" {% if settings.company_name_font_family == "'Times New Roman', serif" %}selected{% endif %}>Times New Roman</option>
+                                <option value="'Georgia', serif" {% if settings.company_name_font_family == "'Georgia', serif" %}selected{% endif %}>Georgia</option>
+                                <option value="'Courier New', monospace" {% if settings.company_name_font_family == "'Courier New', monospace" %}selected{% endif %}>Courier New</option>
+                                <option value="'Verdana', sans-serif" {% if settings.company_name_font_family == "'Verdana', sans-serif" %}selected{% endif %}>Verdana</option>
+                                <option value="'Trebuchet MS', sans-serif" {% if settings.company_name_font_family == "'Trebuchet MS', sans-serif" %}selected{% endif %}>Trebuchet MS</option>
+                                <option value="'Palatino Linotype', serif" {% if settings.company_name_font_family == "'Palatino Linotype', serif" %}selected{% endif %}>Palatino</option>
+                                <option value="'Garamond', serif" {% if settings.company_name_font_family == "'Garamond', serif" %}selected{% endif %}>Garamond</option>
+                                <option value="'Gill Sans', sans-serif" {% if settings.company_name_font_family == "'Gill Sans', sans-serif" %}selected{% endif %}>Gill Sans</option>
+                                <option value="'Impact', sans-serif" {% if settings.company_name_font_family == "'Impact', sans-serif" %}selected{% endif %}>Impact</option>
+                                <option value="'Lucida Console', monospace" {% if settings.company_name_font_family == "'Lucida Console', monospace" %}selected{% endif %}>Lucida Console</option>
+                                <option value="'Tahoma', sans-serif" {% if settings.company_name_font_family == "'Tahoma', sans-serif" %}selected{% endif %}>Tahoma</option>
+                            </select>
                         </div>
                     </div>
                 </div>
@@ -609,15 +688,49 @@
                     <div class="settings-section">
                         <h3><i class="fas fa-font mr-2"></i>Typography</h3>
 
-                        <div class="form-group">
-                            <label class="form-label">Font Family</label>
-                            <select id="font_family" class="form-input" onchange="updateSetting('font_family', this.value)">
-                                <option value="Arial, sans-serif" {% if settings.font_family == 'Arial, sans-serif' %}selected{% endif %}>Arial</option>
-                                <option value="'Times New Roman', serif" {% if settings.font_family == "'Times New Roman', serif" %}selected{% endif %}>Times New Roman</option>
-                                <option value="'Georgia', serif" {% if settings.font_family == "'Georgia', serif" %}selected{% endif %}>Georgia</option>
-                                <option value="'Courier New', monospace" {% if settings.font_family == "'Courier New', monospace" %}selected{% endif %}>Courier New</option>
-                                <option value="'Verdana', sans-serif" {% if settings.font_family == "'Verdana', sans-serif" %}selected{% endif %}>Verdana</option>
-                                <option value="'Trebuchet MS', sans-serif" {% if settings.font_family == "'Trebuchet MS', sans-serif" %}selected{% endif %}>Trebuchet MS</option>
+                        <!-- Apply-to-all toggle -->
+                        <div class="flex items-center justify-between mb-4 p-3 bg-indigo-50 rounded-lg border border-indigo-100">
+                            <div>
+                                <p class="text-sm font-semibold text-indigo-800">Apply font to all sections</p>
+                                <p class="text-xs text-indigo-500 mt-0.5">Turn off to set individual fonts per section</p>
+                            </div>
+                            <div class="toggle-checkbox {% if not (settings.main_font_family or settings.secondary_font_family or settings.ticker_font_family or settings.company_name_font_family) %}checked{% endif %}"
+                                 id="apply_all_fonts_toggle"
+                                 onclick="toggleApplyAllFonts(this)"></div>
+                        </div>
+
+                        <!-- Hint shown when individual mode is active -->
+                        <div id="individual_font_hint"
+                             style="display: {% if settings.main_font_family or settings.secondary_font_family or settings.ticker_font_family or settings.company_name_font_family %}block{% else %}none{% endif %};"
+                             class="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg flex items-start gap-2">
+                            <i class="fas fa-arrow-left text-amber-500 mt-0.5 flex-shrink-0"></i>
+                            <div>
+                                <p class="text-sm font-medium text-amber-800">Individual font controls are active</p>
+                                <p class="text-xs text-amber-600 mt-0.5">Go to the <button onclick="switchTab('content', document.querySelector('[data-tab=content]'))" class="underline font-semibold hover:text-amber-800">Content tab</button> to set a font per section.</p>
+                            </div>
+                        </div>
+
+                        <!-- Global font (visible when apply-to-all is ON) -->
+                        <div id="global_font_group" class="form-group" style="display: {% if not (settings.main_font_family or settings.secondary_font_family or settings.ticker_font_family or settings.company_name_font_family) %}block{% else %}none{% endif %};">
+                            <label class="form-label">Global Font Family</label>
+                            <select id="font_family" class="form-input" onchange="applyFontToAll(this.value)">
+                                {% set fonts = [
+                                    ('Arial, sans-serif', 'Arial'),
+                                    ("'Times New Roman', serif", 'Times New Roman'),
+                                    ("'Georgia', serif", 'Georgia'),
+                                    ("'Courier New', monospace", 'Courier New'),
+                                    ("'Verdana', sans-serif", 'Verdana'),
+                                    ("'Trebuchet MS', sans-serif", 'Trebuchet MS'),
+                                    ("'Palatino Linotype', serif", 'Palatino'),
+                                    ("'Garamond', serif", 'Garamond'),
+                                    ("'Gill Sans', sans-serif", 'Gill Sans'),
+                                    ("'Impact', sans-serif", 'Impact'),
+                                    ("'Lucida Console', monospace", 'Lucida Console'),
+                                    ("'Tahoma', sans-serif", 'Tahoma')
+                                ] %}
+                                {% for val, label in fonts %}
+                                <option value="{{ val }}" {% if settings.font_family == val %}selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
                             </select>
                         </div>
 
@@ -1131,6 +1244,18 @@
                         toggleText.textContent = 'Show Preview';
                     }
                 }
+
+                // Restore font apply-to-all toggle
+                // state.applyAllFonts === false means individual mode is active
+                if (state.applyAllFonts === false) {
+                    const toggleEl = document.getElementById('apply_all_fonts_toggle');
+                    if (toggleEl && toggleEl.classList.contains('checked')) {
+                        toggleEl.classList.remove('checked');
+                    }
+                    document.getElementById('global_font_group').style.display = 'none';
+                    document.getElementById('individual_font_hint').style.display = 'block';
+                    PER_SECTION_FONT_GROUPS.forEach(id => document.getElementById(id).style.display = 'block');
+                }
             }
         } catch (error) {
             console.error('Error loading saved state:', error);
@@ -1143,10 +1268,12 @@
             const activeTabBtn = document.querySelector('.tab-button.active');
             const activeTab = activeTabBtn ? activeTabBtn.dataset.tab : 'content';
             const previewCollapsed = document.getElementById('preview-frame-container')?.classList.contains('collapsed') || false;
+            const applyAllFonts = document.getElementById('apply_all_fonts_toggle')?.classList.contains('checked') || false;
 
             const state = {
                 activeTab: activeTab,
                 previewCollapsed: previewCollapsed,
+                applyAllFonts: applyAllFonts,
                 timestamp: Date.now()
             };
 
@@ -1246,6 +1373,59 @@
 
         // Save state when tab changes
         saveState();
+    }
+
+    // Font apply-to-all toggle
+    const PER_SECTION_FONT_FIELDS = [
+        'main_font_family', 'secondary_font_family',
+        'ticker_font_family', 'company_name_font_family'
+    ];
+    const PER_SECTION_FONT_GROUPS = [
+        'main_font_family_group', 'secondary_font_family_group',
+        'ticker_font_family_group', 'company_name_font_family_group'
+    ];
+
+    function toggleApplyAllFonts(toggleEl) {
+        const willBeChecked = !toggleEl.classList.contains('checked');
+        toggleEl.classList.toggle('checked');
+
+        const hint = document.getElementById('individual_font_hint');
+
+        if (willBeChecked) {
+            // Apply-to-all ON → show global selector, hide individual selectors + hint
+            document.getElementById('global_font_group').style.display = 'block';
+            hint.style.display = 'none';
+            PER_SECTION_FONT_GROUPS.forEach(id => document.getElementById(id).style.display = 'none');
+
+            // Clear all per-section fonts so display falls back to global
+            const saves = PER_SECTION_FONT_FIELDS.map(field => {
+                const formData = new FormData();
+                formData.append(field, '');
+                return fetch(`/api/settings/${category}`, { method: 'POST', body: formData });
+            });
+            Promise.all(saves).then(() => showToast('All sections using global font', 'success'));
+        } else {
+            // Apply-to-all OFF → hide global selector, show individual selectors + hint
+            document.getElementById('global_font_group').style.display = 'none';
+            hint.style.display = 'block';
+            PER_SECTION_FONT_GROUPS.forEach(id => document.getElementById(id).style.display = 'block');
+            showToast('Individual font controls enabled — see Content tab', 'info');
+            refreshPreview();
+        }
+
+        saveState();
+    }
+
+    function applyFontToAll(fontValue) {
+        // Save global font_family AND clear all per-section overrides
+        const formData = new FormData();
+        formData.append('font_family', fontValue);
+        PER_SECTION_FONT_FIELDS.forEach(f => formData.append(f, ''));
+
+        fetch(`/api/settings/${category}`, { method: 'POST', body: formData })
+            .then(r => r.json())
+            .then(d => { if (d.success) showToast('Font applied to all sections', 'success'); })
+            .catch(() => showToast('Failed to update font', 'error'));
     }
 
     function updateSetting(field, value) {

@@ -189,6 +189,15 @@ class OverlaySettings(db.Model):
 
     border_radius = db.Column(db.Integer, default=10)
     font_family = db.Column(db.String(100), default='Arial, sans-serif')
+
+    # Per-section font families (null = use global font_family)
+    main_font_family         = db.Column(db.String(100), default=None)
+    secondary_font_family    = db.Column(db.String(100), default=None)
+    ticker_font_family       = db.Column(db.String(100), default=None)
+    company_name_font_family = db.Column(db.String(100), default=None)
+
+    company_name_italic = db.Column(db.Boolean, default=True)
+
     ticker_speed = db.Column(db.Integer, default=50)
 
     # Logo Settings
@@ -297,7 +306,13 @@ class OverlaySettings(db.Model):
                 'image_border_width': 3,
                 'image_border_color': '#FFFFFF',
                 'image_position': 'left',
-                'image_fit': 'cover'
+                'image_fit': 'cover',
+                # Per-section fonts (None = use global)
+                'main_font_family': None,
+                'secondary_font_family': None,
+                'ticker_font_family': None,
+                'company_name_font_family': None,
+                'company_name_italic': True
             },
             'wedding': {
                 'overlay_bg_color': '#FFFFFF',
@@ -339,7 +354,13 @@ class OverlaySettings(db.Model):
                 'image_border_width': 3,
                 'image_border_color': '#D4AF37',
                 'image_position': 'right',
-                'image_fit': 'cover'
+                'image_fit': 'cover',
+                # Per-section fonts (None = use global)
+                'main_font_family': None,
+                'secondary_font_family': None,
+                'ticker_font_family': None,
+                'company_name_font_family': None,
+                'company_name_italic': True
             },
             'ceremony': {
                 'overlay_bg_color': '#1a237e',
@@ -381,7 +402,13 @@ class OverlaySettings(db.Model):
                 'image_border_width': 2,
                 'image_border_color': '#FFD700',
                 'image_position': 'top',
-                'image_fit': 'cover'
+                'image_fit': 'cover',
+                # Per-section fonts (None = use global)
+                'main_font_family': None,
+                'secondary_font_family': None,
+                'ticker_font_family': None,
+                'company_name_font_family': None,
+                'company_name_italic': True
             }
         }
         return defaults.get(category, defaults['funeral'])

@@ -27,12 +27,21 @@ def manage_settings(category):
             'secondary_transition_type', 'vertical_position', 'horizontal_position',
             'container_width', 'container_height', 'text_scale_mode',
             'logo_display_animation', 'image_display_animation',
-            'image_shape', 'image_position', 'image_fit'
+            'image_shape', 'image_position', 'image_fit',
+            'main_font_family', 'secondary_font_family',
+            'ticker_font_family', 'company_name_font_family'
         ]
 
         for field in fields:
             if field in data:
                 setattr(settings, field, data[field])
+
+        # Per-section fonts: treat empty string as NULL (= use global font)
+        for font_field in ['main_font_family', 'secondary_font_family',
+                           'ticker_font_family', 'company_name_font_family']:
+            if font_field in data:
+                val = data[font_field].strip()
+                setattr(settings, font_field, val if val else None)
 
         # Color fields - Overlay
         color_fields = [
@@ -110,7 +119,8 @@ def manage_settings(category):
             ('logo_shadow', 'logo_shadow'),
             ('show_ticker', 'show_ticker'),
             ('logo_display_animation_enabled', 'logo_display_animation_enabled'),
-            ('image_display_animation_enabled', 'image_display_animation_enabled')
+            ('image_display_animation_enabled', 'image_display_animation_enabled'),
+            ('company_name_italic', 'company_name_italic')
         ]
 
         for field_name, db_field in boolean_fields:
@@ -321,6 +331,11 @@ def settings_to_dict(settings):
 
         'border_radius': settings.border_radius,
         'font_family': settings.font_family,
+        'main_font_family': settings.main_font_family,
+        'secondary_font_family': settings.secondary_font_family,
+        'ticker_font_family': settings.ticker_font_family,
+        'company_name_font_family': settings.company_name_font_family,
+        'company_name_italic': settings.company_name_italic if settings.company_name_italic is not None else True,
         'ticker_speed': settings.ticker_speed,
 
         # Logo Settings

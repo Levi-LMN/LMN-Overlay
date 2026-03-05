@@ -1,82 +1,133 @@
-{% extends "base.html" %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign In — {{ company_name }}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/favicon.png') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .field:focus { outline: none; border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,0.1); }
+    </style>
+</head>
+<body class="min-h-screen flex" style="background:#0f1623;">
 
-{% block title %}Login - {{ company_name }}{% endblock %}
+    <!-- Left -->
+    <div class="hidden lg:flex flex-col justify-between px-16 py-14 flex-1">
+        <img src="{{ url_for('static', filename='images/favicon.png') }}" alt="{{ company_name }}" class="h-9 w-auto object-contain object-left">
 
-{% block content %}
-<div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 py-12 px-4 sm:px-6 lg:px-8">
-    <div class="max-w-md w-full space-y-8 bg-white rounded-2xl shadow-2xl p-10">
         <div>
-            <h2 class="mt-6 text-center text-4xl font-extrabold text-gray-900">
-                {{ company_name }}
-            </h2>
-            <p class="mt-2 text-center text-sm text-gray-600">
-                Overlay Control System
+            <h1 class="text-5xl font-extrabold text-white leading-[1.1] mb-5 tracking-tight">
+                Control your<br>stream overlays<br>
+                <span style="color:#f59e0b;">from one place.</span>
+            </h1>
+            <p class="text-gray-400 text-base leading-relaxed max-w-sm mb-10">
+                Real-time overlays, instant updates, and seamless broadcast control for {{ company_name }}.
+            </p>
+            <div class="flex gap-4">
+                <div class="rounded-2xl px-6 py-4 flex-1" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);">
+                    <p class="text-2xl font-bold mb-0.5" style="color:#f59e0b;">3×</p>
+                    <p class="text-xs text-gray-400">Overlay categories</p>
+                </div>
+                <div class="rounded-2xl px-6 py-4 flex-1" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);">
+                    <p class="text-2xl font-bold mb-0.5" style="color:#f59e0b;">Live</p>
+                    <p class="text-xs text-gray-400">Real-time updates</p>
+                </div>
+            </div>
+        </div>
+
+        <a href="https://lmn.zearom.com" target="_blank"
+           class="flex items-center gap-2 text-xs text-gray-500 hover:text-gray-300 transition w-fit">
+            <i class="fas fa-layer-group"></i>
+            Powered by <span class="text-gray-300 font-medium">LMN Overlay</span>
+        </a>
+    </div>
+
+    <!-- Right -->
+    <div class="flex flex-col items-center justify-center w-full lg:w-auto px-6 lg:px-16 py-10">
+        <div class="bg-white rounded-2xl p-8 w-full max-w-sm shadow-2xl">
+
+            <h2 class="text-2xl font-bold text-gray-900 mb-0.5">Welcome back</h2>
+            <p class="text-gray-400 text-sm mb-6">Sign in to {{ company_name }}</p>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}{% for category, message in messages %}
+                <div class="flex items-center gap-2 text-xs px-3 py-2.5 rounded-lg mb-4
+                    {% if category == 'error' %}bg-red-50 text-red-600{% else %}bg-green-50 text-green-700{% endif %}">
+                    <i class="fas {% if category == 'error' %}fa-exclamation-circle{% else %}fa-check-circle{% endif %}"></i>
+                    {{ message }}
+                </div>
+                {% endfor %}{% endif %}
+            {% endwith %}
+
+            <form method="POST" action="{{ url_for('auth.login') }}" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-medium text-gray-600 mb-1.5">Work email</label>
+                    <div class="relative">
+                        <i class="fas fa-envelope absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-300 text-xs"></i>
+                        <input type="email" name="email" placeholder="you@company.com" required
+                            class="field w-full pl-9 pr-3 py-2.5 border border-gray-200 rounded-xl text-sm bg-gray-50 text-gray-900 placeholder-gray-300 transition">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-gray-600 mb-1.5">Password</label>
+                    <div class="relative">
+                        <i class="fas fa-lock absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-300 text-xs"></i>
+                        <input type="password" name="password" id="pw" placeholder="••••••••" required
+                            class="field w-full pl-9 pr-9 py-2.5 border border-gray-200 rounded-xl text-sm bg-gray-50 text-gray-900 placeholder-gray-300 transition">
+                        <button type="button" onclick="togglePw()" class="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-300 hover:text-gray-500 transition">
+                            <i class="fas fa-eye text-xs" id="pw-eye"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between pt-1">
+                    <label class="flex items-center gap-2 text-xs text-gray-400 cursor-pointer">
+                        <input type="checkbox" name="remember" class="accent-indigo-500 w-3.5 h-3.5"> Remember me
+                    </label>
+                    <a href="#" class="text-xs font-semibold" style="color:#f59e0b;">Forgot password?</a>
+                </div>
+
+                <button type="submit"
+                    class="w-full py-3 bg-gray-900 text-white text-sm font-semibold rounded-xl hover:bg-gray-800 transition flex items-center justify-center gap-2 mt-1">
+                    Sign in <i class="fas fa-arrow-right text-xs"></i>
+                </button>
+            </form>
+
+            <div class="flex items-center gap-3 my-5">
+                <div class="flex-1 h-px bg-gray-100"></div>
+                <span class="text-xs text-gray-300">or</span>
+                <div class="flex-1 h-px bg-gray-100"></div>
+            </div>
+
+            <a href="{{ url_for('auth.google_login') }}"
+                class="w-full flex items-center justify-center gap-2.5 py-2.5 border border-gray-200 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-50 transition">
+                <svg width="15" height="15" viewBox="0 0 18 18">
+                    <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908C16.658 14.013 17.64 11.705 17.64 9.2z" fill="#4285F4"/>
+                    <path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.909-2.259c-.806.54-1.836.86-3.047.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z" fill="#34A853"/>
+                    <path d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/>
+                    <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 6.29C4.672 4.163 6.656 3.58 9 3.58z" fill="#EA4335"/>
+                </svg>
+                Continue with Google
+            </a>
+
+            <!-- Mobile powered by -->
+            <p class="lg:hidden text-center text-xs text-gray-300 mt-6">
+                Powered by <a href="https://lmn.zearom.com" target="_blank" class="font-medium hover:underline">LMN Overlay</a>
             </p>
         </div>
-        
-        <form class="mt-8 space-y-6" method="POST" action="{{ url_for('auth.login') }}">
-            <div class="rounded-md shadow-sm space-y-4">
-                <div>
-                    <label for="email" class="block text-sm font-medium text-gray-700 mb-2">
-                        Email Address
-                    </label>
-                    <div class="relative">
-                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <i class="fas fa-envelope text-gray-400"></i>
-                        </div>
-                        <input id="email" name="email" type="email" required
-                               class="appearance-none relative block w-full pl-10 px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                               placeholder="you@example.com">
-                    </div>
-                </div>
-                
-                <div>
-                    <label for="password" class="block text-sm font-medium text-gray-700 mb-2">
-                        Password
-                    </label>
-                    <div class="relative">
-                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <i class="fas fa-lock text-gray-400"></i>
-                        </div>
-                        <input id="password" name="password" type="password" required
-                               class="appearance-none relative block w-full pl-10 px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                               placeholder="••••••••">
-                    </div>
-                </div>
-            </div>
-
-            <div>
-                <button type="submit"
-                        class="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150">
-                    <span class="absolute left-0 inset-y-0 flex items-center pl-3">
-                        <i class="fas fa-sign-in-alt text-indigo-500 group-hover:text-indigo-400"></i>
-                    </span>
-                    Sign In
-                </button>
-            </div>
-
-            <div class="relative">
-                <div class="absolute inset-0 flex items-center">
-                    <div class="w-full border-t border-gray-300"></div>
-                </div>
-                <div class="relative flex justify-center text-sm">
-                    <span class="px-2 bg-white text-gray-500">Or continue with</span>
-                </div>
-            </div>
-
-            <div>
-                <a href="{{ url_for('auth.google_login') }}"
-                   class="w-full inline-flex justify-center py-3 px-4 border border-gray-300 rounded-lg shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150">
-                    <svg class="w-5 h-5 mr-2" viewBox="0 0 24 24">
-                        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-                    </svg>
-                    Sign in with Google
-                </a>
-            </div>
-        </form>
     </div>
-</div>
-{% endblock %}
+
+    <script>
+        function togglePw() {
+            const f = document.getElementById('pw'), e = document.getElementById('pw-eye');
+            f.type = f.type === 'password' ? 'text' : 'password';
+            e.classList.toggle('fa-eye'); e.classList.toggle('fa-eye-slash');
+        }
+    </script>
+</body>
+</html>

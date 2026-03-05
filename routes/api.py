@@ -26,7 +26,8 @@ def manage_settings(category):
             'font_family', 'layout_style',
             'secondary_transition_type', 'vertical_position', 'horizontal_position',
             'container_width', 'container_height', 'text_scale_mode',
-            'logo_display_animation', 'image_display_animation'
+            'logo_display_animation', 'image_display_animation',
+            'image_shape', 'image_position', 'image_fit'
         ]
 
         for field in fields:
@@ -41,7 +42,8 @@ def manage_settings(category):
             'company_name_color', 'company_name_bg_color',
             'footer_text_color', 'footer_bg_color',
             'accent_color', 'border_color',
-            'bg_color', 'text_color'  # Legacy fields
+            'bg_color', 'text_color',
+            'image_border_color'
         ]
 
         for field in color_fields:
@@ -56,7 +58,8 @@ def manage_settings(category):
             'custom_top', 'custom_bottom', 'custom_left', 'custom_right',
             'custom_width', 'custom_height', 'container_max_width',
             'container_min_width', 'container_padding', 'text_max_lines',
-            'border_width', 'logo_border_radius'
+            'border_width', 'logo_border_radius',
+            'image_size', 'image_border_width'
         ]
 
         for field in int_fields:
@@ -325,6 +328,14 @@ def settings_to_dict(settings):
         'logo_opacity': settings.logo_opacity,
         'logo_border_radius': settings.logo_border_radius,
         'logo_shadow': settings.logo_shadow,
+
+        # Photo / Category Image Container Settings
+        'image_size': settings.image_size,
+        'image_shape': settings.image_shape,
+        'image_border_width': settings.image_border_width,
+        'image_border_color': settings.image_border_color,
+        'image_position': settings.image_position,
+        'image_fit': settings.image_fit,
 
         'layout_style': settings.layout_style,
         'show_decorative_elements': settings.show_decorative_elements,

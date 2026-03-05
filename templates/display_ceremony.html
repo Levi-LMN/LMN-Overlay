@@ -69,17 +69,15 @@
             height: 100%;
         }
 
-        /* Category Image - AT THE TOP CENTER */
+        /* Category Image - absolutely positioned relative to overlay-inner */
         #category-image-container {
-            position: relative;
-            width: 100%;
+            position: absolute;
             display: none;
-            justify-content: center;
-            margin-bottom: 20px;
+            z-index: 4;
         }
 
         #category-image-container.visible {
-            display: flex;
+            display: block;
         }
 
         #category-image {
@@ -88,9 +86,8 @@
             height: 120px;
             object-fit: cover;
             border-radius: 12px;
-            padding: 6px;
-            background: linear-gradient(135deg, var(--image-border-color-1, #FFD700), var(--image-border-color-2, #FFA500));
-            border: 2px solid rgba(255, 255, 255, 0.6);
+            padding: 0;
+            border: 2px solid rgba(255, 215, 0, 0.6);
             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2), 0 3px 10px rgba(0, 0, 0, 0.15);
             transition: all 0.3s ease;
         }
@@ -681,6 +678,62 @@
             const containerPadding = s.container_padding || 25;
             overlayInner.style.padding = containerPadding + 'px';
 
+            // --- Dynamic image container positioning (unified approach) ---
+            const imageSize = s.image_size || 120;
+            const imagePos = s.image_position || 'top';
+            const halfSize = Math.round(imageSize / 2);
+            const gap = 16;
+
+            // FULL RESET on every call — prevents stale styles from previous position
+            categoryImageContainer.style.position = 'absolute';
+            categoryImageContainer.style.left   = 'auto';
+            categoryImageContainer.style.right  = 'auto';
+            categoryImageContainer.style.top    = 'auto';
+            categoryImageContainer.style.bottom = 'auto';
+            categoryImageContainer.style.transform = 'none';
+            overlayInner.style.flexDirection = 'column'; // ceremony default is column
+
+            // Reset text-content padding to base, override per-mode below
+            const textContentDiv = document.getElementById('text-content');
+            textContentDiv.style.paddingTop    = containerPadding + 'px';
+            textContentDiv.style.paddingBottom = containerPadding + 'px';
+            textContentDiv.style.paddingLeft   = containerPadding + 'px';
+            textContentDiv.style.paddingRight  = containerPadding + 'px';
+
+            if (imagePos === 'left') {
+                categoryImageContainer.style.left      = -halfSize + 'px';
+                categoryImageContainer.style.top       = '50%';
+                categoryImageContainer.style.transform = 'translateY(-50%)';
+                overlayInner.style.flexDirection = 'row';
+                textContentDiv.style.paddingLeft = (halfSize + gap) + 'px';
+            } else if (imagePos === 'right') {
+                categoryImageContainer.style.right     = -halfSize + 'px';
+                categoryImageContainer.style.top       = '50%';
+                categoryImageContainer.style.transform = 'translateY(-50%)';
+                overlayInner.style.flexDirection = 'row';
+                textContentDiv.style.paddingRight = (halfSize + gap) + 'px';
+            } else if (imagePos === 'top') {
+                categoryImageContainer.style.top       = -halfSize + 'px';
+                categoryImageContainer.style.left      = '50%';
+                categoryImageContainer.style.transform = 'translateX(-50%)';
+                textContentDiv.style.paddingTop = (halfSize + gap) + 'px';
+            } else if (imagePos === 'bottom') {
+                categoryImageContainer.style.bottom    = -halfSize + 'px';
+                categoryImageContainer.style.left      = '50%';
+                categoryImageContainer.style.transform = 'translateX(-50%)';
+                textContentDiv.style.paddingBottom = (halfSize + gap) + 'px';
+            } else if (imagePos === 'top-left') {
+                categoryImageContainer.style.top  = -halfSize + 'px';
+                categoryImageContainer.style.left = -halfSize + 'px';
+                textContentDiv.style.paddingTop  = (halfSize + gap) + 'px';
+                textContentDiv.style.paddingLeft = (halfSize + gap) + 'px';
+            } else if (imagePos === 'top-right') {
+                categoryImageContainer.style.top   = -halfSize + 'px';
+                categoryImageContainer.style.right = -halfSize + 'px';
+                textContentDiv.style.paddingTop   = (halfSize + gap) + 'px';
+                textContentDiv.style.paddingRight = (halfSize + gap) + 'px';
+            }
+
             if (s.logo_size) {
                 companyLogo.style.width = s.logo_size + 'px';
                 companyLogo.style.height = 'auto';
@@ -799,6 +852,29 @@
                 tickerContent.style.color = s.ticker_text_color || '#FFFFFF';
                 tickerContent.style.fontFamily = s.font_family || 'Segoe UI, sans-serif';
                 tickerContainer.style.backgroundColor = hexToRgba(s.ticker_bg_color || '#0d47a1', s.ticker_bg_opacity || 0.8);
+            }
+
+            // --- Photo / Category Image container styling ---
+            const imageSize = s.image_size || 120;
+            const imageShape = s.image_shape || 'rounded';
+            const imageBorderWidth = s.image_border_width !== undefined ? s.image_border_width : 2;
+            const imageBorderColor = s.image_border_color || '#FFD700';
+            const imageFit = s.image_fit || 'cover';
+
+            categoryImage.style.width = imageSize + 'px';
+            categoryImage.style.height = imageSize + 'px';
+            categoryImage.style.objectFit = imageFit;
+            categoryImage.style.border = `${imageBorderWidth}px solid ${imageBorderColor}`;
+            categoryImage.style.background = 'none';
+            categoryImage.style.padding = '0';
+            categoryImage.style.boxShadow = '0 8px 25px rgba(0,0,0,0.3)';
+
+            if (imageShape === 'circle') {
+                categoryImage.style.borderRadius = '50%';
+            } else if (imageShape === 'square') {
+                categoryImage.style.borderRadius = '0';
+            } else if (imageShape === 'rounded') {
+                categoryImage.style.borderRadius = Math.round(imageSize * 0.12) + 'px';
             }
         }
 

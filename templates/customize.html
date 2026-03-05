@@ -280,19 +280,19 @@
         <div class="lg:col-span-2 order-2 lg:order-1">
             <!-- Tab Navigation -->
             <div class="bg-white rounded-t-lg border-b border-gray-200 flex overflow-x-auto scrollbar-hide">
-                <button class="tab-button active" onclick="switchTab('content')">
+                <button class="tab-button active" data-tab="content" onclick="switchTab('content', this)">
                     <i class="fas fa-text mr-2"></i><span>Content</span>
                 </button>
-                <button class="tab-button" onclick="switchTab('appearance')">
+                <button class="tab-button" data-tab="appearance" onclick="switchTab('appearance', this)">
                     <i class="fas fa-palette mr-2"></i><span>Appearance</span>
                 </button>
-                <button class="tab-button" onclick="switchTab('animations')">
+                <button class="tab-button" data-tab="animations" onclick="switchTab('animations', this)">
                     <i class="fas fa-magic mr-2"></i><span>Animations</span>
                 </button>
-                <button class="tab-button" onclick="switchTab('layout')">
+                <button class="tab-button" data-tab="layout" onclick="switchTab('layout', this)">
                     <i class="fas fa-th-large mr-2"></i><span>Layout</span>
                 </button>
-                <button class="tab-button" onclick="switchTab('assets')">
+                <button class="tab-button" data-tab="assets" onclick="switchTab('assets', this)">
                     <i class="fas fa-images mr-2"></i><span>Assets</span>
                 </button>
             </div>
@@ -965,10 +965,11 @@
                         </div>
                     </div>
 
-                    <!-- Category Image -->
+                    <!-- Category Image / Photo Container -->
                     <div class="settings-section">
                         <h3><i class="fas fa-images mr-2"></i>Category Image</h3>
 
+                        <!-- Show/Hide toggle -->
                         <div class="form-group">
                             <label class="form-label flex items-center gap-2">
                                 Show Category Image
@@ -977,24 +978,99 @@
                             </label>
                         </div>
 
+                        <!-- Current image preview -->
                         {% if settings.category_image %}
                         <div class="mb-3">
                             <img src="{{ url_for('static', filename=settings.category_image) }}" alt="Category" class="max-w-xs rounded">
                         </div>
                         {% endif %}
 
+                        <!-- Upload / Remove -->
                         <div class="form-group">
                             <label class="form-label">Upload Category Image</label>
                             <input type="file" accept="image/*" onchange="uploadFile(this, '{{ category }}', 'image')"
                                    class="form-input">
                         </div>
-
                         {% if settings.category_image %}
                         <button onclick="removeFile('{{ category }}', 'image')"
-                                class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700">
+                                class="mb-4 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700">
                             Remove Image
                         </button>
                         {% endif %}
+
+                        <!-- Divider -->
+                        <hr class="my-4 border-gray-200">
+                        <p class="text-sm font-semibold text-gray-600 mb-3 flex items-center gap-2">
+                            <i class="fas fa-sliders-h text-indigo-500"></i> Photo Container
+                        </p>
+
+                        <!-- Size -->
+                        <div class="form-group">
+                            <label class="form-label">Size: <span id="image_size_display">{{ settings.image_size or 128 }}px</span></label>
+                            <input type="range" min="64" max="300" step="8"
+                                   id="image_size"
+                                   value="{{ settings.image_size or 128 }}"
+                                   class="w-full accent-indigo-600"
+                                   oninput="document.getElementById('image_size_display').textContent = this.value + 'px'"
+                                   onchange="updateSetting('image_size', this.value)">
+                        </div>
+
+                        <!-- Shape -->
+                        <div class="form-group">
+                            <label class="form-label">Shape</label>
+                            <select id="image_shape" class="form-input"
+                                    onchange="updateSetting('image_shape', this.value)">
+                                <option value="circle"  {% if (settings.image_shape or 'circle') == 'circle' %}selected{% endif %}>Circle</option>
+                                <option value="rounded" {% if settings.image_shape == 'rounded' %}selected{% endif %}>Rounded Square</option>
+                                <option value="square"  {% if settings.image_shape == 'square' %}selected{% endif %}>Square</option>
+                            </select>
+                        </div>
+
+                        <!-- Position -->
+                        <div class="form-group">
+                            <label class="form-label">Position</label>
+                            <select id="image_position" class="form-input"
+                                    onchange="updateSetting('image_position', this.value)">
+                                <option value="left"      {% if (settings.image_position or 'left') == 'left' %}selected{% endif %}>← Left (center)</option>
+                                <option value="right"     {% if settings.image_position == 'right' %}selected{% endif %}>→ Right (center)</option>
+                                <option value="top"       {% if settings.image_position == 'top' %}selected{% endif %}>↑ Top (center)</option>
+                                <option value="top-left"  {% if settings.image_position == 'top-left' %}selected{% endif %}>↖ Top Left corner</option>
+                                <option value="top-right" {% if settings.image_position == 'top-right' %}selected{% endif %}>↗ Top Right corner</option>
+                                <option value="bottom"    {% if settings.image_position == 'bottom' %}selected{% endif %}>↓ Bottom (center)</option>
+                            </select>
+                        </div>
+
+                        <!-- Object Fit -->
+                        <div class="form-group">
+                            <label class="form-label">Image Fit</label>
+                            <select id="image_fit" class="form-input"
+                                    onchange="updateSetting('image_fit', this.value)">
+                                <option value="cover"   {% if (settings.image_fit or 'cover') == 'cover' %}selected{% endif %}>Cover (crop to fill)</option>
+                                <option value="contain" {% if settings.image_fit == 'contain' %}selected{% endif %}>Contain (fit inside)</option>
+                                <option value="fill"    {% if settings.image_fit == 'fill' %}selected{% endif %}>Fill (stretch)</option>
+                            </select>
+                        </div>
+
+                        <!-- Border -->
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="form-group">
+                                <label class="form-label">Border Color</label>
+                                <div class="color-input-group">
+                                    <input type="color" class="color-input"
+                                           value="{{ settings.image_border_color or '#FFFFFF' }}"
+                                           oninput="updateSetting('image_border_color', this.value)">
+                                    <input type="text" class="form-input"
+                                           value="{{ settings.image_border_color or '#FFFFFF' }}"
+                                           oninput="updateSetting('image_border_color', this.value)">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Border Width (px)</label>
+                                <input type="number" min="0" max="20" id="image_border_width" class="form-input"
+                                       value="{{ settings.image_border_width if settings.image_border_width is not none else 3 }}"
+                                       onchange="updateSetting('image_border_width', this.value)">
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1037,11 +1113,9 @@
 
                 // Restore active tab
                 if (state.activeTab) {
-                    const tabButton = Array.from(document.querySelectorAll('.tab-button')).find(
-                        btn => btn.textContent.trim().toLowerCase().includes(state.activeTab)
-                    );
+                    const tabButton = document.querySelector(`.tab-button[data-tab="${state.activeTab}"]`);
                     if (tabButton) {
-                        tabButton.click();
+                        switchTab(state.activeTab, tabButton);
                     }
                 }
 
@@ -1067,7 +1141,7 @@
     function saveState() {
         try {
             const activeTabBtn = document.querySelector('.tab-button.active');
-            const activeTab = activeTabBtn ? activeTabBtn.textContent.trim().toLowerCase() : 'content';
+            const activeTab = activeTabBtn ? activeTabBtn.dataset.tab : 'content';
             const previewCollapsed = document.getElementById('preview-frame-container')?.classList.contains('collapsed') || false;
 
             const state = {
@@ -1159,9 +1233,14 @@
         });
     }
 
-    function switchTab(tabName) {
+    function switchTab(tabName, btnEl) {
+        // btnEl is the button element passed directly via onclick="switchTab('x', this)"
+        // Fall back to closest() in case it's ever called without it
+        const activeBtn = btnEl ? btnEl.closest('.tab-button') : document.querySelector(`[data-tab="${tabName}"]`);
+
         document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
-        event.target.classList.add('active');
+        if (activeBtn) activeBtn.classList.add('active');
+
         document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
         document.getElementById(tabName + '-tab').classList.add('active');
 

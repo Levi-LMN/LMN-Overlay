@@ -187,8 +187,7 @@
             height: 128px;
             object-fit: cover;
             border-radius: 50%;
-            padding: 8px;
-            background: linear-gradient(135deg, var(--image-border-color-1, #ffd1dc), var(--image-border-color-2, #ffb6c1));
+            padding: 0;
             border: 3px solid rgba(255, 255, 255, 0.8);
             box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15), 0 5px 15px rgba(0, 0, 0, 0.1);
             transition: all 0.3s ease;
@@ -719,9 +718,59 @@
 
             const textContentDiv = document.getElementById('text-content');
             const containerPadding = s.container_padding || 25;
-            textContentDiv.style.paddingTop = containerPadding + 'px';
+
+            // --- Dynamic image container positioning ---
+            const imageSize = s.image_size || 128;
+            const imagePos = s.image_position || 'right';
+            const halfSize = Math.round(imageSize / 2);
+            const gap = 16;
+
+            // FULL RESET on every call — prevents stale styles from previous position
+            categoryImageContainer.style.position = 'absolute';
+            categoryImageContainer.style.left   = 'auto';
+            categoryImageContainer.style.right  = 'auto';
+            categoryImageContainer.style.top    = 'auto';
+            categoryImageContainer.style.bottom = 'auto';
+            categoryImageContainer.style.transform = 'none';
+            overlayInner.style.flexDirection = 'row';
+
+            // Reset all text padding to base, override per-mode below
+            textContentDiv.style.paddingTop    = containerPadding + 'px';
             textContentDiv.style.paddingBottom = containerPadding + 'px';
-            textContentDiv.style.paddingLeft = containerPadding + 'px';
+            textContentDiv.style.paddingLeft   = containerPadding + 'px';
+            textContentDiv.style.paddingRight  = containerPadding + 'px';
+
+            if (imagePos === 'left') {
+                categoryImageContainer.style.left      = -halfSize + 'px';
+                categoryImageContainer.style.top       = '50%';
+                categoryImageContainer.style.transform = 'translateY(-50%)';
+                textContentDiv.style.paddingLeft = (halfSize + gap) + 'px';
+            } else if (imagePos === 'right') {
+                categoryImageContainer.style.right     = -halfSize + 'px';
+                categoryImageContainer.style.top       = '50%';
+                categoryImageContainer.style.transform = 'translateY(-50%)';
+                textContentDiv.style.paddingRight = (halfSize + gap) + 'px';
+            } else if (imagePos === 'top') {
+                categoryImageContainer.style.top       = -halfSize + 'px';
+                categoryImageContainer.style.left      = '50%';
+                categoryImageContainer.style.transform = 'translateX(-50%)';
+                textContentDiv.style.paddingTop = (halfSize + gap) + 'px';
+            } else if (imagePos === 'bottom') {
+                categoryImageContainer.style.bottom    = -halfSize + 'px';
+                categoryImageContainer.style.left      = '50%';
+                categoryImageContainer.style.transform = 'translateX(-50%)';
+                textContentDiv.style.paddingBottom = (halfSize + gap) + 'px';
+            } else if (imagePos === 'top-left') {
+                categoryImageContainer.style.top  = -halfSize + 'px';
+                categoryImageContainer.style.left = -halfSize + 'px';
+                textContentDiv.style.paddingTop  = (halfSize + gap) + 'px';
+                textContentDiv.style.paddingLeft = (halfSize + gap) + 'px';
+            } else if (imagePos === 'top-right') {
+                categoryImageContainer.style.top   = -halfSize + 'px';
+                categoryImageContainer.style.right = -halfSize + 'px';
+                textContentDiv.style.paddingTop   = (halfSize + gap) + 'px';
+                textContentDiv.style.paddingRight = (halfSize + gap) + 'px';
+            }
 
             if (s.logo_size) {
                 companyLogo.style.width = s.logo_size + 'px';
@@ -841,6 +890,29 @@
                 tickerContent.style.color = s.ticker_text_color || '#333333';
                 tickerContent.style.fontFamily = s.font_family || 'Segoe UI, sans-serif';
                 tickerContainer.style.backgroundColor = hexToRgba(s.ticker_bg_color || '#F5F5DC', s.ticker_bg_opacity || 0.9);
+            }
+
+            // --- Photo / Category Image container styling ---
+            const imageSize = s.image_size || 128;
+            const imageShape = s.image_shape || 'circle';
+            const imageBorderWidth = s.image_border_width !== undefined ? s.image_border_width : 3;
+            const imageBorderColor = s.image_border_color || '#FFFFFF';
+            const imageFit = s.image_fit || 'cover';
+
+            categoryImage.style.width = imageSize + 'px';
+            categoryImage.style.height = imageSize + 'px';
+            categoryImage.style.objectFit = imageFit;
+            categoryImage.style.border = `${imageBorderWidth}px solid ${imageBorderColor}`;
+            categoryImage.style.background = 'none';
+            categoryImage.style.padding = '0';
+            categoryImage.style.boxShadow = '0 8px 25px rgba(0,0,0,0.15)';
+
+            if (imageShape === 'circle') {
+                categoryImage.style.borderRadius = '50%';
+            } else if (imageShape === 'square') {
+                categoryImage.style.borderRadius = '0';
+            } else if (imageShape === 'rounded') {
+                categoryImage.style.borderRadius = Math.round(imageSize * 0.12) + 'px';
             }
         }
 

@@ -197,6 +197,14 @@ class OverlaySettings(db.Model):
     logo_border_radius = db.Column(db.Integer, default=0)
     logo_shadow = db.Column(db.Boolean, default=False)
 
+    # Photo / Category Image Container Settings
+    image_size = db.Column(db.Integer, default=128)
+    image_shape = db.Column(db.String(20), default='circle')   # circle | square | rounded
+    image_border_width = db.Column(db.Integer, default=3)
+    image_border_color = db.Column(db.String(7), default='#FFFFFF')
+    image_position = db.Column(db.String(12), default='left')  # left | right | top | bottom | top-left | top-right
+    image_fit = db.Column(db.String(10), default='cover')      # cover | contain | fill
+
     # Layout specific settings
     layout_style = db.Column(db.String(50), default='default')
     show_decorative_elements = db.Column(db.Boolean, default=True)
@@ -282,7 +290,14 @@ class OverlaySettings(db.Model):
                 'image_display_animation': 'zoom-slow',
                 'image_display_animation_enabled': False,
                 'image_display_animation_duration': 3.0,
-                'image_display_animation_frequency': 5.0
+                'image_display_animation_frequency': 5.0,
+                # Photo container
+                'image_size': 128,
+                'image_shape': 'circle',
+                'image_border_width': 3,
+                'image_border_color': '#FFFFFF',
+                'image_position': 'left',
+                'image_fit': 'cover'
             },
             'wedding': {
                 'overlay_bg_color': '#FFFFFF',
@@ -317,7 +332,14 @@ class OverlaySettings(db.Model):
                 'image_display_animation': 'pan',
                 'image_display_animation_enabled': False,
                 'image_display_animation_duration': 3.0,
-                'image_display_animation_frequency': 5.0
+                'image_display_animation_frequency': 5.0,
+                # Photo container
+                'image_size': 128,
+                'image_shape': 'circle',
+                'image_border_width': 3,
+                'image_border_color': '#D4AF37',
+                'image_position': 'right',
+                'image_fit': 'cover'
             },
             'ceremony': {
                 'overlay_bg_color': '#1a237e',
@@ -352,7 +374,14 @@ class OverlaySettings(db.Model):
                 'image_display_animation': 'zoom-slow',
                 'image_display_animation_enabled': False,
                 'image_display_animation_duration': 3.0,
-                'image_display_animation_frequency': 5.0
+                'image_display_animation_frequency': 5.0,
+                # Photo container
+                'image_size': 120,
+                'image_shape': 'rounded',
+                'image_border_width': 2,
+                'image_border_color': '#FFD700',
+                'image_position': 'top',
+                'image_fit': 'cover'
             }
         }
         return defaults.get(category, defaults['funeral'])

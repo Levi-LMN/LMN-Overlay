@@ -29,7 +29,8 @@ def manage_settings(category):
             'logo_display_animation', 'image_display_animation',
             'image_shape', 'image_position', 'image_fit',
             'main_font_family', 'secondary_font_family',
-            'ticker_font_family', 'company_name_font_family'
+            'ticker_font_family', 'company_name_font_family',
+            'logo_vertical_position', 'logo_horizontal_position'
         ]
 
         for field in fields:
@@ -68,7 +69,8 @@ def manage_settings(category):
             'custom_width', 'custom_height', 'container_max_width',
             'container_min_width', 'container_padding', 'text_max_lines',
             'border_width', 'logo_border_radius',
-            'image_size', 'image_border_width'
+            'image_size', 'image_border_width',
+            'logo_custom_top', 'logo_custom_bottom', 'logo_custom_left', 'logo_custom_right'
         ]
 
         for field in int_fields:
@@ -88,7 +90,10 @@ def manage_settings(category):
             'secondary_text_bg_opacity', 'ticker_bg_opacity',
             'company_name_bg_opacity', 'footer_bg_opacity', 'logo_opacity',
             'logo_display_animation_duration', 'logo_display_animation_frequency',
-            'image_display_animation_duration', 'image_display_animation_frequency'
+            'image_display_animation_duration', 'image_display_animation_frequency',
+            'text_animation_repeat_interval',
+            'overlay_visible_duration', 'overlay_hidden_duration',
+            'cycle_transition_duration', 'stagger_delay'
         ]
 
         for field in float_fields:
@@ -102,7 +107,10 @@ def manage_settings(category):
         # Animation fields
         animation_fields = [
             'entrance_animation', 'text_animation', 'image_animation',
-            'logo_animation', 'ticker_entrance'
+            'logo_animation', 'ticker_entrance',
+            'main_text_animation', 'secondary_text_animation', 'company_name_animation',
+            'cycle_entry_animation', 'cycle_exit_animation',
+            'stagger_order', 'stagger_element_exit', 'stagger_element_entry'
         ]
 
         for field in animation_fields:
@@ -120,7 +128,9 @@ def manage_settings(category):
             ('show_ticker', 'show_ticker'),
             ('logo_display_animation_enabled', 'logo_display_animation_enabled'),
             ('image_display_animation_enabled', 'image_display_animation_enabled'),
-            ('company_name_italic', 'company_name_italic')
+            ('company_name_italic', 'company_name_italic'),
+            ('overlay_cycle_enabled', 'overlay_cycle_enabled'),
+            ('stagger_enabled', 'stagger_enabled')
         ]
 
         for field_name, db_field in boolean_fields:
@@ -343,6 +353,12 @@ def settings_to_dict(settings):
         'logo_opacity': settings.logo_opacity,
         'logo_border_radius': settings.logo_border_radius,
         'logo_shadow': settings.logo_shadow,
+        'logo_vertical_position': settings.logo_vertical_position if hasattr(settings, 'logo_vertical_position') else 'top',
+        'logo_horizontal_position': settings.logo_horizontal_position if hasattr(settings, 'logo_horizontal_position') else 'right',
+        'logo_custom_top': settings.logo_custom_top if hasattr(settings, 'logo_custom_top') else None,
+        'logo_custom_bottom': settings.logo_custom_bottom if hasattr(settings, 'logo_custom_bottom') else None,
+        'logo_custom_left': settings.logo_custom_left if hasattr(settings, 'logo_custom_left') else None,
+        'logo_custom_right': settings.logo_custom_right if hasattr(settings, 'logo_custom_right') else None,
 
         # Photo / Category Image Container Settings
         'image_size': settings.image_size,
@@ -377,6 +393,26 @@ def settings_to_dict(settings):
         'image_display_animation_enabled': settings.image_display_animation_enabled,
         'image_display_animation_duration': settings.image_display_animation_duration,
         'image_display_animation_frequency': settings.image_display_animation_frequency,
+
+        # Per-section text animations
+        'main_text_animation': settings.main_text_animation,
+        'secondary_text_animation': settings.secondary_text_animation,
+        'company_name_animation': settings.company_name_animation,
+        'text_animation_repeat_interval': settings.text_animation_repeat_interval or 0.0,
+
+        # Overlay auto-cycle
+        'overlay_cycle_enabled': settings.overlay_cycle_enabled or False,
+        'overlay_visible_duration': settings.overlay_visible_duration or 10.0,
+        'overlay_hidden_duration': settings.overlay_hidden_duration or 5.0,
+        'cycle_entry_animation': settings.cycle_entry_animation or 'fade',
+        'cycle_exit_animation':  settings.cycle_exit_animation  or 'fade',
+        'cycle_transition_duration': settings.cycle_transition_duration or 0.6,
+        # Staggered element entry/exit
+        'stagger_enabled':       settings.stagger_enabled or False,
+        'stagger_order':         settings.stagger_order or 'main,secondary,company',
+        'stagger_delay':         settings.stagger_delay or 0.3,
+        'stagger_element_exit':  settings.stagger_element_exit  or 'fade',
+        'stagger_element_entry': settings.stagger_element_entry or 'fade',
 
         'vertical_position': settings.vertical_position,
         'horizontal_position': settings.horizontal_position,

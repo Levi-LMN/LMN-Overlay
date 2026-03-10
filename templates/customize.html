@@ -839,24 +839,282 @@
 
                     <!-- Text Animations -->
                     <div class="settings-section">
-                        <h3><i class="fas fa-text mr-2"></i>Text Animations</h3>
+                        <h3><i class="fas fa-magic mr-2"></i>Text Animations</h3>
 
-                        <div class="form-group">
-                            <label class="form-label">Animation Type</label>
-                            <select id="text_animation" class="form-input" onchange="updateSetting('text_animation', this.value)">
-                                <option value="none" {% if settings.text_animation == 'none' %}selected{% endif %}>None</option>
-                                <option value="typewriter" {% if settings.text_animation == 'typewriter' %}selected{% endif %}>Typewriter</option>
-                                <option value="fade-in-words" {% if settings.text_animation == 'fade-in-words' %}selected{% endif %}>Fade In Words</option>
-                                <option value="slide-in-words" {% if settings.text_animation == 'slide-in-words' %}selected{% endif %}>Slide In Words</option>
-                            </select>
+                        <p class="text-xs text-gray-500 mb-3">Set a specific animation per section, or use Global as the fallback. Continuous animations loop forever. Entrance animations play once (or on repeat interval).</p>
+
+                        <div class="grid-2">
+                            <div class="form-group">
+                                <label class="form-label">🌐 Global (fallback)</label>
+                                <select id="text_animation" class="form-input" onchange="updateSetting('text_animation', this.value)">
+                                    <option value="none" {% if settings.text_animation == 'none' or not settings.text_animation %}selected{% endif %}>None</option>
+                                    <option value="pulse" {% if settings.text_animation == 'pulse' %}selected{% endif %}>Pulse</option>
+                                    <option value="glow" {% if settings.text_animation == 'glow' %}selected{% endif %}>Glow</option>
+                                    <option value="float" {% if settings.text_animation == 'float' %}selected{% endif %}>Float</option>
+                                    <option value="bounce" {% if settings.text_animation == 'bounce' %}selected{% endif %}>Bounce</option>
+                                    <option value="shake" {% if settings.text_animation == 'shake' %}selected{% endif %}>Shake</option>
+                                    <option value="zoom" {% if settings.text_animation == 'zoom' %}selected{% endif %}>Zoom</option>
+                                    <option value="shimmer" {% if settings.text_animation == 'shimmer' %}selected{% endif %}>✨ Shimmer</option>
+                                    <option value="neon-flicker" {% if settings.text_animation == 'neon-flicker' %}selected{% endif %}>🔦 Neon Flicker</option>
+                                    <option value="glitch" {% if settings.text_animation == 'glitch' %}selected{% endif %}>⚡ Glitch</option>
+                                    <option value="gradient-sweep" {% if settings.text_animation == 'gradient-sweep' %}selected{% endif %}>🌈 Gradient Sweep</option>
+                                    <option value="color-cycle" {% if settings.text_animation == 'color-cycle' %}selected{% endif %}>🎨 Color Cycle</option>
+                                    <option value="blur-pulse" {% if settings.text_animation == 'blur-pulse' %}selected{% endif %}>🌀 Blur Pulse</option>
+                                    <option value="typewriter" {% if settings.text_animation == 'typewriter' %}selected{% endif %}>⌨️ Typewriter</option>
+                                    <option value="fade-in-words" {% if settings.text_animation == 'fade-in-words' %}selected{% endif %}>💬 Fade In Words</option>
+                                    <option value="slide-in-words" {% if settings.text_animation == 'slide-in-words' %}selected{% endif %}>➡️ Slide In Words</option>
+                                    <option value="letter-cascade" {% if settings.text_animation == 'letter-cascade' %}selected{% endif %}>⬇️ Letter Cascade</option>
+                                    <option value="scramble" {% if settings.text_animation == 'scramble' %}selected{% endif %}>🔀 Scramble</option>
+                                    <option value="fade-in-letters" {% if settings.text_animation == 'fade-in-letters' %}selected{% endif %}>🔡 Fade In Letters</option>
+                                    <option value="roll-up" {% if settings.text_animation == 'roll-up' %}selected{% endif %}>📜 Roll Up</option>
+                                    <option value="split-reveal" {% if settings.text_animation == 'split-reveal' %}selected{% endif %}>↔️ Split Reveal</option>
+                                    <option value="wave" {% if settings.text_animation == 'wave' %}selected{% endif %}>🌊 Wave</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">🔤 Main Text Animation</label>
+                                <select id="main_text_animation" class="form-input" onchange="updateSetting('main_text_animation', this.value)">
+                                    <option value="none" {% if not settings.main_text_animation or settings.main_text_animation == 'none' %}selected{% endif %}>— Use Global —</option>
+                                    <option value="pulse" {% if settings.main_text_animation == 'pulse' %}selected{% endif %}>Pulse</option>
+                                    <option value="glow" {% if settings.main_text_animation == 'glow' %}selected{% endif %}>Glow</option>
+                                    <option value="float" {% if settings.main_text_animation == 'float' %}selected{% endif %}>Float</option>
+                                    <option value="bounce" {% if settings.main_text_animation == 'bounce' %}selected{% endif %}>Bounce</option>
+                                    <option value="shake" {% if settings.main_text_animation == 'shake' %}selected{% endif %}>Shake</option>
+                                    <option value="zoom" {% if settings.main_text_animation == 'zoom' %}selected{% endif %}>Zoom</option>
+                                    <option value="shimmer" {% if settings.main_text_animation == 'shimmer' %}selected{% endif %}>✨ Shimmer</option>
+                                    <option value="neon-flicker" {% if settings.main_text_animation == 'neon-flicker' %}selected{% endif %}>🔦 Neon Flicker</option>
+                                    <option value="glitch" {% if settings.main_text_animation == 'glitch' %}selected{% endif %}>⚡ Glitch</option>
+                                    <option value="gradient-sweep" {% if settings.main_text_animation == 'gradient-sweep' %}selected{% endif %}>🌈 Gradient Sweep</option>
+                                    <option value="color-cycle" {% if settings.main_text_animation == 'color-cycle' %}selected{% endif %}>🎨 Color Cycle</option>
+                                    <option value="blur-pulse" {% if settings.main_text_animation == 'blur-pulse' %}selected{% endif %}>🌀 Blur Pulse</option>
+                                    <option value="typewriter" {% if settings.main_text_animation == 'typewriter' %}selected{% endif %}>⌨️ Typewriter</option>
+                                    <option value="fade-in-words" {% if settings.main_text_animation == 'fade-in-words' %}selected{% endif %}>💬 Fade In Words</option>
+                                    <option value="slide-in-words" {% if settings.main_text_animation == 'slide-in-words' %}selected{% endif %}>➡️ Slide In Words</option>
+                                    <option value="letter-cascade" {% if settings.main_text_animation == 'letter-cascade' %}selected{% endif %}>⬇️ Letter Cascade</option>
+                                    <option value="scramble" {% if settings.main_text_animation == 'scramble' %}selected{% endif %}>🔀 Scramble</option>
+                                    <option value="fade-in-letters" {% if settings.main_text_animation == 'fade-in-letters' %}selected{% endif %}>🔡 Fade In Letters</option>
+                                    <option value="roll-up" {% if settings.main_text_animation == 'roll-up' %}selected{% endif %}>📜 Roll Up</option>
+                                    <option value="split-reveal" {% if settings.main_text_animation == 'split-reveal' %}selected{% endif %}>↔️ Split Reveal</option>
+                                    <option value="wave" {% if settings.main_text_animation == 'wave' %}selected{% endif %}>🌊 Wave</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">💬 Secondary Text Animation</label>
+                                <select id="secondary_text_animation" class="form-input" onchange="updateSetting('secondary_text_animation', this.value)">
+                                    <option value="none" {% if not settings.secondary_text_animation or settings.secondary_text_animation == 'none' %}selected{% endif %}>— Use Global —</option>
+                                    <option value="pulse" {% if settings.secondary_text_animation == 'pulse' %}selected{% endif %}>Pulse</option>
+                                    <option value="glow" {% if settings.secondary_text_animation == 'glow' %}selected{% endif %}>Glow</option>
+                                    <option value="float" {% if settings.secondary_text_animation == 'float' %}selected{% endif %}>Float</option>
+                                    <option value="bounce" {% if settings.secondary_text_animation == 'bounce' %}selected{% endif %}>Bounce</option>
+                                    <option value="shake" {% if settings.secondary_text_animation == 'shake' %}selected{% endif %}>Shake</option>
+                                    <option value="zoom" {% if settings.secondary_text_animation == 'zoom' %}selected{% endif %}>Zoom</option>
+                                    <option value="shimmer" {% if settings.secondary_text_animation == 'shimmer' %}selected{% endif %}>✨ Shimmer</option>
+                                    <option value="neon-flicker" {% if settings.secondary_text_animation == 'neon-flicker' %}selected{% endif %}>🔦 Neon Flicker</option>
+                                    <option value="glitch" {% if settings.secondary_text_animation == 'glitch' %}selected{% endif %}>⚡ Glitch</option>
+                                    <option value="gradient-sweep" {% if settings.secondary_text_animation == 'gradient-sweep' %}selected{% endif %}>🌈 Gradient Sweep</option>
+                                    <option value="color-cycle" {% if settings.secondary_text_animation == 'color-cycle' %}selected{% endif %}>🎨 Color Cycle</option>
+                                    <option value="blur-pulse" {% if settings.secondary_text_animation == 'blur-pulse' %}selected{% endif %}>🌀 Blur Pulse</option>
+                                    <option value="typewriter" {% if settings.secondary_text_animation == 'typewriter' %}selected{% endif %}>⌨️ Typewriter</option>
+                                    <option value="fade-in-words" {% if settings.secondary_text_animation == 'fade-in-words' %}selected{% endif %}>💬 Fade In Words</option>
+                                    <option value="slide-in-words" {% if settings.secondary_text_animation == 'slide-in-words' %}selected{% endif %}>➡️ Slide In Words</option>
+                                    <option value="letter-cascade" {% if settings.secondary_text_animation == 'letter-cascade' %}selected{% endif %}>⬇️ Letter Cascade</option>
+                                    <option value="scramble" {% if settings.secondary_text_animation == 'scramble' %}selected{% endif %}>🔀 Scramble</option>
+                                    <option value="fade-in-letters" {% if settings.secondary_text_animation == 'fade-in-letters' %}selected{% endif %}>🔡 Fade In Letters</option>
+                                    <option value="roll-up" {% if settings.secondary_text_animation == 'roll-up' %}selected{% endif %}>📜 Roll Up</option>
+                                    <option value="split-reveal" {% if settings.secondary_text_animation == 'split-reveal' %}selected{% endif %}>↔️ Split Reveal</option>
+                                    <option value="wave" {% if settings.secondary_text_animation == 'wave' %}selected{% endif %}>🌊 Wave</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">🏢 Company Name Animation</label>
+                                <select id="company_name_animation" class="form-input" onchange="updateSetting('company_name_animation', this.value)">
+                                    <option value="none" {% if not settings.company_name_animation or settings.company_name_animation == 'none' %}selected{% endif %}>— Use Global —</option>
+                                    <option value="pulse" {% if settings.company_name_animation == 'pulse' %}selected{% endif %}>Pulse</option>
+                                    <option value="glow" {% if settings.company_name_animation == 'glow' %}selected{% endif %}>Glow</option>
+                                    <option value="float" {% if settings.company_name_animation == 'float' %}selected{% endif %}>Float</option>
+                                    <option value="bounce" {% if settings.company_name_animation == 'bounce' %}selected{% endif %}>Bounce</option>
+                                    <option value="shake" {% if settings.company_name_animation == 'shake' %}selected{% endif %}>Shake</option>
+                                    <option value="zoom" {% if settings.company_name_animation == 'zoom' %}selected{% endif %}>Zoom</option>
+                                    <option value="shimmer" {% if settings.company_name_animation == 'shimmer' %}selected{% endif %}>✨ Shimmer</option>
+                                    <option value="neon-flicker" {% if settings.company_name_animation == 'neon-flicker' %}selected{% endif %}>🔦 Neon Flicker</option>
+                                    <option value="glitch" {% if settings.company_name_animation == 'glitch' %}selected{% endif %}>⚡ Glitch</option>
+                                    <option value="gradient-sweep" {% if settings.company_name_animation == 'gradient-sweep' %}selected{% endif %}>🌈 Gradient Sweep</option>
+                                    <option value="color-cycle" {% if settings.company_name_animation == 'color-cycle' %}selected{% endif %}>🎨 Color Cycle</option>
+                                    <option value="blur-pulse" {% if settings.company_name_animation == 'blur-pulse' %}selected{% endif %}>🌀 Blur Pulse</option>
+                                    <option value="typewriter" {% if settings.company_name_animation == 'typewriter' %}selected{% endif %}>⌨️ Typewriter</option>
+                                    <option value="fade-in-words" {% if settings.company_name_animation == 'fade-in-words' %}selected{% endif %}>💬 Fade In Words</option>
+                                    <option value="slide-in-words" {% if settings.company_name_animation == 'slide-in-words' %}selected{% endif %}>➡️ Slide In Words</option>
+                                    <option value="letter-cascade" {% if settings.company_name_animation == 'letter-cascade' %}selected{% endif %}>⬇️ Letter Cascade</option>
+                                    <option value="scramble" {% if settings.company_name_animation == 'scramble' %}selected{% endif %}>🔀 Scramble</option>
+                                    <option value="fade-in-letters" {% if settings.company_name_animation == 'fade-in-letters' %}selected{% endif %}>🔡 Fade In Letters</option>
+                                    <option value="roll-up" {% if settings.company_name_animation == 'roll-up' %}selected{% endif %}>📜 Roll Up</option>
+                                    <option value="split-reveal" {% if settings.company_name_animation == 'split-reveal' %}selected{% endif %}>↔️ Split Reveal</option>
+                                    <option value="wave" {% if settings.company_name_animation == 'wave' %}selected{% endif %}>🌊 Wave</option>
+                                </select>
+                            </div>
                         </div>
 
+                        <div class="grid-2">
+                            <div class="form-group">
+                                <label class="form-label">Animation Speed</label>
+                                <input type="range" min="0.5" max="5" step="0.5" id="text_animation_speed" class="w-full"
+                                       value="{{ settings.text_animation_speed or 2.0 }}"
+                                       oninput="this.nextElementSibling.textContent = this.value + 's'; updateSetting('text_animation_speed', this.value)">
+                                <div class="text-sm text-gray-500 text-center">{{ settings.text_animation_speed or 2.0 }}s</div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Repeat Every (seconds)</label>
+                                <div style="display:flex; align-items:center; gap:0.5rem;">
+                                    <input type="range" min="0" max="60" step="1" id="text_animation_repeat_interval" class="w-full"
+                                           value="{{ settings.text_animation_repeat_interval or 0 }}"
+                                           oninput="this.nextElementSibling.textContent = this.value == 0 ? 'Off' : this.value + 's'; updateSetting('text_animation_repeat_interval', this.value)">
+                                    <div class="text-sm text-gray-500" style="min-width:36px; text-align:right;">{{ 'Off' if not settings.text_animation_repeat_interval else (settings.text_animation_repeat_interval|int)|string + 's' }}</div>
+                                </div>
+                                <p class="text-xs text-gray-400 mt-1">0 = play once on load, &gt;0 = re-trigger every N seconds</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Overlay Auto-Cycle -->
+                    <div class="settings-section">
+                        <h3><i class="fas fa-clock mr-2"></i>Overlay Auto-Cycle</h3>
+                        <p class="text-sm text-gray-500 mb-3">Automatically show and hide the overlay on a repeating timer, with custom entry and exit animations.</p>
+
                         <div class="form-group">
-                            <label class="form-label">Animation Speed</label>
-                            <input type="range" min="0.5" max="5" step="0.5" id="text_animation_speed" class="w-full"
-                                   value="{{ settings.text_animation_speed or 1.0 }}"
-                                   oninput="this.nextElementSibling.textContent = this.value + 'x'; updateSetting('text_animation_speed', this.value)">
-                            <div class="text-sm text-gray-500 text-center">{{ settings.text_animation_speed or 1.0 }}x</div>
+                            <label class="form-label flex items-center gap-2">
+                                Enable Auto-Cycle
+                                <div class="toggle-checkbox {% if settings.overlay_cycle_enabled %}checked{% endif %}"
+                                     onclick="toggleBoolean(this, 'overlay_cycle_enabled')"></div>
+                            </label>
+                        </div>
+
+                        <div class="grid-2">
+                            <div class="form-group">
+                                <label class="form-label">Visible Duration (seconds)</label>
+                                <input type="number" min="1" max="300" step="1" id="overlay_visible_duration" class="form-input"
+                                       value="{{ settings.overlay_visible_duration or 10 }}"
+                                       onchange="updateSetting('overlay_visible_duration', this.value)">
+                                <p class="text-xs text-gray-400 mt-1">How long the overlay stays on screen</p>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Hidden Duration (seconds)</label>
+                                <input type="number" min="1" max="300" step="1" id="overlay_hidden_duration" class="form-input"
+                                       value="{{ settings.overlay_hidden_duration or 5 }}"
+                                       onchange="updateSetting('overlay_hidden_duration', this.value)">
+                                <p class="text-xs text-gray-400 mt-1">How long it disappears between appearances</p>
+                            </div>
+                        </div>
+
+                        <p class="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2 mt-1">Entry &amp; Exit Animations</p>
+                        <div class="grid-2">
+                            <div class="form-group">
+                                <label class="form-label">🟢 Entry Animation</label>
+                                <select id="cycle_entry_animation" class="form-input" onchange="updateSetting('cycle_entry_animation', this.value)">
+                                <option value="fade" {% if settings.cycle_entry_animation == 'fade' or (not settings.cycle_entry_animation and 'fade' == 'fade') %}selected{% endif %}>🔲 Fade</option>
+                                <option value="wipe-left" {% if settings.cycle_entry_animation == 'wipe-left' or (not settings.cycle_entry_animation and 'wipe-left' == 'fade') %}selected{% endif %}>◀️ Wipe Left</option>
+                                <option value="wipe-right" {% if settings.cycle_entry_animation == 'wipe-right' or (not settings.cycle_entry_animation and 'wipe-right' == 'fade') %}selected{% endif %}>▶️ Wipe Right</option>
+                                <option value="wipe-up" {% if settings.cycle_entry_animation == 'wipe-up' or (not settings.cycle_entry_animation and 'wipe-up' == 'fade') %}selected{% endif %}>⬆️ Wipe Up</option>
+                                <option value="wipe-down" {% if settings.cycle_entry_animation == 'wipe-down' or (not settings.cycle_entry_animation and 'wipe-down' == 'fade') %}selected{% endif %}>⬇️ Wipe Down</option>
+                                <option value="slide-left" {% if settings.cycle_entry_animation == 'slide-left' or (not settings.cycle_entry_animation and 'slide-left' == 'fade') %}selected{% endif %}>⬅️ Slide from Left</option>
+                                <option value="slide-right" {% if settings.cycle_entry_animation == 'slide-right' or (not settings.cycle_entry_animation and 'slide-right' == 'fade') %}selected{% endif %}>➡️ Slide from Right</option>
+                                <option value="slide-up" {% if settings.cycle_entry_animation == 'slide-up' or (not settings.cycle_entry_animation and 'slide-up' == 'fade') %}selected{% endif %}>🔼 Slide Up</option>
+                                <option value="slide-down" {% if settings.cycle_entry_animation == 'slide-down' or (not settings.cycle_entry_animation and 'slide-down' == 'fade') %}selected{% endif %}>🔽 Slide Down</option>
+                                <option value="split-h" {% if settings.cycle_entry_animation == 'split-h' or (not settings.cycle_entry_animation and 'split-h' == 'fade') %}selected{% endif %}>⬌ Split Open (Horiz)</option>
+                                <option value="split-v" {% if settings.cycle_entry_animation == 'split-v' or (not settings.cycle_entry_animation and 'split-v' == 'fade') %}selected{% endif %}>⬍ Split Open (Vert)</option>
+                                <option value="iris" {% if settings.cycle_entry_animation == 'iris' or (not settings.cycle_entry_animation and 'iris' == 'fade') %}selected{% endif %}>🔵 Iris Expand</option>
+                                <option value="zoom-corner" {% if settings.cycle_entry_animation == 'zoom-corner' or (not settings.cycle_entry_animation and 'zoom-corner' == 'fade') %}selected{% endif %}>🔍 Zoom from Corner</option>
+                                <option value="venetian" {% if settings.cycle_entry_animation == 'venetian' or (not settings.cycle_entry_animation and 'venetian' == 'fade') %}selected{% endif %}>🪟 Venetian Blinds</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">🔴 Exit Animation</label>
+                                <select id="cycle_exit_animation" class="form-input" onchange="updateSetting('cycle_exit_animation', this.value)">
+                                <option value="fade" {% if settings.cycle_exit_animation == 'fade' or (not settings.cycle_exit_animation and 'fade' == 'fade') %}selected{% endif %}>🔲 Fade</option>
+                                <option value="wipe-left" {% if settings.cycle_exit_animation == 'wipe-left' or (not settings.cycle_exit_animation and 'wipe-left' == 'fade') %}selected{% endif %}>◀️ Wipe Left</option>
+                                <option value="wipe-right" {% if settings.cycle_exit_animation == 'wipe-right' or (not settings.cycle_exit_animation and 'wipe-right' == 'fade') %}selected{% endif %}>▶️ Wipe Right</option>
+                                <option value="wipe-up" {% if settings.cycle_exit_animation == 'wipe-up' or (not settings.cycle_exit_animation and 'wipe-up' == 'fade') %}selected{% endif %}>⬆️ Wipe Up</option>
+                                <option value="wipe-down" {% if settings.cycle_exit_animation == 'wipe-down' or (not settings.cycle_exit_animation and 'wipe-down' == 'fade') %}selected{% endif %}>⬇️ Wipe Down</option>
+                                <option value="slide-left" {% if settings.cycle_exit_animation == 'slide-left' or (not settings.cycle_exit_animation and 'slide-left' == 'fade') %}selected{% endif %}>⬅️ Slide from Left</option>
+                                <option value="slide-right" {% if settings.cycle_exit_animation == 'slide-right' or (not settings.cycle_exit_animation and 'slide-right' == 'fade') %}selected{% endif %}>➡️ Slide from Right</option>
+                                <option value="slide-up" {% if settings.cycle_exit_animation == 'slide-up' or (not settings.cycle_exit_animation and 'slide-up' == 'fade') %}selected{% endif %}>🔼 Slide Up</option>
+                                <option value="slide-down" {% if settings.cycle_exit_animation == 'slide-down' or (not settings.cycle_exit_animation and 'slide-down' == 'fade') %}selected{% endif %}>🔽 Slide Down</option>
+                                <option value="split-h" {% if settings.cycle_exit_animation == 'split-h' or (not settings.cycle_exit_animation and 'split-h' == 'fade') %}selected{% endif %}>⬌ Split Open (Horiz)</option>
+                                <option value="split-v" {% if settings.cycle_exit_animation == 'split-v' or (not settings.cycle_exit_animation and 'split-v' == 'fade') %}selected{% endif %}>⬍ Split Open (Vert)</option>
+                                <option value="iris" {% if settings.cycle_exit_animation == 'iris' or (not settings.cycle_exit_animation and 'iris' == 'fade') %}selected{% endif %}>🔵 Iris Expand</option>
+                                <option value="zoom-corner" {% if settings.cycle_exit_animation == 'zoom-corner' or (not settings.cycle_exit_animation and 'zoom-corner' == 'fade') %}selected{% endif %}>🔍 Zoom from Corner</option>
+                                <option value="venetian" {% if settings.cycle_exit_animation == 'venetian' or (not settings.cycle_exit_animation and 'venetian' == 'fade') %}selected{% endif %}>🪟 Venetian Blinds</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Transition Duration</label>
+                            <input type="range" min="0.2" max="2.0" step="0.1" id="cycle_transition_duration" class="w-full"
+                                   value="{{ settings.cycle_transition_duration or 0.6 }}"
+                                   oninput="this.nextElementSibling.textContent = this.value + 's'; updateSetting('cycle_transition_duration', this.value)">
+                            <div class="text-sm text-gray-500 text-center">{{ settings.cycle_transition_duration or 0.6 }}s</div>
+                        </div>
+
+                        <hr class="my-3 border-gray-200">
+                        <p class="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2">🎬 Element Stagger (Lower-Third Style)</p>
+                        <p class="text-xs text-gray-500 mb-3">Each text element enters and exits one by one in sequence — professional broadcast lower-third style.</p>
+
+                        <div class="form-group">
+                            <label class="form-label flex items-center gap-2">
+                                Enable Element Stagger
+                                <div class="toggle-checkbox {% if settings.stagger_enabled %}checked{% endif %}"
+                                     onclick="toggleBoolean(this, 'stagger_enabled')"></div>
+                            </label>
+                        </div>
+
+                        <div class="grid-2">
+                            <div class="form-group">
+                                <label class="form-label">Exit Element Style</label>
+                                <select id="stagger_element_exit" class="form-input" onchange="updateSetting('stagger_element_exit', this.value)">
+                                <option value="fade" {% if settings.stagger_element_exit == 'fade' or (not settings.stagger_element_exit and 'fade' == 'fade') %}selected{% endif %}>Fade</option>
+                                <option value="slide-left" {% if settings.stagger_element_exit == 'slide-left' or (not settings.stagger_element_exit and 'slide-left' == 'fade') %}selected{% endif %}>⬅️ Slide Left</option>
+                                <option value="slide-right" {% if settings.stagger_element_exit == 'slide-right' or (not settings.stagger_element_exit and 'slide-right' == 'fade') %}selected{% endif %}>➡️ Slide Right</option>
+                                <option value="slide-up" {% if settings.stagger_element_exit == 'slide-up' or (not settings.stagger_element_exit and 'slide-up' == 'fade') %}selected{% endif %}>⬆️ Slide Up</option>
+                                <option value="slide-down" {% if settings.stagger_element_exit == 'slide-down' or (not settings.stagger_element_exit and 'slide-down' == 'fade') %}selected{% endif %}>⬇️ Slide Down</option>
+                                <option value="shrink" {% if settings.stagger_element_exit == 'shrink' or (not settings.stagger_element_exit and 'shrink' == 'fade') %}selected{% endif %}>🫧 Shrink / Grow</option>
+                                <option value="blur" {% if settings.stagger_element_exit == 'blur' or (not settings.stagger_element_exit and 'blur' == 'fade') %}selected{% endif %}>🌫️ Blur</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Entry Element Style</label>
+                                <select id="stagger_element_entry" class="form-input" onchange="updateSetting('stagger_element_entry', this.value)">
+                                <option value="fade" {% if settings.stagger_element_entry == 'fade' or (not settings.stagger_element_entry and 'fade' == 'fade') %}selected{% endif %}>Fade</option>
+                                <option value="slide-left" {% if settings.stagger_element_entry == 'slide-left' or (not settings.stagger_element_entry and 'slide-left' == 'fade') %}selected{% endif %}>⬅️ Slide Left</option>
+                                <option value="slide-right" {% if settings.stagger_element_entry == 'slide-right' or (not settings.stagger_element_entry and 'slide-right' == 'fade') %}selected{% endif %}>➡️ Slide Right</option>
+                                <option value="slide-up" {% if settings.stagger_element_entry == 'slide-up' or (not settings.stagger_element_entry and 'slide-up' == 'fade') %}selected{% endif %}>⬆️ Slide Up</option>
+                                <option value="slide-down" {% if settings.stagger_element_entry == 'slide-down' or (not settings.stagger_element_entry and 'slide-down' == 'fade') %}selected{% endif %}>⬇️ Slide Down</option>
+                                <option value="shrink" {% if settings.stagger_element_entry == 'shrink' or (not settings.stagger_element_entry and 'shrink' == 'fade') %}selected{% endif %}>🫧 Shrink / Grow</option>
+                                <option value="blur" {% if settings.stagger_element_entry == 'blur' or (not settings.stagger_element_entry and 'blur' == 'fade') %}selected{% endif %}>🌫️ Blur</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="grid-2">
+                            <div class="form-group">
+                                <label class="form-label">Exit Order (comma-separated)</label>
+                                <input type="text" id="stagger_order" class="form-input" placeholder="main,secondary,company"
+                                       value="{{ settings.stagger_order or 'main,secondary,company' }}"
+                                       onchange="updateSetting('stagger_order', this.value)">
+                                <p class="text-xs text-gray-400 mt-1">e.g. company,secondary,main — entry is reversed</p>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Stagger Delay (seconds)</label>
+                                <input type="range" min="0.1" max="1.5" step="0.1" id="stagger_delay" class="w-full"
+                                       value="{{ settings.stagger_delay or 0.3 }}"
+                                       oninput="this.nextElementSibling.textContent = this.value + 's'; updateSetting('stagger_delay', this.value)">
+                                <div class="text-sm text-gray-500 text-center">{{ settings.stagger_delay or 0.3 }}s</div>
+                            </div>
+                        </div>
+
+                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-700">
+                            <i class="fas fa-info-circle mr-1"></i>
+                            Cycle only runs when the overlay is <strong>set to visible</strong> from the control panel.
+                            Stagger runs <em>inside</em> the visible phase — elements leave before the container exits,
+                            and appear after the container enters.
                         </div>
                     </div>
 
@@ -1074,6 +1332,96 @@
                                     <div class="toggle-checkbox {% if settings.logo_shadow %}checked{% endif %}"
                                          onclick="toggleBoolean(this, 'logo_shadow')"></div>
                                 </label>
+                            </div>
+                        </div>
+
+                        <!-- Logo Position -->
+                        <div class="mt-4 p-3 bg-indigo-50 rounded-lg border border-indigo-100">
+                            <h4 class="text-sm font-semibold text-indigo-700 mb-3 flex items-center gap-2">
+                                <i class="fas fa-arrows-alt text-xs"></i> Logo Position
+                            </h4>
+
+                            <div class="grid-2">
+                                <div class="form-group">
+                                    <label class="form-label">Vertical</label>
+                                    <select id="logo_vertical_position" class="form-input"
+                                            onchange="updateSetting('logo_vertical_position', this.value); toggleLogoCustomPos()">
+                                        <option value="top"    {% if (settings.logo_vertical_position or 'top') == 'top'    %}selected{% endif %}>Top</option>
+                                        <option value="middle" {% if settings.logo_vertical_position == 'middle' %}selected{% endif %}>Middle</option>
+                                        <option value="bottom" {% if settings.logo_vertical_position == 'bottom' %}selected{% endif %}>Bottom</option>
+                                        <option value="custom" {% if settings.logo_vertical_position == 'custom' %}selected{% endif %}>Custom</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label">Horizontal</label>
+                                    <select id="logo_horizontal_position" class="form-input"
+                                            onchange="updateSetting('logo_horizontal_position', this.value); toggleLogoCustomPos()">
+                                        <option value="right"  {% if (settings.logo_horizontal_position or 'right') == 'right'  %}selected{% endif %}>Right</option>
+                                        <option value="center" {% if settings.logo_horizontal_position == 'center' %}selected{% endif %}>Center</option>
+                                        <option value="left"   {% if settings.logo_horizontal_position == 'left'   %}selected{% endif %}>Left</option>
+                                        <option value="custom" {% if settings.logo_horizontal_position == 'custom' %}selected{% endif %}>Custom</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Custom pixel offsets — visible only when either axis is 'custom' -->
+                            <div id="logo-custom-pos"
+                                 class="grid-2 mt-2"
+                                 style="display:{% if settings.logo_vertical_position == 'custom' or settings.logo_horizontal_position == 'custom' %}grid{% else %}none{% endif %}">
+                                <div class="form-group">
+                                    <label class="form-label">Custom Top (px)</label>
+                                    <input type="number" id="logo_custom_top" class="form-input"
+                                           value="{{ settings.logo_custom_top or '' }}"
+                                           placeholder="e.g. 20"
+                                           onchange="updateSetting('logo_custom_top', this.value)">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Custom Bottom (px)</label>
+                                    <input type="number" id="logo_custom_bottom" class="form-input"
+                                           value="{{ settings.logo_custom_bottom or '' }}"
+                                           placeholder="e.g. 20"
+                                           onchange="updateSetting('logo_custom_bottom', this.value)">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Custom Left (px)</label>
+                                    <input type="number" id="logo_custom_left" class="form-input"
+                                           value="{{ settings.logo_custom_left or '' }}"
+                                           placeholder="e.g. 20"
+                                           onchange="updateSetting('logo_custom_left', this.value)">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Custom Right (px)</label>
+                                    <input type="number" id="logo_custom_right" class="form-input"
+                                           value="{{ settings.logo_custom_right or '' }}"
+                                           placeholder="e.g. 20"
+                                           onchange="updateSetting('logo_custom_right', this.value)">
+                                </div>
+                            </div>
+
+                            <!-- Live visual position picker -->
+                            <div class="mt-3">
+                                <label class="form-label text-xs text-indigo-600 mb-1">Quick-pick position</label>
+                                <div id="logo-pos-grid"
+                                     class="grid gap-1"
+                                     style="grid-template-columns:repeat(3,1fr);max-width:160px">
+                                    {% set verts  = ['top','middle','bottom'] %}
+                                    {% set horizs = ['left','center','right'] %}
+                                    {% for v in verts %}{% for h in horizs %}
+                                    <button type="button"
+                                            data-v="{{ v }}" data-h="{{ h }}"
+                                            onclick="setLogoQuickPos('{{ v }}','{{ h }}')"
+                                            class="logo-pos-btn h-10 rounded border-2 transition-all text-xs font-medium
+                                                   {% if (settings.logo_vertical_position or 'top') == v and (settings.logo_horizontal_position or 'right') == h %}
+                                                       border-indigo-500 bg-indigo-500 text-white
+                                                   {% else %}
+                                                       border-gray-200 bg-white text-gray-400 hover:border-indigo-300
+                                                   {% endif %}"
+                                            title="{{ v|capitalize }} {{ h|capitalize }}">
+                                        <i class="fas fa-dot-circle text-xs"></i>
+                                    </button>
+                                    {% endfor %}{% endfor %}
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1713,6 +2061,41 @@
 
     document.addEventListener('DOMContentLoaded', function() {
         loadPhrases();
+        toggleLogoCustomPos();
     });
+
+    /* ── Logo position helpers ──────────────────────────────────────────── */
+    function toggleLogoCustomPos() {
+        const v = document.getElementById('logo_vertical_position')?.value;
+        const h = document.getElementById('logo_horizontal_position')?.value;
+        const panel = document.getElementById('logo-custom-pos');
+        if (!panel) return;
+        panel.style.display = (v === 'custom' || h === 'custom') ? 'grid' : 'none';
+    }
+
+    function setLogoQuickPos(v, h) {
+        /* Update selects */
+        const vSel = document.getElementById('logo_vertical_position');
+        const hSel = document.getElementById('logo_horizontal_position');
+        if (vSel) vSel.value = v;
+        if (hSel) hSel.value = h;
+
+        /* Persist both */
+        updateSetting('logo_vertical_position', v);
+        updateSetting('logo_horizontal_position', h);
+
+        /* Highlight active grid button */
+        document.querySelectorAll('.logo-pos-btn').forEach(btn => {
+            const active = btn.dataset.v === v && btn.dataset.h === h;
+            btn.classList.toggle('border-indigo-500', active);
+            btn.classList.toggle('bg-indigo-500',     active);
+            btn.classList.toggle('text-white',        active);
+            btn.classList.toggle('border-gray-200',  !active);
+            btn.classList.toggle('bg-white',         !active);
+            btn.classList.toggle('text-gray-400',    !active);
+        });
+
+        toggleLogoCustomPos();
+    }
 </script>
 {% endblock %}

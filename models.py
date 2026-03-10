@@ -23,7 +23,6 @@ class User(db.Model):
         return f'<User {self.email}>'
 
     def to_dict(self):
-        """Convert User object to dictionary for JSON serialization"""
         license_data = None
         if self.license:
             license_data = {
@@ -97,27 +96,25 @@ class OverlaySettings(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     category = db.Column(db.String(50), nullable=False, index=True)
 
-    # Content
+    # ── Content ────────────────────────────────────────────────────────────
     main_text = db.Column(db.String(200))
     secondary_text = db.Column(db.String(200))
-    secondary_phrases = db.Column(db.Text)
+    secondary_phrases = db.Column(db.Text)          # JSON list of rotation phrases
     ticker_text = db.Column(db.String(500))
     company_name = db.Column(db.String(100))
-    company_logo = db.Column(db.String(200))
-    category_image = db.Column(db.String(200))
+    company_logo = db.Column(db.String(200))        # relative path under static/
+    category_image = db.Column(db.String(200))      # relative path under static/
     show_category_image = db.Column(db.Boolean, default=True)
     show_company_logo = db.Column(db.Boolean, default=True)
-
-    # NEW: Ticker visibility toggle
     show_ticker = db.Column(db.Boolean, default=True)
 
-    # Secondary Text Rotation Settings
+    # ── Secondary Text Rotation ────────────────────────────────────────────
     secondary_rotation_enabled = db.Column(db.Boolean, default=False)
     secondary_display_duration = db.Column(db.Float, default=3.0)
     secondary_transition_type = db.Column(db.String(50), default='fade')
     secondary_transition_duration = db.Column(db.Float, default=0.5)
 
-    # Position & Size Controls
+    # ── Overlay Position & Size ────────────────────────────────────────────
     vertical_position = db.Column(db.String(20), default='bottom')
     horizontal_position = db.Column(db.String(20), default='left')
     custom_top = db.Column(db.Integer, default=0)
@@ -134,53 +131,51 @@ class OverlaySettings(db.Model):
     custom_height = db.Column(db.Integer, default=200)
     container_padding = db.Column(db.Integer, default=25)
 
-    # Font Scaling Control
+    # ── Text Scaling ───────────────────────────────────────────────────────
     text_scale_mode = db.Column(db.String(20), default='responsive')
     text_line_height = db.Column(db.Float, default=1.2)
     text_max_lines = db.Column(db.Integer, default=2)
     enable_text_truncation = db.Column(db.Boolean, default=True)
 
-    # GRANULAR COLOR CONTROLS - Overlay Container
+    # ── Overlay Background ─────────────────────────────────────────────────
     overlay_bg_color = db.Column(db.String(7), default='#000000')
     overlay_bg_opacity = db.Column(db.Float, default=0.9)
 
-    # Main Text Colors
+    # ── Main Text Colors ───────────────────────────────────────────────────
     main_text_color = db.Column(db.String(7), default='#FFFFFF')
     main_text_bg_color = db.Column(db.String(7), default='transparent')
     main_text_bg_opacity = db.Column(db.Float, default=1.0)
 
-    # Secondary Text Colors
+    # ── Secondary Text Colors ──────────────────────────────────────────────
     secondary_text_color = db.Column(db.String(7), default='#FFD700')
     secondary_text_bg_color = db.Column(db.String(7), default='transparent')
     secondary_text_bg_opacity = db.Column(db.Float, default=1.0)
 
-    # Ticker Colors
+    # ── Ticker Colors ──────────────────────────────────────────────────────
     ticker_text_color = db.Column(db.String(7), default='#FFFFFF')
     ticker_bg_color = db.Column(db.String(7), default='#1a1a1a')
     ticker_bg_opacity = db.Column(db.Float, default=0.8)
 
-    # Company Name Colors
+    # ── Company Name Colors ────────────────────────────────────────────────
     company_name_color = db.Column(db.String(7), default='#FFD700')
     company_name_bg_color = db.Column(db.String(7), default='transparent')
     company_name_bg_opacity = db.Column(db.Float, default=1.0)
 
-    # Footer Colors
+    # ── Footer Colors ──────────────────────────────────────────────────────
     footer_text_color = db.Column(db.String(7), default='#CCCCCC')
     footer_bg_color = db.Column(db.String(7), default='#1a1a1a')
     footer_bg_opacity = db.Column(db.Float, default=0.7)
 
-    # Accent Color (for borders, decorations, etc)
+    # ── Accent / Border ────────────────────────────────────────────────────
     accent_color = db.Column(db.String(7), default='#FFD700')
-
-    # Border Colors
     border_color = db.Column(db.String(7), default='#FFD700')
     border_width = db.Column(db.Integer, default=0)
 
-    # Legacy color fields (kept for backwards compatibility)
+    # ── Legacy color fields (backwards compatibility) ──────────────────────
     bg_color = db.Column(db.String(7), default='#000000')
     text_color = db.Column(db.String(7), default='#FFFFFF')
 
-    # Font Sizes
+    # ── Font Sizes ─────────────────────────────────────────────────────────
     main_font_size = db.Column(db.Integer, default=32)
     secondary_font_size = db.Column(db.Integer, default=24)
     ticker_font_size = db.Column(db.Integer, default=18)
@@ -188,25 +183,36 @@ class OverlaySettings(db.Model):
     footer_font_size = db.Column(db.Integer, default=14)
 
     border_radius = db.Column(db.Integer, default=10)
-    font_family = db.Column(db.String(100), default='Arial, sans-serif')
 
-    # Per-section font families (null = use global font_family)
-    main_font_family         = db.Column(db.String(100), default=None)
-    secondary_font_family    = db.Column(db.String(100), default=None)
-    ticker_font_family       = db.Column(db.String(100), default=None)
+    # ── Font Families ──────────────────────────────────────────────────────
+    font_family = db.Column(db.String(100), default='Arial, sans-serif')
+    # Per-section overrides — NULL means fall back to the global font_family
+    main_font_family = db.Column(db.String(100), default=None)
+    secondary_font_family = db.Column(db.String(100), default=None)
+    ticker_font_family = db.Column(db.String(100), default=None)
     company_name_font_family = db.Column(db.String(100), default=None)
 
     company_name_italic = db.Column(db.Boolean, default=True)
-
     ticker_speed = db.Column(db.Integer, default=50)
 
-    # Logo Settings
+    # ── Logo Appearance ────────────────────────────────────────────────────
     logo_size = db.Column(db.Integer, default=80)
     logo_opacity = db.Column(db.Float, default=1.0)
     logo_border_radius = db.Column(db.Integer, default=0)
     logo_shadow = db.Column(db.Boolean, default=False)
 
-    # Photo / Category Image Container Settings
+    # ── Logo Position ──────────────────────────────────────────────────────
+    # Preset positions: top | middle | bottom  ×  left | center | right
+    # Set either axis to 'custom' and supply logo_custom_* px values below.
+    logo_vertical_position = db.Column(db.String(20), default='top')
+    logo_horizontal_position = db.Column(db.String(20), default='right')
+    # Custom pixel offsets (used when the corresponding axis is 'custom')
+    logo_custom_top = db.Column(db.Integer, default=None)
+    logo_custom_bottom = db.Column(db.Integer, default=None)
+    logo_custom_left = db.Column(db.Integer, default=None)
+    logo_custom_right = db.Column(db.Integer, default=None)
+
+    # ── Category Image / Photo Container ──────────────────────────────────
     image_size = db.Column(db.Integer, default=128)
     image_shape = db.Column(db.String(20), default='circle')   # circle | square | rounded
     image_border_width = db.Column(db.Integer, default=3)
@@ -214,12 +220,12 @@ class OverlaySettings(db.Model):
     image_position = db.Column(db.String(12), default='left')  # left | right | top | bottom | top-left | top-right
     image_fit = db.Column(db.String(10), default='cover')      # cover | contain | fill
 
-    # Layout specific settings
+    # ── Layout ────────────────────────────────────────────────────────────
     layout_style = db.Column(db.String(50), default='default')
     show_decorative_elements = db.Column(db.Boolean, default=True)
     opacity = db.Column(db.Float, default=0.9)
 
-    # Animation Settings
+    # ── Entrance Animations ────────────────────────────────────────────────
     entrance_animation = db.Column(db.String(50), default='slide-left')
     entrance_duration = db.Column(db.Float, default=1.0)
     entrance_delay = db.Column(db.Float, default=0.0)
@@ -232,7 +238,7 @@ class OverlaySettings(db.Model):
     ticker_entrance = db.Column(db.String(50), default='slide-left')
     ticker_entrance_delay = db.Column(db.Float, default=0.5)
 
-    # Display Animation Settings (New)
+    # ── Continuous Display Animations ─────────────────────────────────────
     logo_display_animation = db.Column(db.String(50), default='none')
     logo_display_animation_enabled = db.Column(db.Boolean, default=False)
     logo_display_animation_duration = db.Column(db.Float, default=3.0)
@@ -243,7 +249,32 @@ class OverlaySettings(db.Model):
     image_display_animation_duration = db.Column(db.Float, default=3.0)
     image_display_animation_frequency = db.Column(db.Float, default=5.0)
 
-    # Visibility
+    # ── Per-section Text Animations ────────────────────────────────────────
+    # NULL on any of these means "use the global text_animation value"
+    main_text_animation = db.Column(db.String(50), default=None)
+    secondary_text_animation = db.Column(db.String(50), default=None)
+    company_name_animation = db.Column(db.String(50), default=None)
+    # 0 = play once, no repeat; >0 = replay every N seconds
+    text_animation_repeat_interval = db.Column(db.Float, default=0.0)
+
+    # ── Overlay Auto-Cycle ─────────────────────────────────────────────────
+    # Show overlay for overlay_visible_duration secs, hide for
+    # overlay_hidden_duration secs, then repeat indefinitely.
+    overlay_cycle_enabled = db.Column(db.Boolean, default=False)
+    overlay_visible_duration = db.Column(db.Float, default=10.0)
+    overlay_hidden_duration = db.Column(db.Float, default=5.0)
+    cycle_entry_animation = db.Column(db.String(50), default='fade')
+    cycle_exit_animation = db.Column(db.String(50), default='fade')
+    cycle_transition_duration = db.Column(db.Float, default=0.6)
+
+    # ── Staggered Element Entry / Exit ────────────────────────────────────
+    stagger_enabled = db.Column(db.Boolean, default=False)
+    stagger_order = db.Column(db.String(100), default='main,secondary,company')
+    stagger_delay = db.Column(db.Float, default=0.3)
+    stagger_element_exit = db.Column(db.String(50), default='fade')
+    stagger_element_entry = db.Column(db.String(50), default='fade')
+
+    # ── Visibility & Timestamps ────────────────────────────────────────────
     is_visible = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -251,11 +282,13 @@ class OverlaySettings(db.Model):
     def __repr__(self):
         return f'<OverlaySettings {self.category}>'
 
+    # ── Helper methods ─────────────────────────────────────────────────────
+
     def get_secondary_phrases_list(self):
         if self.secondary_phrases:
             try:
                 return json.loads(self.secondary_phrases)
-            except:
+            except Exception:
                 return []
         return []
 
@@ -264,9 +297,46 @@ class OverlaySettings(db.Model):
 
     @staticmethod
     def get_defaults(category='funeral'):
-        """Get default settings for a category"""
+        """Return a flat dict of sensible defaults for each built-in category.
+        Used by the reset endpoint and by app.py on first-run initialisation."""
+
+        _shared_logo_pos = {
+            'logo_vertical_position': 'top',
+            'logo_horizontal_position': 'right',
+            'logo_custom_top': None,
+            'logo_custom_bottom': None,
+            'logo_custom_left': None,
+            'logo_custom_right': None,
+        }
+
+        _shared_image = {
+            'image_size': 128,
+            'image_shape': 'circle',
+            'image_border_width': 3,
+            'image_position': 'left',
+            'image_fit': 'cover',
+        }
+
+        _shared_fonts = {
+            'main_font_family': None,
+            'secondary_font_family': None,
+            'ticker_font_family': None,
+            'company_name_font_family': None,
+            'company_name_italic': True,
+        }
+
+        _shared_display_anim = {
+            'logo_display_animation_enabled': False,
+            'logo_display_animation_duration': 3.0,
+            'logo_display_animation_frequency': 5.0,
+            'image_display_animation_enabled': False,
+            'image_display_animation_duration': 3.0,
+            'image_display_animation_frequency': 5.0,
+        }
+
         defaults = {
             'funeral': {
+                # Colors
                 'overlay_bg_color': '#000000',
                 'overlay_bg_opacity': 0.9,
                 'main_text_color': '#FFFFFF',
@@ -287,34 +357,24 @@ class OverlaySettings(db.Model):
                 'accent_color': '#FFD700',
                 'border_color': '#FFD700',
                 'border_width': 0,
+                # Logo
                 'logo_animation': 'scale-in',
                 'logo_opacity': 1.0,
                 'logo_border_radius': 0,
                 'logo_shadow': False,
-                'show_ticker': True,
                 'logo_display_animation': 'pulse',
-                'logo_display_animation_enabled': False,
-                'logo_display_animation_duration': 3.0,
-                'logo_display_animation_frequency': 5.0,
-                'image_display_animation': 'zoom-slow',
-                'image_display_animation_enabled': False,
-                'image_display_animation_duration': 3.0,
-                'image_display_animation_frequency': 5.0,
-                # Photo container
-                'image_size': 128,
-                'image_shape': 'circle',
-                'image_border_width': 3,
+                # Image
                 'image_border_color': '#FFFFFF',
-                'image_position': 'left',
-                'image_fit': 'cover',
-                # Per-section fonts (None = use global)
-                'main_font_family': None,
-                'secondary_font_family': None,
-                'ticker_font_family': None,
-                'company_name_font_family': None,
-                'company_name_italic': True
+                'image_display_animation': 'zoom-slow',
+                # Ticker
+                'show_ticker': True,
+                **_shared_logo_pos,
+                **_shared_image,
+                **_shared_fonts,
+                **_shared_display_anim,
             },
             'wedding': {
+                # Colors
                 'overlay_bg_color': '#FFFFFF',
                 'overlay_bg_opacity': 0.95,
                 'main_text_color': '#D4AF37',
@@ -335,34 +395,25 @@ class OverlaySettings(db.Model):
                 'accent_color': '#D4AF37',
                 'border_color': '#D4AF37',
                 'border_width': 2,
+                # Logo
                 'logo_animation': 'fade-in',
                 'logo_opacity': 1.0,
                 'logo_border_radius': 50,
                 'logo_shadow': True,
-                'show_ticker': True,
                 'logo_display_animation': 'float',
-                'logo_display_animation_enabled': False,
-                'logo_display_animation_duration': 3.0,
-                'logo_display_animation_frequency': 5.0,
-                'image_display_animation': 'pan',
-                'image_display_animation_enabled': False,
-                'image_display_animation_duration': 3.0,
-                'image_display_animation_frequency': 5.0,
-                # Photo container
-                'image_size': 128,
-                'image_shape': 'circle',
-                'image_border_width': 3,
+                # Image
                 'image_border_color': '#D4AF37',
                 'image_position': 'right',
-                'image_fit': 'cover',
-                # Per-section fonts (None = use global)
-                'main_font_family': None,
-                'secondary_font_family': None,
-                'ticker_font_family': None,
-                'company_name_font_family': None,
-                'company_name_italic': True
+                'image_display_animation': 'pan',
+                # Ticker
+                'show_ticker': True,
+                **_shared_logo_pos,
+                **{**_shared_image, 'image_position': 'right'},
+                **_shared_fonts,
+                **_shared_display_anim,
             },
             'ceremony': {
+                # Colors
                 'overlay_bg_color': '#1a237e',
                 'overlay_bg_opacity': 0.9,
                 'main_text_color': '#FFFFFF',
@@ -383,34 +434,32 @@ class OverlaySettings(db.Model):
                 'accent_color': '#FFD700',
                 'border_color': '#FFD700',
                 'border_width': 1,
+                # Logo
                 'logo_animation': 'rotate-in',
                 'logo_opacity': 1.0,
                 'logo_border_radius': 10,
                 'logo_shadow': False,
-                'show_ticker': True,
                 'logo_display_animation': 'rotate-slow',
-                'logo_display_animation_enabled': False,
-                'logo_display_animation_duration': 3.0,
-                'logo_display_animation_frequency': 5.0,
-                'image_display_animation': 'zoom-slow',
-                'image_display_animation_enabled': False,
-                'image_display_animation_duration': 3.0,
-                'image_display_animation_frequency': 5.0,
-                # Photo container
+                # Image
                 'image_size': 120,
+                'image_border_color': '#FFD700',
                 'image_shape': 'rounded',
                 'image_border_width': 2,
-                'image_border_color': '#FFD700',
                 'image_position': 'top',
-                'image_fit': 'cover',
-                # Per-section fonts (None = use global)
-                'main_font_family': None,
-                'secondary_font_family': None,
-                'ticker_font_family': None,
-                'company_name_font_family': None,
-                'company_name_italic': True
-            }
+                'image_display_animation': 'zoom-slow',
+                # Ticker
+                'show_ticker': True,
+                **_shared_logo_pos,
+                **{**_shared_image,
+                   'image_size': 120,
+                   'image_shape': 'rounded',
+                   'image_border_width': 2,
+                   'image_position': 'top'},
+                **_shared_fonts,
+                **_shared_display_anim,
+            },
         }
+
         return defaults.get(category, defaults['funeral'])
 
 
@@ -441,7 +490,7 @@ class OCRSession(db.Model):
             'status': self.status,
             'used_in_ticker': self.used_in_ticker,
             'created_at': self.created_at.isoformat() if self.created_at else None,
-            'updated_at': self.updated_at.isoformat() if self.updated_at else None
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None,
         }
 
 
@@ -473,5 +522,5 @@ class OCRImage(db.Model):
             'error_message': self.error_message,
             'category': self.category,
             'created_at': self.created_at.isoformat() if self.created_at else None,
-            'updated_at': self.updated_at.isoformat() if self.updated_at else None
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None,
         }

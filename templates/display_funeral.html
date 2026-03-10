@@ -1,1359 +1,1059 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Funeral Overlay - Display</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        html, body {
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            background: transparent;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            position: relative;
-        }
-
-        /* Company Logo - Outside overlay, top right */
-        #company-logo-container {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            z-index: 100;
-            display: none;
-        }
-
-        #company-logo-container.visible {
-            display: block;
-        }
-
-        #company-logo {
-            display: block;
-            filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.4));
-            transition: all 0.3s ease;
-        }
-
-        /* Main Overlay Container */
-        #overlay-container {
-            position: absolute;
-            display: none;
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        #overlay-container.visible {
-            display: block;
-        }
-
-        /* Add margin bottom when ticker is visible to create spacing */
-        #overlay-container.ticker-active {
-            margin-bottom: 50px;
-        }
-
-        /* Overlay inner wrapper for decorative elements */
-        #overlay-inner {
-            position: relative;
-            display: flex;
-            flex-direction: row;
-            align-items: center;
-            width: 100%;
-            height: 100%;
-        }
-
-        /* Decorative corner accents */
-        .corner-accent {
-            position: absolute;
-            width: 50px;
-            height: 50px;
-            border: 2px solid;
-            opacity: 0.5;
-            transition: all 0.3s ease;
-            pointer-events: none;
-        }
-
-        .corner-top-left {
-            top: -2px;
-            left: -2px;
-            border-right: none;
-            border-bottom: none;
-        }
-
-        .corner-bottom-right {
-            bottom: -2px;
-            right: -2px;
-            border-left: none;
-            border-top: none;
-        }
-
-        /* Category Image Section - Positioned OUTSIDE the card on the left */
-        #category-image-container {
-            position: absolute;
-            left: -64px;
-            top: 50%;
-            transform: translateY(-50%);
-            z-index: 4;
-            display: none;
-        }
-
-        #category-image-container.visible {
-            display: block;
-        }
-
-        #category-image {
-            display: block;
-            width: 128px;
-            height: 128px;
-            object-fit: cover;
-            border-radius: 50%;
-            padding: 4px;
-            border: 3px solid rgba(255, 255, 255, 0.5);
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
-            transition: all 0.3s ease;
-        }
-
-        /* Text Content Section */
-        #text-content {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            min-width: 0;
-            padding-left: 80px;
-        }
-
-        #main-text,
-        #secondary-text,
-        #company-name {
-            word-wrap: break-word;
-            overflow-wrap: break-word;
-            transition: all 0.4s ease;
-        }
-
-        #main-text {
-            font-weight: 700;
-            line-height: 1.2;
-            letter-spacing: 0.5px;
-            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
-        }
-
-        /* Fixed container for secondary text to prevent dimension changes */
-        #secondary-text-container {
-            position: relative;
-            display: block;
-        }
-
-        #secondary-text {
-            font-weight: 400;
-            line-height: 1.3;
-            letter-spacing: 0.3px;
-            opacity: 0.95;
-            display: block;
-        }
-
-        #company-name {
-            font-weight: 500;
-            opacity: 0.85;
-        }
-
-        /* Ticker Container */
-        #ticker-container {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            overflow: hidden;
-            z-index: 50;
-            display: none;
-            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.25);
-        }
-
-        #ticker-container.visible {
-            display: block;
-        }
-
-        #ticker-wrapper {
-            position: relative;
-            width: 100%;
-            overflow: hidden;
-        }
-
-        #ticker-content {
-            display: inline-block;
-            white-space: nowrap;
-            padding: 14px 0;
-            font-weight: 500;
-            letter-spacing: 0.5px;
-            will-change: transform;
-        }
-
-        /* Entrance Animations */
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        @keyframes slideInLeft {
-            from { opacity: 0; transform: translateX(-100%); }
-            to { opacity: 1; transform: translateX(0); }
-        }
-
-        @keyframes slideInRight {
-            from { opacity: 0; transform: translateX(100%); }
-            to { opacity: 1; transform: translateX(0); }
-        }
-
-        @keyframes slideInUp {
-            from { opacity: 0; transform: translateY(100px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        @keyframes slideInDown {
-            from { opacity: 0; transform: translateY(-100px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        @keyframes zoomIn {
-            from { opacity: 0; transform: scale(0.5); }
-            to { opacity: 1; transform: scale(1); }
-        }
-
-        @keyframes scaleIn {
-            from { opacity: 0; transform: scale(0.8); }
-            to { opacity: 1; transform: scale(1); }
-        }
-
-        @keyframes rotateIn {
-            from { opacity: 0; transform: rotate(-180deg) scale(0.5); }
-            to { opacity: 1; transform: rotate(0deg) scale(1); }
-        }
-
-        @keyframes bounceIn {
-            0% { opacity: 0; transform: scale(0.3); }
-            50% { opacity: 1; transform: scale(1.05); }
-            70% { transform: scale(0.9); }
-            100% { transform: scale(1); }
-        }
-
-        @keyframes flipIn {
-            from { opacity: 0; transform: perspective(400px) rotateY(90deg); }
-            to { opacity: 1; transform: perspective(400px) rotateY(0deg); }
-        }
-
-        /* Entrance Animation Classes */
-        .anim-fadeIn,
-        .anim-fade-in { animation-name: fadeIn; animation-fill-mode: both; }
-
-        .anim-slideInLeft,
-        .anim-slide-in-left,
-        .anim-slide-left { animation-name: slideInLeft; animation-fill-mode: both; }
-
-        .anim-slideInRight,
-        .anim-slide-in-right,
-        .anim-slide-right { animation-name: slideInRight; animation-fill-mode: both; }
-
-        .anim-slideInUp,
-        .anim-slide-in-up,
-        .anim-slide-up { animation-name: slideInUp; animation-fill-mode: both; }
-
-        .anim-slideInDown,
-        .anim-slide-in-down,
-        .anim-slide-down { animation-name: slideInDown; animation-fill-mode: both; }
-
-        .anim-zoomIn,
-        .anim-zoom-in { animation-name: zoomIn; animation-fill-mode: both; }
-
-        .anim-scaleIn,
-        .anim-scale-in { animation-name: scaleIn; animation-fill-mode: both; }
-
-        .anim-rotateIn,
-        .anim-rotate-in { animation-name: rotateIn; animation-fill-mode: both; }
-
-        .anim-bounceIn,
-        .anim-bounce-in { animation-name: bounceIn; animation-fill-mode: both; }
-
-        .anim-flipIn,
-        .anim-flip-in { animation-name: flipIn; animation-fill-mode: both; }
-
-        /* Display Animations (continuous) - For Logo and Image */
-        @keyframes displayPulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-        }
-
-        @keyframes displayBounce {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-10px); }
-        }
-
-        @keyframes displayShake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-5px); }
-            75% { transform: translateX(5px); }
-        }
-
-        @keyframes displayFloat {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-15px); }
-        }
-
-        @keyframes displayGlow {
-            0%, 100% { filter: brightness(1) drop-shadow(0 4px 12px rgba(0, 0, 0, 0.4)); }
-            50% { filter: brightness(1.2) drop-shadow(0 4px 20px rgba(255, 215, 0, 0.6)); }
-        }
-
-        @keyframes displayRotate {
-            from { transform: rotateY(0deg); }
-            to { transform: rotateY(360deg); }
-        }
-
-        @keyframes displayFlip {
-            0%, 100% { transform: rotateY(0deg); }
-            50% { transform: rotateY(180deg); }
-        }
-
-        @keyframes displayZoom {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-        }
-
-        @keyframes displayPan {
-            0%, 100% { transform: translateX(0) scale(1.05); }
-            50% { transform: translateX(-5%) scale(1.05); }
-        }
-
-        @keyframes displayTilt {
-            0%, 100% { transform: rotate(0deg); }
-            25% { transform: rotate(-3deg); }
-            75% { transform: rotate(3deg); }
-        }
-
-        @keyframes displaySwing {
-            0%, 100% { transform: rotate(0deg); }
-            25% { transform: rotate(-5deg); }
-            75% { transform: rotate(5deg); }
-        }
-
-        .display-pulse { animation: displayPulse 2s ease-in-out infinite; }
-        .display-bounce { animation: displayBounce 2s ease-in-out infinite; }
-        .display-shake { animation: displayShake 2s ease-in-out infinite; }
-        .display-float { animation: displayFloat 3s ease-in-out infinite; }
-        .display-glow { animation: displayGlow 3s ease-in-out infinite; }
-        .display-rotate-slow { animation: displayRotate 10s linear infinite; }
-        .display-flip { animation: displayFlip 4s ease-in-out infinite; }
-        .display-flip-slow { animation: displayRotate 12s linear infinite; }
-        .display-zoom-slow { animation: displayZoom 8s ease-in-out infinite; }
-        .display-pan { animation: displayPan 10s ease-in-out infinite; }
-        .display-tilt { animation: displayTilt 3s ease-in-out infinite; }
-        .display-swing { animation: displaySwing 2s ease-in-out infinite; }
-
-        /* Text Animations (continuous) */
-        @keyframes textPulse {
-            0%, 100% { transform: scale(1); opacity: 1; }
-            50% { transform: scale(1.02); opacity: 0.9; }
-        }
-
-        @keyframes textGlow {
-            0%, 100% { text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3); }
-            50% { text-shadow: 0 0 25px currentColor, 0 2px 10px rgba(0, 0, 0, 0.3); }
-        }
-
-        @keyframes textFloat {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-5px); }
-        }
-
-        @keyframes textBounce {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-8px); }
-        }
-
-        @keyframes textShake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-3px); }
-            75% { transform: translateX(3px); }
-        }
-
-        @keyframes textZoom {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.02); }
-        }
-
-        .text-pulse { animation: textPulse 2s ease-in-out infinite; }
-        .text-glow { animation: textGlow 2s ease-in-out infinite; }
-        .text-float { animation: textFloat 3s ease-in-out infinite; }
-        .text-bounce { animation: textBounce 2s ease-in-out infinite; }
-        .text-shake { animation: textShake 2s ease-in-out infinite; }
-        .text-zoom { animation: textZoom 2s ease-in-out infinite; }
-
-        /* Typewriter effect - cursor */
-        .typewriter-cursor {
-            display: inline-block;
-            width: 2px;
-            height: 1em;
-            background-color: currentColor;
-            margin-left: 2px;
-            animation: blink 1s step-start infinite;
-            vertical-align: text-bottom;
-        }
-
-        @keyframes blink {
-            50% { opacity: 0; }
-        }
-
-        /* Image reveal animation */
-        @keyframes photoReveal {
-            from {
-                clip-path: circle(0% at 50% 50%);
-                filter: grayscale(1);
-            }
-            to {
-                clip-path: circle(50% at 50% 50%);
-                filter: grayscale(0);
-            }
-        }
-
-        .photo-reveal {
-            animation: photoReveal 1.5s ease-out 0.7s both;
-        }
-
-        /* Responsive */
-        @media (max-width: 768px) {
-            #overlay-container {
-                gap: 15px;
-            }
-            #overlay-inner {
-                gap: 15px;
-            }
-            #category-image {
-                width: 100px !important;
-                height: 100px !important;
-            }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Overlay Display</title>
+<style>
+/* ─── Reset ──────────────────────────────────────────────────────────────── */
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;overflow:hidden;background:transparent}
+body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;position:relative}
+
+/* ─── Company Logo ───────────────────────────────────────────────────────── */
+#logo-wrap{position:absolute;z-index:100;display:none}
+#logo-wrap.vis{display:block}
+#logo-img{display:block;transition:all .3s ease}
+
+/* ─── Overlay Container ──────────────────────────────────────────────────── */
+#ov{
+  position:absolute;
+  opacity:0;visibility:hidden;pointer-events:none;
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  transition:opacity .6s ease,visibility .6s ease;
+}
+#ov.vis{opacity:1;visibility:visible;pointer-events:auto}
+/* Disable CSS transition during cycle so keyframes are sole opacity driver */
+#ov.no-tr{transition:none!important}
+/* When ticker is showing, push overlay up slightly */
+#ov.ticker-active{margin-bottom:50px}
+
+/* ─── Inner layout ───────────────────────────────────────────────────────── */
+#ov-inner{position:relative;display:flex;flex-direction:row;align-items:center;width:100%;height:100%}
+
+/* ─── Corner accents ─────────────────────────────────────────────────────── */
+.ca{position:absolute;width:50px;height:50px;border:2px solid;opacity:.5;pointer-events:none;display:none}
+.ca-tl{top:-2px;left:-2px;border-right:none;border-bottom:none}
+.ca-br{bottom:-2px;right:-2px;border-left:none;border-top:none}
+
+/* ─── Category image ─────────────────────────────────────────────────────── */
+#img-wrap{position:absolute;z-index:4;display:none}
+#img-wrap.vis{display:block}
+#cat-img{display:block}
+
+/* Force sub-elements invisible the instant the cycle hides the overlay */
+#ov.cycle-hidden #img-wrap,
+#ov.cycle-hidden .ca{
+  visibility:hidden!important;
+  opacity:0!important;
+  transition:none!important;
+}
+
+/* ─── Text content ───────────────────────────────────────────────────────── */
+#txt{flex:1;display:flex;flex-direction:column;gap:10px;min-width:0}
+#main-txt,#sec-wrap,#co-name{word-wrap:break-word;overflow-wrap:break-word}
+/* Wrapper div for secondary text — holds fixed dimensions during rotation */
+#sec-wrap{position:relative;display:block}
+#sec-txt{display:block;transition:all .4s ease}
+
+/* ─── Ticker ─────────────────────────────────────────────────────────────── */
+#ticker-wrap{position:fixed;bottom:0;left:0;width:100%;overflow:hidden;z-index:50;display:none;box-shadow:0 -4px 20px rgba(0,0,0,.25)}
+#ticker-wrap.vis{display:block}
+#ticker-inner{position:relative;width:100%;overflow:hidden}
+#ticker-txt{display:inline-block;white-space:nowrap;padding:14px 0;font-weight:500;letter-spacing:.5px;will-change:transform}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   ENTRANCE ANIMATIONS  (class = "anim-" + settings value)
+════════════════════════════════════════════════════════════════════════════ */
+@keyframes kFadeIn      {from{opacity:0}to{opacity:1}}
+@keyframes kSlideInLeft {from{opacity:0;transform:translateX(-110%)}to{opacity:1;transform:translateX(0)}}
+@keyframes kSlideInRight{from{opacity:0;transform:translateX(110%)}to{opacity:1;transform:translateX(0)}}
+@keyframes kSlideInUp   {from{opacity:0;transform:translateY(80px)}to{opacity:1;transform:translateY(0)}}
+@keyframes kSlideInDown {from{opacity:0;transform:translateY(-80px)}to{opacity:1;transform:translateY(0)}}
+@keyframes kZoomIn      {from{opacity:0;transform:scale(.4)}to{opacity:1;transform:scale(1)}}
+@keyframes kScaleIn     {from{opacity:0;transform:scale(.75)}to{opacity:1;transform:scale(1)}}
+@keyframes kRotateIn    {from{opacity:0;transform:rotate(-180deg) scale(.5)}to{opacity:1;transform:rotate(0deg) scale(1)}}
+@keyframes kBounceIn    {0%{opacity:0;transform:scale(.3)}50%{opacity:1;transform:scale(1.06)}70%{transform:scale(.93)}100%{transform:scale(1)}}
+@keyframes kFlipIn      {from{opacity:0;transform:perspective(400px) rotateY(90deg)}to{opacity:1;transform:perspective(400px) rotateY(0deg)}}
+/* Photo reveal: clip-path circle + desaturate-to-colour */
+@keyframes kPhotoReveal {from{clip-path:circle(0% at 50% 50%);filter:grayscale(1)}to{clip-path:circle(50% at 50% 50%);filter:grayscale(0)}}
+
+.anim-fadeIn,.anim-fade-in    {animation-name:kFadeIn;      animation-fill-mode:both}
+.anim-slideInLeft,.anim-slide-in-left,.anim-slide-left{animation-name:kSlideInLeft; animation-fill-mode:both}
+.anim-slideInRight,.anim-slide-in-right,.anim-slide-right{animation-name:kSlideInRight;animation-fill-mode:both}
+.anim-slideInUp,.anim-slide-in-up,.anim-slide-up{animation-name:kSlideInUp;   animation-fill-mode:both}
+.anim-slideInDown,.anim-slide-in-down,.anim-slide-down{animation-name:kSlideInDown; animation-fill-mode:both}
+.anim-zoomIn,.anim-zoom-in    {animation-name:kZoomIn;      animation-fill-mode:both}
+.anim-scaleIn,.anim-scale-in  {animation-name:kScaleIn;     animation-fill-mode:both}
+.anim-rotateIn,.anim-rotate-in{animation-name:kRotateIn;    animation-fill-mode:both}
+.anim-bounceIn,.anim-bounce-in{animation-name:kBounceIn;    animation-fill-mode:both}
+.anim-flipIn,.anim-flip-in    {animation-name:kFlipIn;      animation-fill-mode:both}
+.anim-photo-reveal            {animation-name:kPhotoReveal; animation-fill-mode:both}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   CONTINUOUS TEXT ANIMATIONS  (class = "text-" + settings value)
+════════════════════════════════════════════════════════════════════════════ */
+@keyframes tPulse     {0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.03);opacity:.88}}
+@keyframes tGlow      {0%,100%{text-shadow:0 2px 10px rgba(0,0,0,.3)}50%{text-shadow:0 0 30px currentColor,0 2px 10px rgba(0,0,0,.3)}}
+@keyframes tFloat     {0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+@keyframes tBounce    {0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+@keyframes tShake     {0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+@keyframes tZoom      {0%,100%{transform:scale(1)}50%{transform:scale(1.04)}}
+@keyframes tShimmer   {0%,80%,100%{text-shadow:none;filter:brightness(1)}20%{text-shadow:-12px 0 14px rgba(255,255,255,.6);filter:brightness(1.3)}40%{text-shadow:0 0 20px rgba(255,255,255,.85);filter:brightness(1.6)}60%{text-shadow:12px 0 14px rgba(255,255,255,.6);filter:brightness(1.3)}}
+@keyframes tNeonFlicker{0%,18%,22%,25%,53%,57%,100%{text-shadow:0 0 5px #fff,0 0 12px currentColor,0 0 25px currentColor,0 0 45px currentColor;opacity:1}20%,24%,55%{text-shadow:none;opacity:.4}}
+@keyframes tGlitch    {0%,6%,48%,54%,100%{transform:translate(0);text-shadow:none}2%{transform:translate(-3px,1px);text-shadow:-3px 0 0 rgba(255,0,0,.7),3px 0 0 rgba(0,255,255,.7)}4%{transform:translate(3px,-1px);text-shadow:3px 0 0 rgba(255,0,0,.7),-3px 0 0 rgba(0,255,255,.7)}50%{transform:translate(2px,2px);text-shadow:-2px 0 0 rgba(255,0,0,.5)}52%{transform:translate(-2px,-2px);text-shadow:2px 0 0 rgba(0,255,255,.5)}}
+@keyframes tGradient  {0%,100%{filter:hue-rotate(0deg)brightness(1)}25%{filter:hue-rotate(30deg)brightness(1.1)}50%{filter:hue-rotate(60deg)brightness(1.2)}75%{filter:hue-rotate(30deg)brightness(1.1)}}
+@keyframes tColorCycle{from{filter:hue-rotate(0deg)}to{filter:hue-rotate(360deg)}}
+@keyframes tBlurPulse {0%,100%{filter:blur(0px)brightness(1)}50%{filter:blur(2.5px)brightness(1.2)}}
+@keyframes tWaveLetter{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+@keyframes twBlink    {50%{opacity:0}}
+
+.text-pulse         {animation:tPulse        2s   ease-in-out infinite}
+.text-glow          {animation:tGlow         2s   ease-in-out infinite}
+.text-float         {animation:tFloat        3s   ease-in-out infinite}
+.text-bounce        {animation:tBounce       2s   ease-in-out infinite}
+.text-shake         {animation:tShake        2s   ease-in-out infinite}
+.text-zoom          {animation:tZoom         2s   ease-in-out infinite}
+.text-shimmer       {animation:tShimmer      2.5s ease-in-out infinite}
+.text-neon-flicker  {animation:tNeonFlicker  3.5s linear      infinite}
+.text-glitch        {animation:tGlitch       4s   steps(1)    infinite}
+.text-gradient-sweep{animation:tGradient     4s   ease-in-out infinite}
+.text-color-cycle   {animation:tColorCycle   5s   linear      infinite}
+.text-blur-pulse    {animation:tBlurPulse    2.5s ease-in-out infinite}
+.wave-letter        {display:inline-block;animation:tWaveLetter 1s ease-in-out infinite}
+.tw-cursor          {display:inline-block;width:2px;height:1em;background:currentColor;margin-left:2px;animation:twBlink 1s step-start infinite;vertical-align:text-bottom}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   CONTINUOUS DISPLAY ANIMATIONS  logo / image  (class = "display-" + value)
+════════════════════════════════════════════════════════════════════════════ */
+@keyframes dPulse     {0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+@keyframes dBounce    {0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+@keyframes dShake     {0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+@keyframes dFloat     {0%,100%{transform:translateY(0)}50%{transform:translateY(-16px)}}
+@keyframes dGlow      {0%,100%{filter:brightness(1) drop-shadow(0 4px 12px rgba(0,0,0,.4))}50%{filter:brightness(1.2) drop-shadow(0 4px 20px rgba(255,215,0,.6))}}
+@keyframes dRotate    {from{transform:rotateY(0)}to{transform:rotateY(360deg)}}
+@keyframes dFlip      {0%,100%{transform:rotateY(0)}50%{transform:rotateY(180deg)}}
+@keyframes dZoom      {0%,100%{transform:scale(1)}50%{transform:scale(1.12)}}
+@keyframes dPan       {0%,100%{transform:translateX(0) scale(1.05)}50%{transform:translateX(-5%) scale(1.05)}}
+@keyframes dTilt      {0%,100%{transform:rotate(0deg)}25%{transform:rotate(-3deg)}75%{transform:rotate(3deg)}}
+@keyframes dSwing     {0%,100%{transform:rotate(0deg)}25%{transform:rotate(-5deg)}75%{transform:rotate(5deg)}}
+
+.display-pulse      {animation:dPulse     2s   ease-in-out infinite}
+.display-bounce     {animation:dBounce    2s   ease-in-out infinite}
+.display-shake      {animation:dShake     2s   ease-in-out infinite}
+.display-float      {animation:dFloat     3s   ease-in-out infinite}
+.display-glow       {animation:dGlow      3s   ease-in-out infinite}
+.display-rotate-slow{animation:dRotate    10s  linear      infinite}
+.display-flip       {animation:dFlip      4s   ease-in-out infinite}
+.display-flip-slow  {animation:dRotate    12s  linear      infinite}
+.display-zoom-slow  {animation:dZoom      8s   ease-in-out infinite}
+.display-pan        {animation:dPan       10s  ease-in-out infinite}
+.display-tilt       {animation:dTilt      3s   ease-in-out infinite}
+.display-swing      {animation:dSwing     2s   ease-in-out infinite}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   CYCLE (overlay entry / exit) KEYFRAMES
+════════════════════════════════════════════════════════════════════════════ */
+@keyframes oFadeIn    {from{opacity:0}to{opacity:1}}
+@keyframes oFadeOut   {from{opacity:1}to{opacity:0}}
+@keyframes oWipeInL   {from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0 0 0 0)}}
+@keyframes oWipeOutL  {from{clip-path:inset(0 0 0 0)}to{clip-path:inset(0 0 0 100%)}}
+@keyframes oWipeInR   {from{clip-path:inset(0 0 0 100%)}to{clip-path:inset(0 0 0 0)}}
+@keyframes oWipeOutR  {from{clip-path:inset(0 0 0 0)}to{clip-path:inset(0 100% 0 0)}}
+@keyframes oWipeInU   {from{clip-path:inset(100% 0 0 0)}to{clip-path:inset(0 0 0 0)}}
+@keyframes oWipeOutU  {from{clip-path:inset(0 0 0 0)}to{clip-path:inset(0 0 100% 0)}}
+@keyframes oWipeInD   {from{clip-path:inset(0 0 100% 0)}to{clip-path:inset(0 0 0 0)}}
+@keyframes oWipeOutD  {from{clip-path:inset(0 0 0 0)}to{clip-path:inset(100% 0 0 0)}}
+@keyframes oSlideInL  {from{opacity:0;transform:translateX(-110%)}to{opacity:1;transform:translateX(0)}}
+@keyframes oSlideOutL {from{opacity:1;transform:translateX(0)}to{opacity:0;transform:translateX(-110%)}}
+@keyframes oSlideInR  {from{opacity:0;transform:translateX(110%)}to{opacity:1;transform:translateX(0)}}
+@keyframes oSlideOutR {from{opacity:1;transform:translateX(0)}to{opacity:0;transform:translateX(110%)}}
+@keyframes oSlideInU  {from{opacity:0;transform:translateY(80px)}to{opacity:1;transform:translateY(0)}}
+@keyframes oSlideOutU {from{opacity:1;transform:translateY(0)}to{opacity:0;transform:translateY(-80px)}}
+@keyframes oSlideInD  {from{opacity:0;transform:translateY(-80px)}to{opacity:1;transform:translateY(0)}}
+@keyframes oSlideOutD {from{opacity:1;transform:translateY(0)}to{opacity:0;transform:translateY(80px)}}
+@keyframes oSplitInH  {from{clip-path:polygon(0 50%,100% 50%,100% 50%,0 50%)}to{clip-path:polygon(0 0,100% 0,100% 100%,0 100%)}}
+@keyframes oSplitOutH {from{clip-path:polygon(0 0,100% 0,100% 100%,0 100%)}to{clip-path:polygon(0 50%,100% 50%,100% 50%,0 50%)}}
+@keyframes oSplitInV  {from{clip-path:polygon(50% 0,50% 0,50% 100%,50% 100%)}to{clip-path:polygon(0 0,100% 0,100% 100%,0 100%)}}
+@keyframes oSplitOutV {from{clip-path:polygon(0 0,100% 0,100% 100%,0 100%)}to{clip-path:polygon(50% 0,50% 0,50% 100%,50% 100%)}}
+@keyframes oIrisIn    {from{clip-path:circle(0% at 50% 50%)}to{clip-path:circle(150% at 50% 50%)}}
+@keyframes oIrisOut   {from{clip-path:circle(150% at 50% 50%)}to{clip-path:circle(0% at 50% 50%)}}
+@keyframes oZoomCornIn{from{opacity:0;transform:scale(.05)}to{opacity:1;transform:scale(1)}}
+@keyframes oZoomCornOut{from{opacity:1;transform:scale(1)}to{opacity:0;transform:scale(.05)}}
+@keyframes oVenetianIn{0%{clip-path:inset(0 0 95% 0)}20%{clip-path:inset(0 0 75% 0)}40%{clip-path:inset(0 0 55% 0)}60%{clip-path:inset(0 0 35% 0)}80%{clip-path:inset(0 0 15% 0)}100%{clip-path:inset(0 0 0% 0)}}
+@keyframes oVenetianOut{from{clip-path:inset(0 0 0% 0)}to{clip-path:inset(0 0 100% 0)}}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   ELEMENT STAGGER KEYFRAMES
+════════════════════════════════════════════════════════════════════════════ */
+@keyframes eFadeIn  {from{opacity:0}to{opacity:1}}
+@keyframes eFadeOut {to{opacity:0}}
+@keyframes eSlInL   {from{opacity:0;transform:translateX(-60px)}to{opacity:1;transform:translateX(0)}}
+@keyframes eSlOutL  {to{opacity:0;transform:translateX(-60px)}}
+@keyframes eSlInR   {from{opacity:0;transform:translateX(60px)}to{opacity:1;transform:translateX(0)}}
+@keyframes eSlOutR  {to{opacity:0;transform:translateX(60px)}}
+@keyframes eSlInU   {from{opacity:0;transform:translateY(-30px)}to{opacity:1;transform:translateY(0)}}
+@keyframes eSlOutU  {to{opacity:0;transform:translateY(-30px)}}
+@keyframes eSlInD   {from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
+@keyframes eSlOutD  {to{opacity:0;transform:translateY(30px)}}
+@keyframes eGrowIn  {from{opacity:0;transform:scale(0) rotate(-6deg)}to{opacity:1;transform:scale(1) rotate(0)}}
+@keyframes eShrinkOut{to{opacity:0;transform:scale(0) rotate(6deg)}}
+@keyframes eBlurIn  {from{opacity:0;filter:blur(14px)}to{opacity:1;filter:blur(0)}}
+@keyframes eBlurOut {to{opacity:0;filter:blur(14px)}}
+
+/* ─── Responsive ─────────────────────────────────────────────────────────── */
+@media(max-width:768px){
+  #cat-img{width:100px!important;height:100px!important}
+}
+</style>
 </head>
 <body>
-    <!-- Company Logo - Outside overlay, top right -->
-    <div id="company-logo-container">
-        <img id="company-logo" src="" alt="Company Logo">
+
+<!-- Company Logo -->
+<div id="logo-wrap"><img id="logo-img" src="" alt="Logo"></div>
+
+<!-- Main Overlay -->
+<div id="ov">
+  <div id="ov-inner">
+    <div class="ca ca-tl"></div>
+    <div class="ca ca-br"></div>
+    <div id="img-wrap"><img id="cat-img" src="" alt=""></div>
+    <div id="txt">
+      <div id="main-txt"></div>
+      <!-- Wrapper holds fixed min-dimensions during secondary phrase rotation -->
+      <div id="sec-wrap"><div id="sec-txt"></div></div>
+      <div id="co-name"></div>
     </div>
-
-    <!-- Main Overlay Container -->
-    <div id="overlay-container">
-        <div id="overlay-inner">
-            <!-- Decorative corner accents -->
-            <div class="corner-accent corner-top-left"></div>
-            <div class="corner-accent corner-bottom-right"></div>
-
-            <!-- Category Image - OUTSIDE card on left, vertically centered -->
-            <div id="category-image-container">
-                <img id="category-image" src="" alt="Category Image">
-            </div>
-
-            <!-- Text Content Section -->
-            <div id="text-content">
-                <div id="main-text"></div>
-                <div id="secondary-text-container">
-                    <div id="secondary-text"></div>
-                </div>
-                <div id="company-name"></div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Ticker Container -->
-    <div id="ticker-container">
-        <div id="ticker-wrapper">
-            <div id="ticker-content"></div>
-        </div>
-    </div>
-
-    <script>
-        const category = new URLSearchParams(window.location.search).get('category') || 'funeral';
-
-        // DOM elements
-        const overlayContainer = document.getElementById('overlay-container');
-        const overlayInner = document.getElementById('overlay-inner');
-        const mainText = document.getElementById('main-text');
-        const secondaryTextContainer = document.getElementById('secondary-text-container');
-        const secondaryText = document.getElementById('secondary-text');
-        const companyName = document.getElementById('company-name');
-        const categoryImageContainer = document.getElementById('category-image-container');
-        const categoryImage = document.getElementById('category-image');
-        const companyLogoContainer = document.getElementById('company-logo-container');
-        const companyLogo = document.getElementById('company-logo');
-        const tickerContainer = document.getElementById('ticker-container');
-        const tickerContent = document.getElementById('ticker-content');
-        const cornerAccents = document.querySelectorAll('.corner-accent');
-
-        let currentSettings = {};
-        let secondaryPhrases = [];
-        let phraseIndex = 0;
-        let rotationInterval = null;
-        let tickerAnimation = null;
-        let textAnimationTimeout = null;
-
-        // Typewriter state
-        let typewriterIntervals = {
-            main: null,
-            secondary: null,
-            company: null
-        };
-
-        // Helper: Calculate maximum dimensions for secondary text to prevent size changes
-        function calculateSecondaryTextDimensions(phrases, fontSize, fontFamily, lineHeight, containerMaxWidth, hasBg, bgPadding) {
-            if (!phrases || phrases.length === 0) return { width: 0, height: 0 };
-
-            const temp = document.createElement('div');
-            temp.style.position = 'absolute';
-            temp.style.visibility = 'hidden';
-            temp.style.fontSize = fontSize + 'px';
-            temp.style.fontFamily = fontFamily;
-            temp.style.fontWeight = '400';
-            temp.style.letterSpacing = '0.3px';
-            temp.style.lineHeight = lineHeight;
-            temp.style.wordWrap = 'break-word';
-            temp.style.overflowWrap = 'break-word';
-            temp.style.maxWidth = containerMaxWidth + 'px';
-
-            // Include padding if background is applied
-            if (hasBg && bgPadding) {
-                temp.style.padding = bgPadding;
-                temp.style.borderRadius = '6px';
-                temp.style.display = 'inline-block';
-            }
-
-            document.body.appendChild(temp);
-
-            let maxWidth = 0;
-            let maxHeight = 0;
-
-            phrases.forEach(phrase => {
-                temp.textContent = phrase;
-                const rect = temp.getBoundingClientRect();
-                if (rect.width > maxWidth) maxWidth = rect.width;
-                if (rect.height > maxHeight) maxHeight = rect.height;
-            });
-
-            document.body.removeChild(temp);
-            return { width: Math.ceil(maxWidth), height: Math.ceil(maxHeight) };
-        }
-
-        // Fetch and apply settings
-        async function updateDisplay() {
-            try {
-                const response = await fetch(`/api/poll/${category}`);
-                const data = await response.json();
-
-                if (data.settings) {
-                    const newSettings = data.settings;
-
-                    // Check if settings changed
-                    if (JSON.stringify(newSettings) !== JSON.stringify(currentSettings)) {
-                        currentSettings = newSettings;
-                        secondaryPhrases = newSettings.secondary_phrases || [];
-                        applySettings();
-                    }
-                }
-            } catch (error) {
-                console.error('Error fetching settings:', error);
-            }
-        }
-
-        function applySettings() {
-            const s = currentSettings;
-
-            // Visibility
-            if (s.is_visible) {
-                overlayContainer.classList.add('visible');
-            } else {
-                overlayContainer.classList.remove('visible');
-            }
-
-            // Apply positioning
-            applyPositioning();
-
-            // Apply styling
-            applyStyling();
-
-            // Apply text content with animations
-            applyTextContent();
-
-            // Apply decorations
-            applyDecorations();
-
-            // Apply animations
-            applyAnimations();
-
-            // Handle secondary rotation
-            if (s.secondary_rotation_enabled && secondaryPhrases.length > 0) {
-                startSecondaryRotation();
-            } else {
-                stopSecondaryRotation();
-            }
-
-            // Category image
-            if (s.show_category_image && s.category_image) {
-                categoryImage.src = `/static/${s.category_image}`;
-                categoryImageContainer.classList.add('visible');
-            } else {
-                categoryImageContainer.classList.remove('visible');
-            }
-
-            // Company logo
-            if (s.show_company_logo && s.company_logo) {
-                companyLogo.src = `/static/${s.company_logo}`;
-                companyLogoContainer.classList.add('visible');
-            } else {
-                companyLogoContainer.classList.remove('visible');
-            }
-
-            // Ticker
-            if (s.show_ticker && s.ticker_text) {
-                tickerContent.textContent = s.ticker_text;
-                tickerContainer.classList.add('visible');
-                overlayContainer.classList.add('ticker-active');
-                startTicker();
-            } else {
-                tickerContainer.classList.remove('visible');
-                overlayContainer.classList.remove('ticker-active');
-                stopTicker();
-            }
-        }
-
-        // Apply positioning based on settings
-        function applyPositioning() {
-            const s = currentSettings;
-
-            // Vertical positioning
-            switch (s.vertical_position) {
-                case 'top':
-                    overlayContainer.style.top = '20px';
-                    overlayContainer.style.bottom = 'auto';
-                    overlayContainer.style.transform = 'none';
-                    break;
-                case 'middle':
-                    overlayContainer.style.top = '50%';
-                    overlayContainer.style.transform = 'translateY(-50%)';
-                    overlayContainer.style.bottom = 'auto';
-                    break;
-                case 'bottom':
-                    overlayContainer.style.bottom = '20px';
-                    overlayContainer.style.top = 'auto';
-                    overlayContainer.style.transform = 'none';
-                    break;
-                case 'custom':
-                    if (s.custom_top !== null && s.custom_top !== undefined) {
-                        overlayContainer.style.top = s.custom_top + 'px';
-                        overlayContainer.style.bottom = 'auto';
-                        overlayContainer.style.transform = 'none';
-                    } else if (s.custom_bottom !== null && s.custom_bottom !== undefined) {
-                        overlayContainer.style.bottom = s.custom_bottom + 'px';
-                        overlayContainer.style.top = 'auto';
-                        overlayContainer.style.transform = 'none';
-                    }
-                    break;
-            }
-
-            // Horizontal positioning
-            switch (s.horizontal_position) {
-                case 'left':
-                    overlayContainer.style.left = '80px';
-                    overlayContainer.style.right = 'auto';
-                    if (s.vertical_position !== 'middle') {
-                        overlayContainer.style.transform = 'none';
-                    }
-                    break;
-                case 'center':
-                    overlayContainer.style.left = '50%';
-                    if (s.vertical_position === 'middle') {
-                        overlayContainer.style.transform = 'translate(-50%, -50%)';
-                    } else {
-                        overlayContainer.style.transform = 'translateX(-50%)';
-                    }
-                    overlayContainer.style.right = 'auto';
-                    break;
-                case 'right':
-                    overlayContainer.style.right = '20px';
-                    overlayContainer.style.left = 'auto';
-                    if (s.vertical_position !== 'middle') {
-                        overlayContainer.style.transform = 'none';
-                    }
-                    break;
-                case 'custom':
-                    if (s.custom_left !== null && s.custom_left !== undefined) {
-                        // Use custom_left directly - user sets their own value
-                        overlayContainer.style.left = s.custom_left + 'px';
-                        overlayContainer.style.right = 'auto';
-                    } else if (s.custom_right !== null && s.custom_right !== undefined) {
-                        overlayContainer.style.right = s.custom_right + 'px';
-                        overlayContainer.style.left = 'auto';
-                    }
-                    if (s.vertical_position !== 'middle') {
-                        overlayContainer.style.transform = 'none';
-                    }
-                    break;
-            }
-
-            // Container dimensions
-            if (s.container_width === 'full') {
-                overlayContainer.style.width = '100%';
-            } else if (s.container_width === 'custom' && s.custom_width) {
-                overlayContainer.style.width = s.custom_width + 'px';
-            } else {
-                overlayContainer.style.width = 'auto';
-                overlayContainer.style.maxWidth = (s.container_max_width || 900) + 'px';
-                overlayContainer.style.minWidth = (s.container_min_width || 400) + 'px';
-            }
-
-            if (s.container_height === 'custom' && s.custom_height) {
-                overlayContainer.style.height = s.custom_height + 'px';
-            } else {
-                overlayContainer.style.height = 'auto';
-            }
-
-            // Apply padding to the text content area
-            const textContentDiv = document.getElementById('text-content');
-            const containerPadding = s.container_padding || 25;
-
-            // --- Dynamic image container positioning ---
-            const imageSize = s.image_size || 128;
-            const imagePos = s.image_position || 'left';
-            const halfSize = Math.round(imageSize / 2);
-            const gap = 16;
-
-            // FULL RESET on every call — this prevents stale styles from a previous position
-            categoryImageContainer.style.position = 'absolute';
-            categoryImageContainer.style.left   = 'auto';
-            categoryImageContainer.style.right  = 'auto';
-            categoryImageContainer.style.top    = 'auto';
-            categoryImageContainer.style.bottom = 'auto';
-            categoryImageContainer.style.transform = 'none';
-            overlayInner.style.flexDirection = 'row';   // always row — image is always abs-positioned
-
-            // Reset all text padding to base, then override per-mode below
-            textContentDiv.style.paddingTop    = containerPadding + 'px';
-            textContentDiv.style.paddingBottom = containerPadding + 'px';
-            textContentDiv.style.paddingLeft   = containerPadding + 'px';
-            textContentDiv.style.paddingRight  = containerPadding + 'px';
-
-            if (imagePos === 'left') {
-                categoryImageContainer.style.left      = -halfSize + 'px';
-                categoryImageContainer.style.top       = '50%';
-                categoryImageContainer.style.transform = 'translateY(-50%)';
-                textContentDiv.style.paddingLeft = (halfSize + gap) + 'px';
-            } else if (imagePos === 'right') {
-                categoryImageContainer.style.right     = -halfSize + 'px';
-                categoryImageContainer.style.top       = '50%';
-                categoryImageContainer.style.transform = 'translateY(-50%)';
-                textContentDiv.style.paddingRight = (halfSize + gap) + 'px';
-            } else if (imagePos === 'top') {
-                categoryImageContainer.style.top       = -halfSize + 'px';
-                categoryImageContainer.style.left      = '50%';
-                categoryImageContainer.style.transform = 'translateX(-50%)';
-                textContentDiv.style.paddingTop = (halfSize + gap) + 'px';
-            } else if (imagePos === 'bottom') {
-                categoryImageContainer.style.bottom    = -halfSize + 'px';
-                categoryImageContainer.style.left      = '50%';
-                categoryImageContainer.style.transform = 'translateX(-50%)';
-                textContentDiv.style.paddingBottom = (halfSize + gap) + 'px';
-            } else if (imagePos === 'top-left') {
-                categoryImageContainer.style.top  = -halfSize + 'px';
-                categoryImageContainer.style.left = -halfSize + 'px';
-                textContentDiv.style.paddingTop  = (halfSize + gap) + 'px';
-                textContentDiv.style.paddingLeft = (halfSize + gap) + 'px';
-            } else if (imagePos === 'top-right') {
-                categoryImageContainer.style.top   = -halfSize + 'px';
-                categoryImageContainer.style.right = -halfSize + 'px';
-                textContentDiv.style.paddingTop   = (halfSize + gap) + 'px';
-                textContentDiv.style.paddingRight = (halfSize + gap) + 'px';
-            }
-
-            // Logo size and styling
-            if (s.logo_size) {
-                companyLogo.style.width = s.logo_size + 'px';
-                companyLogo.style.height = 'auto';
-            }
-
-            companyLogo.style.opacity = s.logo_opacity || 1;
-            companyLogo.style.borderRadius = (s.logo_border_radius || 0) + 'px';
-
-            if (s.logo_shadow) {
-                companyLogo.style.filter = 'drop-shadow(0 4px 12px rgba(0, 0, 0, 0.4))';
-            } else {
-                companyLogo.style.filter = 'none';
-            }
-        }
-
-        // Apply styling (colors, fonts, etc.)
-        // This function applies ALL visual settings from the database:
-        // - Overall overlay opacity (opacity)
-        // - Overlay background color and opacity (overlay_bg_color, overlay_bg_opacity)
-        // - Border styling (border_width, border_color, border_radius)
-        // - Main text (color, background, font size, font family)
-        // - Secondary text (color, background, font size, fixed dimensions for rotation)
-        // - Company name (color, background, font size)
-        // - Ticker (color, background, font size)
-        // - Logo (size, opacity, border radius, shadow)
-        function applyStyling() {
-            const s = currentSettings;
-
-            // Overlay background with opacity
-            overlayContainer.style.backgroundColor = hexToRgba(
-                s.overlay_bg_color || '#1a1a1a',
-                s.overlay_bg_opacity || 0.85
-            );
-            overlayContainer.style.borderRadius = (s.border_radius || 15) + 'px';
-
-            // OVERALL OVERLAY OPACITY (the missing control!)
-            overlayContainer.style.opacity = s.opacity !== undefined ? s.opacity : 0.9;
-
-            // Border
-            if (s.border_width && s.border_width > 0) {
-                overlayContainer.style.border = `${s.border_width}px solid ${s.border_color || '#FFD700'}`;
-            } else {
-                overlayContainer.style.border = 'none';
-            }
-
-            // Set image border colors as CSS variables for gradient
-            const imageBorderColor1 = s.accent_color || '#86efac';
-            const imageBorderColor2 = s.border_color || '#10b981';
-            document.documentElement.style.setProperty('--image-border-color-1', imageBorderColor1);
-            document.documentElement.style.setProperty('--image-border-color-2', imageBorderColor2);
-
-            // Main text styling
-            mainText.style.fontSize = (s.main_font_size || 48) + 'px';
-            mainText.style.color = s.main_text_color || '#FFFFFF';
-            mainText.style.fontFamily = s.main_font_family || s.font_family || 'Segoe UI, sans-serif';
-            mainText.style.lineHeight = s.text_line_height || 1.2;
-
-            // Main text background with opacity
-            if (s.main_text_bg_color && s.main_text_bg_color !== 'transparent' && s.main_text_bg_opacity > 0) {
-                mainText.style.backgroundColor = hexToRgba(
-                    s.main_text_bg_color,
-                    s.main_text_bg_opacity || 0
-                );
-                mainText.style.padding = '10px 15px';
-                mainText.style.borderRadius = '8px';
-                mainText.style.display = 'inline-block';
-            } else {
-                mainText.style.backgroundColor = 'transparent';
-                mainText.style.padding = '0';
-                mainText.style.display = 'block';
-            }
-
-            // Secondary text styling with FIXED dimensions
-            const secondaryFontSize = s.secondary_font_size || 28;
-            const secondaryFontFamily = s.secondary_font_family || s.font_family || 'Segoe UI, sans-serif';
-            const secondaryLineHeight = s.text_line_height || 1.3;
-
-            secondaryText.style.fontSize = secondaryFontSize + 'px';
-            secondaryText.style.color = s.secondary_text_color || '#E0E0E0';
-            secondaryText.style.fontFamily = secondaryFontFamily;
-            secondaryText.style.lineHeight = secondaryLineHeight;
-
-            // Determine if background will be applied
-            const hasSecondaryBg = s.secondary_text_bg_color && s.secondary_text_bg_color !== 'transparent' && (s.secondary_text_bg_opacity || 0) > 0;
-            const secondaryBgPadding = hasSecondaryBg ? '8px 12px' : '0';
-
-            // Calculate and set FIXED dimensions for secondary text container
-            if (s.secondary_rotation_enabled && secondaryPhrases.length > 0) {
-                // Get the max width available (container width - paddings)
-                const containerMaxWidth = (s.container_max_width || 900) - (s.container_padding || 25) * 2 - 80;
-
-                const dims = calculateSecondaryTextDimensions(
-                    secondaryPhrases,
-                    secondaryFontSize,
-                    secondaryFontFamily,
-                    secondaryLineHeight,
-                    containerMaxWidth,
-                    hasSecondaryBg,
-                    secondaryBgPadding
-                );
-
-                if (dims.width > 0 && dims.height > 0) {
-                    secondaryTextContainer.style.minWidth = dims.width + 'px';
-                    secondaryTextContainer.style.minHeight = dims.height + 'px';
-                    // DO NOT set maxHeight - let text grow if needed
-                }
-            } else {
-                secondaryTextContainer.style.minWidth = 'auto';
-                secondaryTextContainer.style.minHeight = 'auto';
-            }
-
-            // Secondary text background with opacity
-            if (hasSecondaryBg) {
-                secondaryText.style.backgroundColor = hexToRgba(
-                    s.secondary_text_bg_color,
-                    s.secondary_text_bg_opacity || 0
-                );
-                secondaryText.style.padding = '8px 12px';
-                secondaryText.style.borderRadius = '6px';
-                secondaryText.style.display = 'inline-block';
-            } else {
-                secondaryText.style.backgroundColor = 'transparent';
-                secondaryText.style.padding = '0';
-                secondaryText.style.display = 'block';
-            }
-
-            // Company name styling
-            companyName.style.fontSize = (s.company_name_font_size || 20) + 'px';
-            companyName.style.color = s.company_name_color || '#B0B0B0';
-            companyName.style.fontFamily = s.company_name_font_family || s.font_family || 'Segoe UI, sans-serif';
-            companyName.style.fontStyle = (s.company_name_italic !== false) ? 'italic' : 'normal';
-
-            // Company name background with opacity
-            if (s.company_name_bg_color && s.company_name_bg_color !== 'transparent' && (s.company_name_bg_opacity || 0) > 0) {
-                companyName.style.backgroundColor = hexToRgba(
-                    s.company_name_bg_color,
-                    s.company_name_bg_opacity || 0
-                );
-                companyName.style.padding = '6px 10px';
-                companyName.style.borderRadius = '5px';
-                companyName.style.display = 'inline-block';
-            } else {
-                companyName.style.backgroundColor = 'transparent';
-                companyName.style.padding = '0';
-                companyName.style.display = 'block';
-            }
-
-            // Ticker styling
-            if (s.show_ticker) {
-                tickerContent.style.fontSize = (s.ticker_font_size || 18) + 'px';
-                tickerContent.style.color = s.ticker_text_color || '#FFFFFF';
-                tickerContent.style.fontFamily = s.ticker_font_family || s.font_family || 'Segoe UI, sans-serif';
-
-                tickerContainer.style.backgroundColor = hexToRgba(
-                    s.ticker_bg_color || '#1a1a1a',
-                    s.ticker_bg_opacity || 0.8
-                );
-            }
-
-            // --- Photo / Category Image container styling ---
-            const imageSize = s.image_size || 128;
-            const imageShape = s.image_shape || 'circle';
-            const imageBorderWidth = s.image_border_width !== undefined ? s.image_border_width : 3;
-            const imageBorderColor = s.image_border_color || '#FFFFFF';
-            const imageFit = s.image_fit || 'cover';
-
-            categoryImage.style.width = imageSize + 'px';
-            categoryImage.style.height = imageSize + 'px';
-            categoryImage.style.objectFit = imageFit;
-            categoryImage.style.border = `${imageBorderWidth}px solid ${imageBorderColor}`;
-            categoryImage.style.background = 'none';
-            categoryImage.style.padding = '0';
-            categoryImage.style.boxShadow = '0 8px 25px rgba(0,0,0,0.35)';
-
-            if (imageShape === 'circle') {
-                categoryImage.style.borderRadius = '50%';
-            } else if (imageShape === 'square') {
-                categoryImage.style.borderRadius = '0';
-            } else if (imageShape === 'rounded') {
-                categoryImage.style.borderRadius = Math.round(imageSize * 0.12) + 'px';
-            }
-        }
-
-        // Apply text content with special animations (typewriter, fade-in-words, etc.)
-        function applyTextContent() {
-            const s = currentSettings;
-            const textAnimation = s.text_animation;
-
-            // Stop any existing typewriter animations
-            Object.keys(typewriterIntervals).forEach(key => {
-                if (typewriterIntervals[key]) {
-                    clearInterval(typewriterIntervals[key]);
-                    typewriterIntervals[key] = null;
-                }
-            });
-
-            // Apply text based on animation type
-            if (textAnimation === 'typewriter') {
-                applyTypewriterEffect(mainText, s.main_text || '', 'main', s.text_animation_speed || 1.0);
-                secondaryText.textContent = s.secondary_text || '';
-                companyName.textContent = s.company_name || '';
-            } else if (textAnimation === 'fade-in-words') {
-                applyFadeInWords(mainText, s.main_text || '', s.text_animation_speed || 1.0);
-                secondaryText.textContent = s.secondary_text || '';
-                companyName.textContent = s.company_name || '';
-            } else if (textAnimation === 'slide-in-words') {
-                applySlideInWords(mainText, s.main_text || '', s.text_animation_speed || 1.0);
-                secondaryText.textContent = s.secondary_text || '';
-                companyName.textContent = s.company_name || '';
-            } else {
-                // Normal text display
-                mainText.textContent = s.main_text || '';
-                secondaryText.textContent = s.secondary_text || '';
-                companyName.textContent = s.company_name || '';
-            }
-        }
-
-        // Typewriter effect
-        function applyTypewriterEffect(element, text, key, speed) {
-            if (!text) {
-                element.innerHTML = '';
-                return;
-            }
-
-            element.innerHTML = '<span class="typewriter-cursor"></span>';
-            let index = 0;
-            const baseDelay = 100 / speed;
-
-            typewriterIntervals[key] = setInterval(() => {
-                if (index < text.length) {
-                    const cursor = element.querySelector('.typewriter-cursor');
-                    const textNode = document.createTextNode(text.charAt(index));
-                    element.insertBefore(textNode, cursor);
-                    index++;
-                } else {
-                    clearInterval(typewriterIntervals[key]);
-                    typewriterIntervals[key] = null;
-                    setTimeout(() => {
-                        const cursor = element.querySelector('.typewriter-cursor');
-                        if (cursor) cursor.remove();
-                    }, 1000);
-                }
-            }, baseDelay);
-        }
-
-        // Fade in words effect
-        function applyFadeInWords(element, text, speed) {
-            if (!text) {
-                element.innerHTML = '';
-                return;
-            }
-
-            const words = text.split(' ');
-            element.innerHTML = '';
-            const baseDelay = 200 / speed;
-
-            words.forEach((word, index) => {
-                const span = document.createElement('span');
-                span.textContent = word;
-                span.style.opacity = '0';
-                span.style.display = 'inline-block';
-                span.style.marginRight = '0.3em';
-                span.style.transition = 'opacity 0.5s ease-in';
-                element.appendChild(span);
-
-                setTimeout(() => {
-                    span.style.opacity = '1';
-                }, index * baseDelay);
-            });
-        }
-
-        // Slide in words effect
-        function applySlideInWords(element, text, speed) {
-            if (!text) {
-                element.innerHTML = '';
-                return;
-            }
-
-            const words = text.split(' ');
-            element.innerHTML = '';
-            const baseDelay = 200 / speed;
-
-            words.forEach((word, index) => {
-                const span = document.createElement('span');
-                span.textContent = word;
-                span.style.opacity = '0';
-                span.style.transform = 'translateX(-20px)';
-                span.style.display = 'inline-block';
-                span.style.marginRight = '0.3em';
-                span.style.transition = 'all 0.5s ease-out';
-                element.appendChild(span);
-
-                setTimeout(() => {
-                    span.style.opacity = '1';
-                    span.style.transform = 'translateX(0)';
-                }, index * baseDelay);
-            });
-        }
-
-        // Apply decorative elements
-        function applyDecorations() {
-            const s = currentSettings;
-
-            if (s.show_decorative_elements) {
-                cornerAccents.forEach(corner => {
-                    corner.style.display = 'block';
-                    corner.style.borderColor = s.accent_color || '#FFD700';
-                });
-            } else {
-                cornerAccents.forEach(corner => {
-                    corner.style.display = 'none';
-                });
-            }
-        }
-
-        // Apply all animations
-        function applyAnimations() {
-            const s = currentSettings;
-
-            // Clear any pending text animation timeout
-            if (textAnimationTimeout) {
-                clearTimeout(textAnimationTimeout);
-                textAnimationTimeout = null;
-            }
-
-            // Calculate maximum entrance animation duration
-            let maxEntranceDuration = 0;
-            const entranceDuration = s.entrance_duration || 1;
-            const entranceDelay = s.entrance_delay || 0;
-            const logoAnimDelay = s.logo_animation_delay || 0.3;
-            const imageAnimDelay = s.image_animation_delay || 0.2;
-            const tickerEntranceDelay = s.ticker_entrance_delay || 0.5;
-
-            if (s.entrance_animation && s.entrance_animation !== 'none') {
-                maxEntranceDuration = Math.max(maxEntranceDuration, entranceDuration + entranceDelay);
-            }
-            if (s.logo_animation && s.logo_animation !== 'none' && s.show_company_logo) {
-                maxEntranceDuration = Math.max(maxEntranceDuration, entranceDuration + logoAnimDelay);
-            }
-            if (s.image_animation && s.image_animation !== 'none' && s.show_category_image) {
-                maxEntranceDuration = Math.max(maxEntranceDuration, entranceDuration + imageAnimDelay);
-            }
-            if (s.ticker_entrance && s.ticker_entrance !== 'none' && s.show_ticker) {
-                maxEntranceDuration = Math.max(maxEntranceDuration, entranceDuration + tickerEntranceDelay);
-            }
-
-            // Entrance animation for overlay
-            if (s.entrance_animation && s.entrance_animation !== 'none') {
-                overlayContainer.className = overlayContainer.className
-                    .split(' ')
-                    .filter(c => !c.startsWith('anim-'))
-                    .join(' ');
-
-                overlayContainer.classList.add('anim-' + s.entrance_animation);
-                overlayContainer.style.animationDuration = entranceDuration + 's';
-                overlayContainer.style.animationDelay = entranceDelay + 's';
-            }
-
-            // Logo entrance animation
-            if (s.logo_animation && s.logo_animation !== 'none') {
-                companyLogo.className = companyLogo.className
-                    .split(' ')
-                    .filter(c => !c.startsWith('anim-'))
-                    .join(' ');
-
-                companyLogo.classList.add('anim-' + s.logo_animation);
-                companyLogo.style.animationDuration = entranceDuration + 's';
-                companyLogo.style.animationDelay = logoAnimDelay + 's';
-            }
-
-            // Image entrance animation
-            if (s.image_animation && s.image_animation !== 'none') {
-                categoryImage.className = categoryImage.className
-                    .split(' ')
-                    .filter(c => !c.startsWith('anim-'))
-                    .join(' ');
-
-                categoryImage.classList.add('anim-' + s.image_animation);
-                categoryImage.style.animationDuration = entranceDuration + 's';
-                categoryImage.style.animationDelay = imageAnimDelay + 's';
-            }
-
-            // Ticker entrance animation
-            if (s.ticker_entrance && s.ticker_entrance !== 'none') {
-                tickerContainer.className = tickerContainer.className
-                    .split(' ')
-                    .filter(c => !c.startsWith('anim-'))
-                    .join(' ');
-
-                tickerContainer.classList.add('anim-' + s.ticker_entrance);
-                tickerContainer.style.animationDuration = entranceDuration + 's';
-                tickerContainer.style.animationDelay = tickerEntranceDelay + 's';
-            }
-
-            // Text continuous animations - START AFTER entrance animations complete
-            const textAnimation = s.text_animation;
-            if (textAnimation && textAnimation !== 'none' &&
-                !['typewriter', 'fade-in-words', 'slide-in-words'].includes(textAnimation)) {
-
-                // Delay text animations until entrance animations complete
-                const delayMs = (maxEntranceDuration * 1000) + 100;
-
-                textAnimationTimeout = setTimeout(() => {
-                    [mainText, secondaryText, companyName].forEach(element => {
-                        if (!element.textContent) return;
-
-                        element.className = element.className
-                            .split(' ')
-                            .filter(c => !c.startsWith('text-'))
-                            .join(' ');
-
-                        let animClass = textAnimation;
-                        if (['pulse', 'glow', 'float', 'bounce', 'shake', 'zoom'].includes(animClass)) {
-                            animClass = 'text-' + animClass;
-                        }
-
-                        element.classList.add(animClass);
-                        element.style.animationDuration = (s.text_animation_speed || 2) + 's';
-                    });
-                }, delayMs);
-            }
-
-            // Logo display animation (continuous)
-            if (s.logo_display_animation_enabled && s.logo_display_animation && s.logo_display_animation !== 'none') {
-                companyLogo.className = companyLogo.className
-                    .split(' ')
-                    .filter(c => !c.startsWith('display-'))
-                    .join(' ');
-
-                companyLogo.classList.add('display-' + s.logo_display_animation);
-
-                if (s.logo_display_animation_duration) {
-                    companyLogo.style.animationDuration = s.logo_display_animation_duration + 's';
-                }
-            }
-
-            // Image display animation (continuous)
-            if (s.image_display_animation_enabled && s.image_display_animation && s.image_display_animation !== 'none') {
-                categoryImage.className = categoryImage.className
-                    .split(' ')
-                    .filter(c => !c.startsWith('display-'))
-                    .join(' ');
-
-                categoryImage.classList.add('display-' + s.image_display_animation);
-
-                if (s.image_display_animation_duration) {
-                    categoryImage.style.animationDuration = s.image_display_animation_duration + 's';
-                }
-            }
-        }
-
-        // Secondary text rotation
-        function startSecondaryRotation() {
-            stopSecondaryRotation();
-
-            if (!secondaryPhrases.length) return;
-
-            const s = currentSettings;
-            const duration = (s.secondary_display_duration || 3) * 1000;
-
-            rotationInterval = setInterval(() => {
-                phraseIndex = (phraseIndex + 1) % secondaryPhrases.length;
-                const newText = secondaryPhrases[phraseIndex];
-
-                const transitionType = s.secondary_transition_type || 'fade';
-                const transitionDuration = (s.secondary_transition_duration || 0.5) * 1000;
-
-                if (transitionType === 'fade') {
-                    secondaryText.style.transition = `opacity ${transitionDuration}ms`;
-                    secondaryText.style.opacity = '0';
-                    setTimeout(() => {
-                        secondaryText.textContent = newText;
-                        secondaryText.style.opacity = '1';
-                    }, transitionDuration);
-                } else if (transitionType === 'slide') {
-                    secondaryText.style.transition = `transform ${transitionDuration}ms, opacity ${transitionDuration}ms`;
-                    secondaryText.style.transform = 'translateX(-50px)';
-                    secondaryText.style.opacity = '0';
-                    setTimeout(() => {
-                        secondaryText.textContent = newText;
-                        secondaryText.style.transform = 'translateX(0)';
-                        secondaryText.style.opacity = '1';
-                    }, transitionDuration);
-                } else {
-                    secondaryText.textContent = newText;
-                }
-            }, duration);
-        }
-
-        function stopSecondaryRotation() {
-            if (rotationInterval) {
-                clearInterval(rotationInterval);
-                rotationInterval = null;
-            }
-        }
-
-        // Ticker scrolling animation
-        function startTicker() {
-            stopTicker();
-
-            const s = currentSettings;
-            const containerWidth = tickerContainer.offsetWidth;
-            const contentWidth = tickerContent.scrollWidth;
-
-            if (contentWidth <= containerWidth) {
-                tickerContent.style.transform = 'translateX(0)';
-                return;
-            }
-
-            const speed = s.ticker_speed || 50;
-            const pixelsPerSecond = speed * 2;
-            const totalDistance = contentWidth + containerWidth;
-            const duration = (totalDistance / pixelsPerSecond) * 1000;
-
-            let startTime = null;
-            let startPos = containerWidth;
-
-            function animate(timestamp) {
-                if (!startTime) startTime = timestamp;
-                const elapsed = timestamp - startTime;
-                const progress = elapsed / duration;
-                const currentPos = startPos - (totalDistance * progress);
-
-                tickerContent.style.transform = `translateX(${currentPos}px)`;
-
-                if (currentPos <= -contentWidth) {
-                    startTime = timestamp;
-                    startPos = containerWidth;
-                }
-
-                tickerAnimation = requestAnimationFrame(animate);
-            }
-
-            tickerAnimation = requestAnimationFrame(animate);
-        }
-
-        function stopTicker() {
-            if (tickerAnimation) {
-                cancelAnimationFrame(tickerAnimation);
-                tickerAnimation = null;
-            }
-        }
-
-        // Utility: Convert hex to RGBA
-        function hexToRgba(hex, alpha) {
-            if (!hex || hex === 'transparent' || hex === '') return 'transparent';
-
-            // Remove # if present
-            hex = hex.replace('#', '');
-
-            // Handle 3-character hex codes
-            if (hex.length === 3) {
-                hex = hex.split('').map(c => c + c).join('');
-            }
-
-            // Parse RGB values
-            const r = parseInt(hex.substring(0, 2), 16) || 0;
-            const g = parseInt(hex.substring(2, 4), 16) || 0;
-            const b = parseInt(hex.substring(4, 6), 16) || 0;
-
-            // Ensure alpha is a valid number between 0 and 1
-            let a = parseFloat(alpha);
-            if (isNaN(a) || a === undefined || a === null) {
-                a = 1;
-            }
-            a = Math.max(0, Math.min(1, a));
-
-            return `rgba(${r}, ${g}, ${b}, ${a})`;
-        }
-
-        // Start polling for updates every 2 seconds
-        setInterval(updateDisplay, 2000);
-
-        // Initial load
-        updateDisplay();
-    </script>
+  </div>
+</div>
+
+<!-- Ticker -->
+<div id="ticker-wrap">
+  <div id="ticker-inner">
+    <div id="ticker-txt"></div>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+const CAT = new URLSearchParams(location.search).get('category') || 'funeral';
+
+/* ── DOM refs ─────────────────────────────────────────────────────────────── */
+const ovEl         = document.getElementById('ov');
+const mainEl       = document.getElementById('main-txt');
+const secWrapEl    = document.getElementById('sec-wrap');
+const secEl        = document.getElementById('sec-txt');
+const coEl         = document.getElementById('co-name');
+const imgWrapEl    = document.getElementById('img-wrap');
+const catImgEl     = document.getElementById('cat-img');
+const logoWrapEl   = document.getElementById('logo-wrap');
+const logoImgEl    = document.getElementById('logo-img');
+const tickerWrapEl = document.getElementById('ticker-wrap');
+const tickerTxtEl  = document.getElementById('ticker-txt');
+const txtEl        = document.getElementById('txt');
+const cornerEls    = document.querySelectorAll('.ca');
+
+/* ── Runtime state ────────────────────────────────────────────────────────── */
+let cur = {}, phrases = [], phraseIdx = 0;
+let rotTimer = null, tickerRAF = null;
+let cycleTimer = null, cycleOn = false;
+let twTimers = { main: null, sec: null, co: null };
+let txtAnimTO = null, txtRepeatTO = null;
+
+/* ── Lookup tables ────────────────────────────────────────────────────────── */
+const CYCLE_MAP = {
+  'fade'       :{ i:'oFadeIn',     o:'oFadeOut'    },
+  'wipe-left'  :{ i:'oWipeInL',    o:'oWipeOutL'   },
+  'wipe-right' :{ i:'oWipeInR',    o:'oWipeOutR'   },
+  'wipe-up'    :{ i:'oWipeInU',    o:'oWipeOutU'   },
+  'wipe-down'  :{ i:'oWipeInD',    o:'oWipeOutD'   },
+  'slide-left' :{ i:'oSlideInL',   o:'oSlideOutL'  },
+  'slide-right':{ i:'oSlideInR',   o:'oSlideOutR'  },
+  'slide-up'   :{ i:'oSlideInU',   o:'oSlideOutU'  },
+  'slide-down' :{ i:'oSlideInD',   o:'oSlideOutD'  },
+  'split-h'    :{ i:'oSplitInH',   o:'oSplitOutH'  },
+  'split-v'    :{ i:'oSplitInV',   o:'oSplitOutV'  },
+  'iris'       :{ i:'oIrisIn',     o:'oIrisOut'    },
+  'zoom-corner':{ i:'oZoomCornIn', o:'oZoomCornOut'},
+  'venetian'   :{ i:'oVenetianIn', o:'oVenetianOut'},
+};
+
+const STAGGER_MAP = {
+  'fade'       :{ i:'eFadeIn',  o:'eFadeOut'  },
+  'slide-left' :{ i:'eSlInL',   o:'eSlOutL'   },
+  'slide-right':{ i:'eSlInR',   o:'eSlOutR'   },
+  'slide-up'   :{ i:'eSlInU',   o:'eSlOutU'   },
+  'slide-down' :{ i:'eSlInD',   o:'eSlOutD'   },
+  'shrink'     :{ i:'eGrowIn',  o:'eShrinkOut'},
+  'blur'       :{ i:'eBlurIn',  o:'eBlurOut'  },
+};
+
+const CONTINUOUS_SET = new Set([
+  'pulse','glow','float','bounce','shake','zoom',
+  'shimmer','neon-flicker','glitch','gradient-sweep','color-cycle','blur-pulse'
+]);
+
+/* ════════════════════════════════════════════════════════════════════════════
+   MASTER APPLY
+════════════════════════════════════════════════════════════════════════════ */
+function applySettings(s) {
+  /* 1. Visibility / cycle */
+  if (s.is_visible) {
+    if (s.overlay_cycle_enabled) { startCycle(s); }
+    else { stopCycle(); ovEl.classList.add('vis'); }
+  } else {
+    stopCycle();
+    ovEl.classList.remove('vis');
+    ovEl.style.visibility = '';
+  }
+
+  /* 2. Style, layout, assets */
+  applyStyling(s);
+  applyPositioning(s);
+  applyDecorations(s);
+  applyAssets(s);
+
+  /* 3. Phrase data + text */
+  phrases = s.secondary_phrases || [];
+  applyText(s);
+
+  /* 4. Secondary rotation */
+  if (s.secondary_rotation_enabled && phrases.length > 0) startRotation(s);
+  else stopRotation();
+
+  /* 5. Animations — last, so elements exist and are visible */
+  applyAnimations(s);
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   UTILITIES
+════════════════════════════════════════════════════════════════════════════ */
+function toRgba(hex, a) {
+  if (!hex || hex === 'transparent' || hex === '') return 'transparent';
+  hex = hex.replace('#', '');
+  if (hex.length === 3) hex = hex.split('').map(c => c + c).join('');
+  const r = parseInt(hex.slice(0, 2), 16) || 0;
+  const g = parseInt(hex.slice(2, 4), 16) || 0;
+  const b = parseInt(hex.slice(4, 6), 16) || 0;
+  a = parseFloat(a); if (isNaN(a)) a = 1;
+  return `rgba(${r},${g},${b},${Math.max(0, Math.min(1, a))})`;
+}
+
+function stripClass(el, prefix) {
+  el.className = el.className.split(' ').filter(c => !c.startsWith(prefix)).join(' ');
+}
+
+function resolveAnim(specific, fallback) {
+  return (specific && specific !== 'none') ? specific : (fallback || 'none');
+}
+
+/* Pre-calculate the maximum rendered width & height of all phrases so the
+   secondary-text wrapper can be locked to those dimensions, preventing the
+   overlay from resizing or reflowing during phrase rotation. */
+function calcSecondaryDims(phrases, fontSize, fontFamily, lineHeight, maxW, hasBg, bgPad) {
+  if (!phrases || !phrases.length) return { w: 0, h: 0 };
+  const tmp = document.createElement('div');
+  tmp.style.cssText = [
+    'position:absolute', 'visibility:hidden', 'pointer-events:none',
+    `font-size:${fontSize}px`, `font-family:${fontFamily}`,
+    'font-weight:400', 'letter-spacing:0.3px', `line-height:${lineHeight}`,
+    'word-wrap:break-word', 'overflow-wrap:break-word',
+    `max-width:${maxW}px`,
+  ].join(';');
+  if (hasBg && bgPad) {
+    tmp.style.padding = bgPad;
+    tmp.style.borderRadius = '6px';
+    tmp.style.display = 'inline-block';
+  }
+  document.body.appendChild(tmp);
+  let maxWidth = 0, maxHeight = 0;
+  phrases.forEach(p => {
+    tmp.textContent = p;
+    const r = tmp.getBoundingClientRect();
+    if (r.width  > maxWidth)  maxWidth  = r.width;
+    if (r.height > maxHeight) maxHeight = r.height;
+  });
+  document.body.removeChild(tmp);
+  return { w: Math.ceil(maxWidth), h: Math.ceil(maxHeight) };
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   STYLING
+════════════════════════════════════════════════════════════════════════════ */
+function styleTextEl(el, o) {
+  el.style.fontSize   = o.size   + 'px';
+  el.style.color      = o.color  || '';
+  el.style.fontFamily = o.family || 'Segoe UI,sans-serif';
+  if (o.lh) el.style.lineHeight = o.lh;
+  const op = (o.bgOp != null && o.bgOp !== '') ? parseFloat(o.bgOp) : 0;
+  if (o.bg && o.bg !== 'transparent' && o.bg !== '' && op > 0) {
+    el.style.backgroundColor = toRgba(o.bg, op);
+    el.style.padding         = o.pad  || '8px 12px';
+    el.style.borderRadius    = '6px';
+    el.style.display         = 'inline-block';
+  } else {
+    el.style.backgroundColor = 'transparent';
+    el.style.padding         = '0';
+    el.style.display         = 'block';
+  }
+}
+
+function applyStyling(s) {
+  const gf = s.font_family || 'Segoe UI,sans-serif';
+
+  /* Overall overlay */
+  ovEl.style.backgroundColor = toRgba(s.overlay_bg_color || '#1a1a1a', s.overlay_bg_opacity != null ? s.overlay_bg_opacity : 0.85);
+  ovEl.style.borderRadius    = (s.border_radius || 15) + 'px';
+  /* Store target opacity so cycle engine can restore it on show */
+  const targetOp = s.opacity != null ? s.opacity : 0.9;
+  ovEl.dataset.targetOpacity = targetOp;
+  if (ovEl.style.opacity !== '0') ovEl.style.opacity = targetOp;
+  ovEl.style.border = (s.border_width > 0)
+    ? `${s.border_width}px solid ${s.border_color || '#FFD700'}`
+    : 'none';
+
+  /* Expose accent / border colors as CSS vars (used by gradient image border if any) */
+  document.documentElement.style.setProperty('--accent-color',       s.accent_color  || '#86efac');
+  document.documentElement.style.setProperty('--border-color',       s.border_color  || '#10b981');
+
+  /* Main text */
+  styleTextEl(mainEl, {
+    size:  s.main_font_size      || 48,
+    color: s.main_text_color     || '#FFFFFF',
+    family:s.main_font_family    || gf,
+    bg:    s.main_text_bg_color,
+    bgOp:  s.main_text_bg_opacity,
+    lh:    s.text_line_height    || 1.2,
+    pad:   '10px 15px',
+  });
+
+  /* Secondary text */
+  const secFontSize   = s.secondary_font_size      || 28;
+  const secFontFamily = s.secondary_font_family    || gf;
+  const secLineHeight = s.text_line_height         || 1.3;
+  const secBgOp       = parseFloat(s.secondary_text_bg_opacity) || 0;
+  const hasSecBg      = !!(s.secondary_text_bg_color && s.secondary_text_bg_color !== 'transparent' && secBgOp > 0);
+
+  styleTextEl(secEl, {
+    size:  secFontSize,
+    color: s.secondary_text_color    || '#E0E0E0',
+    family:secFontFamily,
+    lh:    secLineHeight,
+    bg:    s.secondary_text_bg_color,
+    bgOp:  s.secondary_text_bg_opacity,
+  });
+
+  /* Lock secondary wrapper dimensions so overlay never reflowing during rotation */
+  if (s.secondary_rotation_enabled && phrases.length > 0) {
+    const containerMaxW = (s.container_max_width || 900) - (s.container_padding || 25) * 2 - 80;
+    const dims = calcSecondaryDims(phrases, secFontSize, secFontFamily, secLineHeight,
+                                   containerMaxW, hasSecBg, hasSecBg ? '8px 12px' : '0');
+    if (dims.w > 0 && dims.h > 0) {
+      secWrapEl.style.minWidth  = dims.w + 'px';
+      secWrapEl.style.minHeight = dims.h + 'px';
+    }
+  } else {
+    secWrapEl.style.minWidth = secWrapEl.style.minHeight = 'auto';
+  }
+
+  /* Company name */
+  styleTextEl(coEl, {
+    size:  s.company_name_font_size   || 20,
+    color: s.company_name_color       || '#B0B0B0',
+    family:s.company_name_font_family || gf,
+    bg:    s.company_name_bg_color,
+    bgOp:  s.company_name_bg_opacity,
+    pad:   '6px 10px',
+  });
+  coEl.style.fontWeight = '500';
+  coEl.style.opacity    = '0.85';
+  coEl.style.fontStyle  = (s.company_name_italic !== false) ? 'italic' : 'normal';
+
+  /* Ticker */
+  const tkFontSize = s.ticker_font_size || 18;
+  tickerWrapEl.style.backgroundColor = toRgba(s.ticker_bg_color || '#1a1a1a', s.ticker_bg_opacity != null ? s.ticker_bg_opacity : 0.8);
+  tickerTxtEl.style.fontSize         = tkFontSize + 'px';
+  tickerTxtEl.style.color            = s.ticker_text_color  || '#FFFFFF';
+  tickerTxtEl.style.fontFamily       = s.ticker_font_family || gf;
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   POSITIONING
+════════════════════════════════════════════════════════════════════════════ */
+function applyPositioning(s) {
+  const pad = s.container_padding != null ? s.container_padding : 25;
+  const vp  = s.vertical_position   || 'bottom';
+  const hp  = s.horizontal_position || 'left';
+
+  /* ── Vertical ─────────────────────────────────────────────────────────── */
+  ovEl.style.top = ovEl.style.bottom = 'auto';
+  ovEl.style.transform = 'none';
+  if      (vp === 'top')    { ovEl.style.top    = '20px'; }
+  else if (vp === 'middle'  || vp === 'center') { ovEl.style.top = '50%'; ovEl.style.transform = 'translateY(-50%)'; }
+  else if (vp === 'bottom') { ovEl.style.bottom = '20px'; }
+  else if (vp === 'custom') {
+    if      (s.custom_top    != null) { ovEl.style.top    = s.custom_top    + 'px'; }
+    else if (s.custom_bottom != null) { ovEl.style.bottom = s.custom_bottom + 'px'; }
+  }
+
+  /* ── Horizontal ───────────────────────────────────────────────────────── */
+  const vCenter = (vp === 'middle' || vp === 'center');
+  ovEl.style.left = ovEl.style.right = 'auto';
+  if      (hp === 'left')   { ovEl.style.left  = '80px';  if (!vCenter) ovEl.style.transform = 'none'; }
+  else if (hp === 'center') { ovEl.style.left  = '50%';   ovEl.style.transform = vCenter ? 'translate(-50%,-50%)' : 'translateX(-50%)'; }
+  else if (hp === 'right')  { ovEl.style.right = '20px';  if (!vCenter) ovEl.style.transform = 'none'; }
+  else if (hp === 'custom') {
+    if      (s.custom_left  != null) { ovEl.style.left  = s.custom_left  + 'px'; }
+    else if (s.custom_right != null) { ovEl.style.right = s.custom_right + 'px'; }
+    if (!vCenter) ovEl.style.transform = 'none';
+  }
+
+  /* ── Dimensions ───────────────────────────────────────────────────────── */
+  if (s.container_width === 'full') {
+    ovEl.style.width = '100%'; ovEl.style.maxWidth = ''; ovEl.style.minWidth = '';
+  } else if (s.container_width === 'custom' && s.custom_width) {
+    ovEl.style.width = s.custom_width + 'px'; ovEl.style.maxWidth = ''; ovEl.style.minWidth = '';
+  } else {
+    ovEl.style.width    = 'auto';
+    ovEl.style.maxWidth = (s.container_max_width || 900) + 'px';
+    ovEl.style.minWidth = (s.container_min_width || 400) + 'px';
+  }
+  ovEl.style.height = (s.container_height === 'custom' && s.custom_height) ? s.custom_height + 'px' : 'auto';
+
+  /* ── Image layout ─────────────────────────────────────────────────────── */
+  /* Reset ALL text padding first, then override per-position below */
+  txtEl.style.paddingTop    = pad + 'px';
+  txtEl.style.paddingBottom = pad + 'px';
+  txtEl.style.paddingLeft   = pad + 'px';
+  txtEl.style.paddingRight  = pad + 'px';
+
+  const sz   = s.image_size || 128;
+  const half = Math.round(sz / 2);
+  const gap  = 16;
+  const ipos = s.image_position || 'left';
+
+  /* Full reset of image wrapper position */
+  imgWrapEl.style.position  = 'absolute';
+  imgWrapEl.style.left = imgWrapEl.style.right = imgWrapEl.style.top = imgWrapEl.style.bottom = 'auto';
+  imgWrapEl.style.transform = 'none';
+
+  if (s.show_category_image && s.category_image) {
+    if      (ipos === 'left')      { imgWrapEl.style.left   = -half+'px'; imgWrapEl.style.top    = '50%'; imgWrapEl.style.transform = 'translateY(-50%)'; txtEl.style.paddingLeft   = (pad+half+gap)+'px'; }
+    else if (ipos === 'right')     { imgWrapEl.style.right  = -half+'px'; imgWrapEl.style.top    = '50%'; imgWrapEl.style.transform = 'translateY(-50%)'; txtEl.style.paddingRight  = (pad+half+gap)+'px'; }
+    else if (ipos === 'top')       { imgWrapEl.style.top    = -half+'px'; imgWrapEl.style.left   = '50%'; imgWrapEl.style.transform = 'translateX(-50%)'; txtEl.style.paddingTop    = (pad+half+gap)+'px'; }
+    else if (ipos === 'bottom')    { imgWrapEl.style.bottom = -half+'px'; imgWrapEl.style.left   = '50%'; imgWrapEl.style.transform = 'translateX(-50%)'; txtEl.style.paddingBottom = (pad+half+gap)+'px'; }
+    else if (ipos === 'top-left')  { imgWrapEl.style.top    = -half+'px'; imgWrapEl.style.left   = -half+'px'; txtEl.style.paddingTop  = (pad+half+gap)+'px'; txtEl.style.paddingLeft   = (pad+half+gap)+'px'; }
+    else if (ipos === 'top-right') { imgWrapEl.style.top    = -half+'px'; imgWrapEl.style.right  = -half+'px'; txtEl.style.paddingTop  = (pad+half+gap)+'px'; txtEl.style.paddingRight  = (pad+half+gap)+'px'; }
+  }
+
+  /* ── Image appearance ────────────────────────────────────────────────── */
+  catImgEl.style.width = catImgEl.style.height = sz + 'px';
+  catImgEl.style.objectFit   = s.image_fit || 'cover';
+  catImgEl.style.border      = `${s.image_border_width != null ? s.image_border_width : 3}px solid ${s.image_border_color || 'rgba(255,255,255,0.5)'}`;
+  catImgEl.style.boxShadow   = '0 8px 25px rgba(0,0,0,.35)';
+  catImgEl.style.padding     = '0';
+  catImgEl.style.background  = 'none';
+  const sh = s.image_shape || 'circle';
+  catImgEl.style.borderRadius = sh === 'circle' ? '50%' : sh === 'square' ? '0' : Math.round(sz * .12) + 'px';
+
+  /* ── Logo appearance ─────────────────────────────────────────────────── */
+  if (s.logo_size) logoImgEl.style.width = s.logo_size + 'px';
+  logoImgEl.style.height       = 'auto';
+  logoImgEl.style.opacity      = s.logo_opacity != null ? s.logo_opacity : 1;
+  logoImgEl.style.borderRadius = (s.logo_border_radius || 0) + 'px';
+  logoImgEl.style.filter       = s.logo_shadow ? 'drop-shadow(0 4px 12px rgba(0,0,0,0.4))' : 'none';
+
+  /* ── Logo position ───────────────────────────────────────────────────── */
+  applyLogoPosition(s);
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   LOGO POSITION
+   Translates logo_vertical_position / logo_horizontal_position (and optional
+   logo_custom_* pixel offsets) into absolute CSS on #logo-wrap.
+   Presets use a 20 px margin; custom mode accepts explicit px values.
+════════════════════════════════════════════════════════════════════════════ */
+function applyLogoPosition(s) {
+  const wrap = logoWrapEl;
+  const GAP  = 20; /* default edge margin in px */
+
+  /* ── Full reset ─────────────────────────────────────────────────────── */
+  wrap.style.top       = 'auto';
+  wrap.style.bottom    = 'auto';
+  wrap.style.left      = 'auto';
+  wrap.style.right     = 'auto';
+  wrap.style.transform = 'none';
+
+  const vp = s.logo_vertical_position   || 'top';
+  const hp = s.logo_horizontal_position || 'right';
+
+  /* ── Vertical ────────────────────────────────────────────────────────── */
+  if (vp === 'top')         { wrap.style.top    = GAP + 'px'; }
+  else if (vp === 'bottom') { wrap.style.bottom = GAP + 'px'; }
+  else if (vp === 'middle') {
+    wrap.style.top       = '50%';
+    wrap.style.transform = 'translateY(-50%)';
+  } else if (vp === 'custom') {
+    if (s.logo_custom_top    != null) wrap.style.top    = s.logo_custom_top    + 'px';
+    if (s.logo_custom_bottom != null) wrap.style.bottom = s.logo_custom_bottom + 'px';
+  }
+
+  /* ── Horizontal ──────────────────────────────────────────────────────── */
+  const vCenter = (vp === 'middle');
+  if (hp === 'right')       { wrap.style.right  = GAP + 'px'; }
+  else if (hp === 'left')   { wrap.style.left   = GAP + 'px'; }
+  else if (hp === 'center') {
+    wrap.style.left      = '50%';
+    wrap.style.transform = vCenter
+      ? 'translate(-50%, -50%)'
+      : (wrap.style.transform === 'translateY(-50%)' ? 'translate(-50%, -50%)' : 'translateX(-50%)');
+  } else if (hp === 'custom') {
+    if (s.logo_custom_left  != null) wrap.style.left  = s.logo_custom_left  + 'px';
+    if (s.logo_custom_right != null) wrap.style.right = s.logo_custom_right + 'px';
+    if (!vCenter) wrap.style.transform = 'none';
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   ASSETS
+════════════════════════════════════════════════════════════════════════════ */
+function applyAssets(s) {
+  /* Category image */
+  if (s.show_category_image && s.category_image) {
+    catImgEl.src = '/static/' + s.category_image;
+    imgWrapEl.classList.add('vis');
+  } else {
+    imgWrapEl.classList.remove('vis');
+  }
+
+  /* Company logo */
+  if (s.show_company_logo && s.company_logo) {
+    logoImgEl.src = '/static/' + s.company_logo;
+    logoWrapEl.classList.add('vis');
+  } else {
+    logoWrapEl.classList.remove('vis');
+  }
+
+  /* Ticker — also toggle .ticker-active on overlay so it respects margin-bottom */
+  if (s.show_ticker && s.ticker_text) {
+    tickerTxtEl.textContent = s.ticker_text;
+    tickerWrapEl.classList.add('vis');
+    ovEl.classList.add('ticker-active');
+    startTicker(s);
+  } else {
+    tickerWrapEl.classList.remove('vis');
+    ovEl.classList.remove('ticker-active');
+    stopTicker();
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   DECORATIONS
+════════════════════════════════════════════════════════════════════════════ */
+function applyDecorations(s) {
+  cornerEls.forEach(c => {
+    c.style.display     = s.show_decorative_elements ? 'block' : 'none';
+    c.style.borderColor = s.accent_color || '#FFD700';
+  });
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   TEXT CONTENT + ONE-SHOT ANIMATIONS
+════════════════════════════════════════════════════════════════════════════ */
+function killTw(k) { if (twTimers[k]) { clearInterval(twTimers[k]); twTimers[k] = null; } }
+
+function applyText(s) {
+  ['main', 'sec', 'co'].forEach(killTw);
+  if (txtAnimTO)   { clearTimeout(txtAnimTO);    txtAnimTO  = null; }
+  if (txtRepeatTO) { clearInterval(txtRepeatTO); txtRepeatTO = null; }
+
+  const spd = s.text_animation_speed || 1.0;
+  applyTextEl(mainEl, s.main_text      || '', resolveAnim(s.main_text_animation,      s.text_animation), spd, 'main');
+  applyTextEl(secEl,  s.secondary_text || '', resolveAnim(s.secondary_text_animation, s.text_animation), spd, 'sec');
+  applyTextEl(coEl,   s.company_name   || '', resolveAnim(s.company_name_animation,   s.text_animation), spd, 'co');
+
+  /* After entrance animations complete, activate continuous text classes */
+  const wait = calcEntranceWait(s) * 1000 + 150;
+  txtAnimTO = setTimeout(() => {
+    runContinuous(s);
+    const rep = s.text_animation_repeat_interval || 0;
+    if (rep > 0) {
+      txtRepeatTO = setInterval(() => {
+        applyText(s);
+        setTimeout(() => runContinuous(s), 200);
+      }, rep * 1000);
+    }
+  }, wait);
+}
+
+function calcEntranceWait(s) {
+  let m = 0, d = s.entrance_duration || 1;
+  if (s.entrance_animation && s.entrance_animation !== 'none') m = Math.max(m, d + (s.entrance_delay            || 0));
+  if (s.logo_animation      && s.logo_animation    !== 'none') m = Math.max(m, d + (s.logo_animation_delay      || 0));
+  if (s.image_animation     && s.image_animation   !== 'none') m = Math.max(m, d + (s.image_animation_delay     || 0));
+  if (s.ticker_entrance     && s.ticker_entrance   !== 'none') m = Math.max(m, d + (s.ticker_entrance_delay     || 0));
+  return m;
+}
+
+function runContinuous(s) {
+  const durS = (s.text_animation_speed || 2) + 's';
+  [
+    [mainEl, 'main_text_animation'],
+    [secEl,  'secondary_text_animation'],
+    [coEl,   'company_name_animation'],
+  ].forEach(([el, key]) => {
+    const a = resolveAnim(s[key], s.text_animation);
+    stripClass(el, 'text-');
+    if (!el.textContent.trim()) return;
+    if (CONTINUOUS_SET.has(a)) {
+      el.classList.add('text-' + a);
+      el.style.animationDuration = durS;
+    } else if (a === 'wave' && !el.querySelector('.wave-letter')) {
+      applyWave(el, el.textContent, parseFloat(s.text_animation_speed) || 2);
+    }
+  });
+}
+
+function applyTextEl(el, text, anim, spd, key) {
+  stripClass(el, 'text-');
+  el.className = el.className.split(' ').filter(c => c !== 'wave-letter').join(' ');
+  el.style.animation = el.style.overflow = '';
+  switch (anim) {
+    case 'typewriter':      applyTypewriter(el, text, key, spd); break;
+    case 'fade-in-words':   applyFadeWords(el, text, spd);       break;
+    case 'slide-in-words':  applySlideWords(el, text, spd);      break;
+    case 'letter-cascade':  applyLetterCascade(el, text, spd);   break;
+    case 'scramble':        applyScramble(el, text, spd);        break;
+    case 'fade-in-letters': applyFadeLetters(el, text, spd);     break;
+    case 'roll-up':         applyRollUp(el, text, spd);          break;
+    case 'split-reveal':    applySplitReveal(el, text, spd);     break;
+    case 'wave':            applyWave(el, text, spd);            break;
+    default:                el.textContent = text;
+  }
+}
+
+/* ── One-shot text animation helpers ─────────────────────────────────────── */
+function applyTypewriter(el, text, key, spd) {
+  if (!text) { el.innerHTML = ''; return; }
+  el.innerHTML = '<span class="tw-cursor"></span>';
+  let i = 0;
+  twTimers[key] = setInterval(() => {
+    if (i < text.length) {
+      el.insertBefore(document.createTextNode(text[i++]), el.querySelector('.tw-cursor'));
+    } else {
+      killTw(key);
+      setTimeout(() => { const c = el.querySelector('.tw-cursor'); if (c) c.remove(); }, 1000);
+    }
+  }, 100 / spd);
+}
+function applyFadeWords(el, text, spd) {
+  if (!text) { el.innerHTML = ''; return; } el.innerHTML = '';
+  text.split(' ').forEach((w, i) => {
+    const sp = document.createElement('span');
+    sp.textContent = w;
+    sp.style.cssText = 'opacity:0;display:inline-block;margin-right:.3em;transition:opacity .5s ease-in';
+    el.appendChild(sp);
+    setTimeout(() => sp.style.opacity = '1', i * (200 / spd));
+  });
+}
+function applySlideWords(el, text, spd) {
+  if (!text) { el.innerHTML = ''; return; } el.innerHTML = '';
+  text.split(' ').forEach((w, i) => {
+    const sp = document.createElement('span');
+    sp.textContent = w;
+    sp.style.cssText = 'opacity:0;transform:translateX(-20px);display:inline-block;margin-right:.3em;transition:all .5s ease-out';
+    el.appendChild(sp);
+    setTimeout(() => { sp.style.opacity = '1'; sp.style.transform = 'translateX(0)'; }, i * (200 / spd));
+  });
+}
+function applyLetterCascade(el, text, spd) {
+  if (!text) { el.innerHTML = ''; return; } el.innerHTML = '';
+  const d = 60 / spd;
+  text.split('').forEach((ch, i) => {
+    const sp = document.createElement('span');
+    sp.textContent = ch === ' ' ? '\u00A0' : ch;
+    sp.style.cssText = `display:inline-block;opacity:0;transform:translateY(-24px);transition:opacity .3s ease,transform .35s cubic-bezier(.34,1.56,.64,1);transition-delay:${i * d}ms`;
+    el.appendChild(sp);
+    setTimeout(() => { sp.style.opacity = '1'; sp.style.transform = 'translateY(0)'; }, 50 + i * d);
+  });
+}
+function applyScramble(el, text, spd) {
+  if (!text) { el.textContent = ''; return; }
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@#$%&*?!';
+  const rd = Math.max(30, 70 / spd), sd = Math.max(20, 40 / spd);
+  let rev = 0;
+  const rand = () => chars[Math.floor(Math.random() * chars.length)];
+  const sh = setInterval(() => {
+    let o = '';
+    for (let i = 0; i < text.length; i++) o += text[i] === ' ' ? ' ' : (i < rev ? text[i] : rand());
+    el.textContent = o;
+  }, sd);
+  const rv = setInterval(() => { rev++; if (rev >= text.length) { clearInterval(rv); clearInterval(sh); el.textContent = text; } }, rd);
+}
+function applyFadeLetters(el, text, spd) {
+  if (!text) { el.innerHTML = ''; return; } el.innerHTML = '';
+  text.split('').forEach((ch, i) => {
+    const sp = document.createElement('span');
+    sp.textContent = ch === ' ' ? '\u00A0' : ch;
+    sp.style.cssText = 'display:inline-block;opacity:0;transition:opacity .4s ease';
+    el.appendChild(sp);
+    setTimeout(() => sp.style.opacity = '1', i * (50 / spd));
+  });
+}
+function applyRollUp(el, text, spd) {
+  if (!text) { el.textContent = ''; return; }
+  const dur = Math.round(800 / spd);
+  el.style.overflow = 'hidden';
+  const inner = document.createElement('div');
+  inner.textContent = text;
+  inner.style.cssText = `transform:translateY(100%);transition:transform ${dur}ms cubic-bezier(.22,1,.36,1)`;
+  el.innerHTML = ''; el.appendChild(inner);
+  setTimeout(() => inner.style.transform = 'translateY(0)', 30);
+}
+function applySplitReveal(el, text, spd) {
+  if (!text) { el.innerHTML = ''; return; } el.innerHTML = '';
+  const mid = Math.floor(text.length / 2), d = 40 / spd;
+  text.split('').forEach((ch, i) => {
+    const sp = document.createElement('span');
+    sp.textContent = ch === ' ' ? '\u00A0' : ch;
+    const dist = Math.abs(i - mid), dir = i < mid ? '40px' : '-40px';
+    sp.style.cssText = `display:inline-block;opacity:0;transform:translateX(${dir});transition:opacity .4s ease,transform .45s cubic-bezier(.34,1.56,.64,1)`;
+    el.appendChild(sp);
+    setTimeout(() => { sp.style.opacity = '1'; sp.style.transform = 'translateX(0)'; }, 60 + dist * d);
+  });
+}
+function applyWave(el, text, spd) {
+  if (!text) { el.innerHTML = ''; return; } el.innerHTML = '';
+  const dur = Math.max(.5, 1.5 / spd) + 's';
+  text.split('').forEach((ch, i) => {
+    const sp = document.createElement('span');
+    sp.textContent = ch === ' ' ? '\u00A0' : ch;
+    sp.className = 'wave-letter';
+    sp.style.animationDuration = dur;
+    sp.style.animationDelay    = (i * .07) + 's';
+    el.appendChild(sp);
+  });
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   ENTRANCE + CONTINUOUS DISPLAY ANIMATIONS
+════════════════════════════════════════════════════════════════════════════ */
+function applyAnimations(s) {
+  const dur = (s.entrance_duration || 1) + 's';
+
+  function entrance(el, anim, delay) {
+    if (!anim || anim === 'none') return;
+    stripClass(el, 'anim-');
+    el.classList.add('anim-' + anim);
+    el.style.animationDuration = dur;
+    el.style.animationDelay   = (delay || 0) + 's';
+  }
+
+  entrance(ovEl,       s.entrance_animation, s.entrance_delay           || 0);
+  if (s.show_company_logo   && s.company_logo)   entrance(logoImgEl, s.logo_animation,   s.logo_animation_delay   || 0);
+  if (s.show_category_image && s.category_image) entrance(catImgEl,  s.image_animation,  s.image_animation_delay  || 0);
+  if (s.show_ticker         && s.ticker_text)    entrance(tickerWrapEl, s.ticker_entrance, s.ticker_entrance_delay || 0);
+
+  /* Continuous display animations for logo and image */
+  function displayAnim(el, enabled, anim, animDur) {
+    stripClass(el, 'display-');
+    if (enabled && anim && anim !== 'none') {
+      el.classList.add('display-' + anim);
+      if (animDur) el.style.animationDuration = animDur + 's';
+    }
+  }
+  displayAnim(logoImgEl, s.logo_display_animation_enabled,  s.logo_display_animation,  s.logo_display_animation_duration);
+  displayAnim(catImgEl,  s.image_display_animation_enabled, s.image_display_animation, s.image_display_animation_duration);
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   SECONDARY TEXT ROTATION
+════════════════════════════════════════════════════════════════════════════ */
+function startRotation(s) {
+  stopRotation();
+  if (!phrases.length) return;
+  const dur  = (s.secondary_display_duration    || 3)   * 1000;
+  const type = s.secondary_transition_type      || 'fade';
+  const tDur = (s.secondary_transition_duration || 0.5) * 1000;
+  rotTimer = setInterval(() => {
+    phraseIdx = (phraseIdx + 1) % phrases.length;
+    const next = phrases[phraseIdx];
+    if (type === 'fade') {
+      secEl.style.transition = `opacity ${tDur}ms`;
+      secEl.style.opacity    = '0';
+      setTimeout(() => { secEl.textContent = next; secEl.style.opacity = '1'; }, tDur);
+    } else if (type === 'slide') {
+      secEl.style.transition = `transform ${tDur}ms,opacity ${tDur}ms`;
+      secEl.style.transform  = 'translateX(-50px)';
+      secEl.style.opacity    = '0';
+      setTimeout(() => { secEl.textContent = next; secEl.style.transform = 'translateX(0)'; secEl.style.opacity = '1'; }, tDur);
+    } else {
+      secEl.textContent = next;
+    }
+  }, dur);
+}
+function stopRotation() { if (rotTimer) { clearInterval(rotTimer); rotTimer = null; } }
+
+/* ════════════════════════════════════════════════════════════════════════════
+   TICKER
+════════════════════════════════════════════════════════════════════════════ */
+function startTicker(s) {
+  stopTicker();
+  requestAnimationFrame(() => {
+    const cw = tickerWrapEl.offsetWidth, tw = tickerTxtEl.scrollWidth;
+    if (tw <= cw) { tickerTxtEl.style.transform = 'translateX(0)'; return; }
+    const pps   = (s.ticker_speed || 50) * 2;
+    const total = tw + cw;
+    const dur   = (total / pps) * 1000;
+    let start = null, pos = cw;
+    function frame(ts) {
+      if (!start) start = ts;
+      pos = cw - total * ((ts - start) / dur);
+      tickerTxtEl.style.transform = `translateX(${pos}px)`;
+      if (pos <= -tw) { start = ts; pos = cw; }
+      tickerRAF = requestAnimationFrame(frame);
+    }
+    tickerRAF = requestAnimationFrame(frame);
+  });
+}
+function stopTicker() { if (tickerRAF) { cancelAnimationFrame(tickerRAF); tickerRAF = null; } }
+
+/* ════════════════════════════════════════════════════════════════════════════
+   CYCLE ENGINE  (auto show / hide with entry + exit + optional stagger)
+════════════════════════════════════════════════════════════════════════════ */
+function stopCycle() {
+  cycleOn = false;
+  clearTimeout(cycleTimer); cycleTimer = null;
+  ovEl.classList.remove('no-tr');
+  ovEl.style.animation = ovEl.style.clipPath = ovEl.style.transformOrigin = '';
+}
+
+function startCycle(s) {
+  stopCycle();
+  if (!s.overlay_cycle_enabled || !s.is_visible) return;
+  cycleOn = true;
+
+  const TRANS = Math.max(50,  (s.cycle_transition_duration || 0.6) * 1000);
+  const SHOW  = Math.max(100, (s.overlay_visible_duration  || 10)  * 1000);
+  const HIDE  = Math.max(100, (s.overlay_hidden_duration   || 5)   * 1000);
+  const eAnim = CYCLE_MAP[s.cycle_entry_animation] || CYCLE_MAP['fade'];
+  const xAnim = CYCLE_MAP[s.cycle_exit_animation]  || CYCLE_MAP['fade'];
+  const zIn   = s.cycle_entry_animation === 'zoom-corner';
+  const zOut  = s.cycle_exit_animation  === 'zoom-corner';
+
+  /* Disable CSS transition so every show/hide snap inside the cycle is instant */
+  ovEl.classList.add('no-tr');
+
+  const EL = { main: mainEl, secondary: secEl, company: coEl };
+
+  function snapHide() {
+    /* Add cycle-hidden FIRST so CSS immediately suppresses img/corners,
+       then kill the animation — eliminating the one-frame flash. */
+    ovEl.classList.add('cycle-hidden');
+    ovEl.style.visibility = 'hidden';
+    ovEl.style.opacity    = '0';
+    ovEl.style.animation  = ovEl.style.clipPath = '';
+  }
+  function snapShow() {
+    ovEl.classList.remove('cycle-hidden');
+  }
+  function resetEls() {
+    Object.values(EL).forEach(el => {
+      el.style.opacity = el.style.transform = el.style.filter = el.style.animation = '';
+    });
+  }
+
+  function staggerOut(done) {
+    const order = (s.stagger_order || 'main,secondary,company').split(',').map(k => k.trim());
+    const delay = (s.stagger_delay || 0.3) * 1000;
+    const def   = STAGGER_MAP[s.stagger_element_exit || 'fade'] || STAGGER_MAP['fade'];
+    order.forEach((k, i) => {
+      const el = EL[k]; if (!el || !el.textContent.trim()) return;
+      setTimeout(() => el.style.animation = `${def.o} 500ms ease forwards`, i * delay);
+    });
+    cycleTimer = setTimeout(() => {
+      if (!cycleOn) return;
+      Object.values(EL).forEach(el => { el.style.animation = ''; el.style.opacity = '0'; });
+      done();
+    }, order.length * delay + 560);
+  }
+
+  function staggerIn(done) {
+    const order = (s.stagger_order || 'main,secondary,company').split(',').map(k => k.trim()).reverse();
+    const delay = (s.stagger_delay || 0.3) * 1000;
+    const def   = STAGGER_MAP[s.stagger_element_entry || 'fade'] || STAGGER_MAP['fade'];
+    Object.values(EL).forEach(el => { el.style.opacity = '0'; el.style.animation = ''; });
+    order.forEach((k, i) => {
+      const el = EL[k]; if (!el) return;
+      setTimeout(() => el.style.animation = `${def.i} 500ms ease forwards`, i * delay);
+    });
+    cycleTimer = setTimeout(() => { if (cycleOn) { resetEls(); done(); } }, order.length * delay + 560);
+  }
+
+  function doEntry() {
+    if (!cycleOn) return;
+    ovEl.style.transformOrigin = zIn ? '0% 100%' : '';
+    snapHide();
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      if (!cycleOn) return;
+      snapShow();
+      const target = ovEl.dataset.targetOpacity || '0.9';
+      ovEl.style.opacity    = target;
+      ovEl.style.visibility = 'visible';
+      ovEl.style.animation  = `${eAnim.i} ${TRANS}ms ease forwards`;
+      cycleTimer = setTimeout(() => {
+        if (!cycleOn) return;
+        ovEl.style.animation = ovEl.style.clipPath = ovEl.style.transformOrigin = '';
+        if (s.stagger_enabled) staggerIn(() => { cycleTimer = setTimeout(doExit, SHOW); });
+        else                   cycleTimer = setTimeout(doExit, SHOW);
+      }, TRANS);
+    }));
+  }
+
+  function doExit() {
+    if (!cycleOn) return;
+    ovEl.style.transformOrigin = zOut ? '0% 100%' : '';
+    function runExit() {
+      if (!cycleOn) return;
+      ovEl.style.animation = `${xAnim.o} ${TRANS}ms ease forwards`;
+      cycleTimer = setTimeout(() => {
+        if (!cycleOn) return;
+        /* Stamp cycle-hidden BEFORE clearing animation so sub-elements
+           are already CSS-suppressed when animation-fill-mode resets. */
+        ovEl.classList.add('cycle-hidden');
+        ovEl.style.visibility = 'hidden';
+        ovEl.style.opacity    = '0';
+        ovEl.style.animation  = ovEl.style.clipPath = ovEl.style.transformOrigin = '';
+        cycleTimer = setTimeout(doEntry, HIDE);
+      }, TRANS);
+    }
+    if (s.stagger_enabled) staggerOut(runExit); else runExit();
+  }
+
+  doEntry();
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   POLLING
+════════════════════════════════════════════════════════════════════════════ */
+async function poll() {
+  try {
+    const res  = await fetch(`/api/poll/${CAT}`);
+    const data = await res.json();
+    if (data.settings) {
+      const ns = data.settings;
+      if (JSON.stringify(ns) !== JSON.stringify(cur)) {
+        cur     = ns;
+        phrases = ns.secondary_phrases || [];
+        applySettings(ns);
+      }
+    }
+  } catch (e) { console.warn('Poll error:', e); }
+}
+
+setInterval(poll, 2000);
+poll();
+</script>
 </body>
 </html>

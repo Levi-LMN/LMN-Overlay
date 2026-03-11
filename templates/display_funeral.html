@@ -551,7 +551,13 @@ function applyPositioning(s) {
 
   /* ── Image appearance ────────────────────────────────────────────────── */
   catImgEl.style.width = catImgEl.style.height = sz + 'px';
-  catImgEl.style.objectFit   = s.image_fit || 'cover';
+  catImgEl.style.objectFit      = s.image_fit || 'cover';
+  catImgEl.style.objectPosition = s.image_object_position || 'center center';
+  if (s.image_zoom && s.image_zoom !== 100) {
+    catImgEl.style.transform = `scale(${s.image_zoom / 100})`;
+  } else {
+    catImgEl.style.transform = '';
+  }
   catImgEl.style.border      = `${s.image_border_width != null ? s.image_border_width : 3}px solid ${s.image_border_color || 'rgba(255,255,255,0.5)'}`;
   catImgEl.style.boxShadow   = '0 8px 25px rgba(0,0,0,.35)';
   catImgEl.style.padding     = '0';

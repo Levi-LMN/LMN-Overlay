@@ -1453,7 +1453,8 @@
                         <!-- Upload / Remove -->
                         <div class="form-group">
                             <label class="form-label">Upload Category Image</label>
-                            <input type="file" accept="image/*" onchange="uploadFile(this, '{{ category }}', 'image')"
+                            <input type="file" accept="image/*" id="category_image_input"
+                                   onchange="openImageCropper(this, '{{ category }}')"
                                    class="form-input">
                         </div>
                         {% if settings.category_image %}
@@ -1561,6 +1562,57 @@
                             class="w-full h-full border-0"></iframe>
                 </div>
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- ── Image Crop / Position Preview Modal ──────────────────────────────── -->
+<div id="img-crop-modal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.7);align-items:center;justify-content:center;">
+    <div style="background:#fff;border-radius:1rem;padding:1.5rem;width:min(92vw,520px);box-shadow:0 25px 60px rgba(0,0,0,.4);">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
+            <h3 style="font-size:1.1rem;font-weight:700;color:#1f2937;margin:0;">
+                <i class="fas fa-crop-alt" style="color:#4f46e5;margin-right:.5rem;"></i>Position &amp; Preview
+            </h3>
+            <button onclick="closeImageCropper()" style="background:none;border:none;font-size:1.25rem;color:#6b7280;cursor:pointer;">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <p style="font-size:.8rem;color:#6b7280;margin-bottom:1rem;">
+            Drag the image to reposition it inside the container. Use the zoom slider to scale.
+        </p>
+        <!-- Container preview -->
+        <div style="display:flex;justify-content:center;margin-bottom:1.25rem;">
+            <div id="crop-container" style="width:160px;height:160px;border-radius:50%;overflow:hidden;border:3px solid rgba(255,255,255,.6);box-shadow:0 8px 25px rgba(0,0,0,.35);cursor:grab;position:relative;background:#1a1a1a;user-select:none;">
+                <img id="crop-img" src="" alt="" draggable="false" style="position:absolute;width:100%;height:100%;object-fit:none;cursor:grab;transform-origin:center center;">
+            </div>
+        </div>
+        <!-- Shape selector -->
+        <div style="display:flex;gap:.5rem;justify-content:center;margin-bottom:1rem;">
+            <button class="crop-shape-btn" data-shape="circle" onclick="setCropShape('circle',this)"
+                style="padding:.35rem .9rem;border-radius:999px;border:2px solid #4f46e5;background:#ede9fe;color:#4f46e5;font-size:.8rem;font-weight:600;cursor:pointer;">⬤ Circle</button>
+            <button class="crop-shape-btn" data-shape="rounded" onclick="setCropShape('rounded',this)"
+                style="padding:.35rem .9rem;border-radius:.5rem;border:2px solid #d1d5db;background:#fff;color:#374151;font-size:.8rem;font-weight:600;cursor:pointer;">▣ Rounded</button>
+            <button class="crop-shape-btn" data-shape="square" onclick="setCropShape('square',this)"
+                style="padding:.35rem .9rem;border-radius:0;border:2px solid #d1d5db;background:#fff;color:#374151;font-size:.8rem;font-weight:600;cursor:pointer;">■ Square</button>
+        </div>
+        <!-- Zoom -->
+        <div style="margin-bottom:1.25rem;">
+            <label style="font-size:.8rem;font-weight:600;color:#374151;display:block;margin-bottom:.35rem;">
+                Zoom: <span id="crop-zoom-val">100%</span>
+            </label>
+            <input type="range" id="crop-zoom" min="50" max="300" step="5" value="100"
+                   style="width:100%;accent-color:#4f46e5;" oninput="updateCropZoom(this.value)">
+        </div>
+        <!-- Actions -->
+        <div style="display:flex;gap:.75rem;justify-content:flex-end;">
+            <button onclick="closeImageCropper()"
+                style="padding:.55rem 1.25rem;border-radius:.5rem;border:1px solid #d1d5db;background:#fff;color:#374151;font-weight:600;cursor:pointer;font-size:.9rem;">
+                Cancel
+            </button>
+            <button onclick="confirmImageCrop()"
+                style="padding:.55rem 1.25rem;border-radius:.5rem;border:none;background:#4f46e5;color:#fff;font-weight:600;cursor:pointer;font-size:.9rem;">
+                <i class="fas fa-check mr-1"></i> Use This
+            </button>
         </div>
     </div>
 </div>
@@ -2067,6 +2119,123 @@
         loadPhrases();
         toggleLogoCustomPos();
     });
+
+    /* ── Image Crop / Position Preview ─────────────────────────────────────── */
+    let _cropFile = null, _cropCategory = null;
+    let _cropX = 0, _cropY = 0, _cropZoom = 1;
+    let _dragging = false, _dragStartX, _dragStartY, _dragOriginX, _dragOriginY;
+
+    function openImageCropper(input, cat) {
+        const file = input.files[0];
+        if (!file) return;
+        _cropFile = file;
+        _cropCategory = cat;
+        const reader = new FileReader();
+        reader.onload = e => {
+            const img = document.getElementById('crop-img');
+            img.src = e.target.result;
+            img.onload = () => {
+                _cropX = 0; _cropY = 0; _cropZoom = 1;
+                document.getElementById('crop-zoom').value = 100;
+                document.getElementById('crop-zoom-val').textContent = '100%';
+                const shape = document.getElementById('image_shape')?.value || 'circle';
+                setCropShape(shape, document.querySelector(`.crop-shape-btn[data-shape="${shape}"]`));
+                applyCropTransform();
+                document.getElementById('img-crop-modal').style.display = 'flex';
+            };
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function closeImageCropper() {
+        document.getElementById('img-crop-modal').style.display = 'none';
+        const inp = document.getElementById('category_image_input');
+        if (inp) inp.value = '';
+    }
+
+    function setCropShape(shape, btn) {
+        document.getElementById('crop-container').style.borderRadius =
+            shape === 'circle' ? '50%' : shape === 'rounded' ? '16px' : '0';
+        document.querySelectorAll('.crop-shape-btn').forEach(b => {
+            b.style.border = '2px solid #d1d5db';
+            b.style.background = '#fff';
+            b.style.color = '#374151';
+        });
+        if (btn) {
+            btn.style.border = '2px solid #4f46e5';
+            btn.style.background = '#ede9fe';
+            btn.style.color = '#4f46e5';
+        }
+    }
+
+    function updateCropZoom(val) {
+        _cropZoom = val / 100;
+        document.getElementById('crop-zoom-val').textContent = val + '%';
+        applyCropTransform();
+    }
+
+    function applyCropTransform() {
+        const img = document.getElementById('crop-img');
+        img.style.transform = `translate(${_cropX}px, ${_cropY}px) scale(${_cropZoom})`;
+    }
+
+    (function() {
+        const ci = document.getElementById('crop-img');
+        ci.addEventListener('mousedown', e => {
+            _dragging = true;
+            _dragStartX = e.clientX; _dragStartY = e.clientY;
+            _dragOriginX = _cropX;   _dragOriginY = _cropY;
+            ci.style.cursor = 'grabbing';
+            e.preventDefault();
+        });
+        document.addEventListener('mousemove', e => {
+            if (!_dragging) return;
+            _cropX = _dragOriginX + (e.clientX - _dragStartX);
+            _cropY = _dragOriginY + (e.clientY - _dragStartY);
+            applyCropTransform();
+        });
+        document.addEventListener('mouseup', () => { _dragging = false; ci.style.cursor = 'grab'; });
+        ci.addEventListener('touchstart', e => {
+            const t = e.touches[0];
+            _dragging = true;
+            _dragStartX = t.clientX; _dragStartY = t.clientY;
+            _dragOriginX = _cropX;   _dragOriginY = _cropY;
+            e.preventDefault();
+        }, { passive: false });
+        document.addEventListener('touchmove', e => {
+            if (!_dragging) return;
+            const t = e.touches[0];
+            _cropX = _dragOriginX + (t.clientX - _dragStartX);
+            _cropY = _dragOriginY + (t.clientY - _dragStartY);
+            applyCropTransform();
+        }, { passive: false });
+        document.addEventListener('touchend', () => { _dragging = false; });
+    })();
+
+    function confirmImageCrop() {
+        if (!_cropFile) return;
+        const container = document.getElementById('crop-container');
+        const cw = container.offsetWidth, ch = container.offsetHeight;
+        const clamp = v => Math.max(0, Math.min(100, v));
+        const objPos = `${clamp(Math.round(50 - (_cropX / cw) * 100))}% ${clamp(Math.round(50 - (_cropY / ch) * 100))}%`;
+        const activeBtn = document.querySelector('.crop-shape-btn[style*="#4f46e5"]');
+        const shape = activeBtn ? activeBtn.dataset.shape : null;
+        const formData = new FormData();
+        formData.append('file', _cropFile);
+        fetch(`/api/upload/${_cropCategory}/image`, { method: 'POST', body: formData })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    updateSetting('image_object_position', objPos);
+                    updateSetting('image_zoom', Math.round(_cropZoom * 100));
+                    if (shape) updateSetting('image_shape', shape);
+                    showToast('Image uploaded', 'success');
+                    closeImageCropper();
+                    setTimeout(() => location.reload(), 800);
+                }
+            })
+            .catch(() => showToast('Upload failed', 'error'));
+    }
 
     /* ── Logo position helpers ──────────────────────────────────────────── */
     function toggleLogoCustomPos() {

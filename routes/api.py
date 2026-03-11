@@ -27,7 +27,7 @@ def manage_settings(category):
             'secondary_transition_type', 'vertical_position', 'horizontal_position',
             'container_width', 'container_height', 'text_scale_mode',
             'logo_display_animation', 'image_display_animation',
-            'image_shape', 'image_position', 'image_fit',
+            'image_shape', 'image_position', 'image_fit', 'image_object_position',
             'main_font_family', 'secondary_font_family',
             'ticker_font_family', 'company_name_font_family',
             'logo_vertical_position', 'logo_horizontal_position'
@@ -69,7 +69,7 @@ def manage_settings(category):
             'custom_width', 'custom_height', 'container_max_width',
             'container_min_width', 'container_padding', 'text_max_lines',
             'border_width', 'logo_border_radius',
-            'image_size', 'image_border_width',
+            'image_size', 'image_border_width', 'image_zoom',
             'logo_custom_top', 'logo_custom_bottom', 'logo_custom_left', 'logo_custom_right'
         ]
 
@@ -367,6 +367,8 @@ def settings_to_dict(settings):
         'image_border_color': settings.image_border_color,
         'image_position': settings.image_position,
         'image_fit': settings.image_fit,
+        'image_object_position': settings.image_object_position or 'center center',
+        'image_zoom': settings.image_zoom or 100,
 
         'layout_style': settings.layout_style,
         'show_decorative_elements': settings.show_decorative_elements,

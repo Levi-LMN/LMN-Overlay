@@ -219,6 +219,8 @@ class OverlaySettings(db.Model):
     image_border_color = db.Column(db.String(7), default='#FFFFFF')
     image_position = db.Column(db.String(12), default='left')  # left | right | top | bottom | top-left | top-right
     image_fit = db.Column(db.String(10), default='cover')      # cover | contain | fill
+    image_object_position = db.Column(db.String(20), default='center center')  # CSS object-position from cropper
+    image_zoom = db.Column(db.Integer, default=100)            # zoom % from cropper (100 = no zoom)
 
     # ── Layout ────────────────────────────────────────────────────────────
     layout_style = db.Column(db.String(50), default='default')
@@ -315,6 +317,8 @@ class OverlaySettings(db.Model):
             'image_border_width': 3,
             'image_position': 'left',
             'image_fit': 'cover',
+            'image_object_position': 'center center',
+            'image_zoom': 100,
         }
 
         _shared_fonts = {

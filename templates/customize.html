@@ -848,6 +848,7 @@
                                 <label class="form-label">🌐 Global (fallback)</label>
                                 <select id="text_animation" class="form-input" onchange="updateSetting('text_animation', this.value)">
                                     <option value="none" {% if settings.text_animation == 'none' or not settings.text_animation %}selected{% endif %}>None</option>
+                                    <option value="auto" {% if settings.text_animation == 'auto' %}selected{% endif %}>🎲 Auto (Random Mix)</option>
                                     <option value="pulse" {% if settings.text_animation == 'pulse' %}selected{% endif %}>Pulse</option>
                                     <option value="glow" {% if settings.text_animation == 'glow' %}selected{% endif %}>Glow</option>
                                     <option value="float" {% if settings.text_animation == 'float' %}selected{% endif %}>Float</option>
@@ -875,6 +876,7 @@
                                 <label class="form-label">🔤 Main Text Animation</label>
                                 <select id="main_text_animation" class="form-input" onchange="updateSetting('main_text_animation', this.value)">
                                     <option value="none" {% if not settings.main_text_animation or settings.main_text_animation == 'none' %}selected{% endif %}>— Use Global —</option>
+                                    <option value="auto" {% if settings.main_text_animation == 'auto' %}selected{% endif %}>🎲 Auto (Random Mix)</option>
                                     <option value="pulse" {% if settings.main_text_animation == 'pulse' %}selected{% endif %}>Pulse</option>
                                     <option value="glow" {% if settings.main_text_animation == 'glow' %}selected{% endif %}>Glow</option>
                                     <option value="float" {% if settings.main_text_animation == 'float' %}selected{% endif %}>Float</option>
@@ -902,6 +904,7 @@
                                 <label class="form-label">💬 Secondary Text Animation</label>
                                 <select id="secondary_text_animation" class="form-input" onchange="updateSetting('secondary_text_animation', this.value)">
                                     <option value="none" {% if not settings.secondary_text_animation or settings.secondary_text_animation == 'none' %}selected{% endif %}>— Use Global —</option>
+                                    <option value="auto" {% if settings.secondary_text_animation == 'auto' %}selected{% endif %}>🎲 Auto (Random Mix)</option>
                                     <option value="pulse" {% if settings.secondary_text_animation == 'pulse' %}selected{% endif %}>Pulse</option>
                                     <option value="glow" {% if settings.secondary_text_animation == 'glow' %}selected{% endif %}>Glow</option>
                                     <option value="float" {% if settings.secondary_text_animation == 'float' %}selected{% endif %}>Float</option>
@@ -929,6 +932,7 @@
                                 <label class="form-label">🏢 Company Name Animation</label>
                                 <select id="company_name_animation" class="form-input" onchange="updateSetting('company_name_animation', this.value)">
                                     <option value="none" {% if not settings.company_name_animation or settings.company_name_animation == 'none' %}selected{% endif %}>— Use Global —</option>
+                                    <option value="auto" {% if settings.company_name_animation == 'auto' %}selected{% endif %}>🎲 Auto (Random Mix)</option>
                                     <option value="pulse" {% if settings.company_name_animation == 'pulse' %}selected{% endif %}>Pulse</option>
                                     <option value="glow" {% if settings.company_name_animation == 'glow' %}selected{% endif %}>Glow</option>
                                     <option value="float" {% if settings.company_name_animation == 'float' %}selected{% endif %}>Float</option>

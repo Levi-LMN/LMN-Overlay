@@ -54,7 +54,7 @@ body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;position:relative}
 #main-txt,#sec-wrap,#co-name{word-wrap:break-word;overflow-wrap:break-word}
 /* Wrapper div for secondary text — holds fixed dimensions during rotation */
 #sec-wrap{position:relative;display:block}
-#sec-txt{display:block;transition:all .4s ease}
+#sec-txt{display:block}
 
 /* ─── Ticker ─────────────────────────────────────────────────────────────── */
 #ticker-wrap{position:fixed;bottom:0;left:0;width:100%;overflow:hidden;z-index:50;display:none;box-shadow:0 -4px 20px rgba(0,0,0,.25)}
@@ -256,7 +256,7 @@ const cornerEls    = document.querySelectorAll('.ca');
 
 /* ── Runtime state ────────────────────────────────────────────────────────── */
 let cur = {}, phrases = [], phraseIdx = 0;
-let rotTimer = null, tickerRAF = null;
+let rotTimer = null, rotPendingTimer = null, tickerRAF = null;
 let cycleTimer = null, cycleOn = false;
 let twTimers = { main: null, sec: null, co: null };
 let txtAnimTO = null, txtRepeatTO = null;
@@ -345,7 +345,9 @@ function stripClass(el, prefix) {
 }
 
 function resolveAnim(specific, fallback) {
-  return (specific && specific !== 'none') ? specific : (fallback || 'none');
+  if (specific && specific !== 'none') return specific;
+  if (fallback && fallback !== 'none') return fallback;
+  return 'none';
 }
 
 /* Pre-calculate the maximum rendered width & height of all phrases so the
@@ -565,53 +567,26 @@ function applyPositioning(s) {
   logoImgEl.style.filter       = s.logo_shadow ? 'drop-shadow(0 4px 12px rgba(0,0,0,0.4))' : 'none';
 
   /* ── Logo position ───────────────────────────────────────────────────── */
-  applyLogoPosition(s);
-}
-
-/* ════════════════════════════════════════════════════════════════════════════
-   LOGO POSITION
-   Translates logo_vertical_position / logo_horizontal_position (and optional
-   logo_custom_* pixel offsets) into absolute CSS on #logo-wrap.
-   Presets use a 20 px margin; custom mode accepts explicit px values.
-════════════════════════════════════════════════════════════════════════════ */
-function applyLogoPosition(s) {
-  const wrap = logoWrapEl;
-  const GAP  = 20; /* default edge margin in px */
-
-  /* ── Full reset ─────────────────────────────────────────────────────── */
-  wrap.style.top       = 'auto';
-  wrap.style.bottom    = 'auto';
-  wrap.style.left      = 'auto';
-  wrap.style.right     = 'auto';
-  wrap.style.transform = 'none';
-
-  const vp = s.logo_vertical_position   || 'top';
-  const hp = s.logo_horizontal_position || 'right';
-
-  /* ── Vertical ────────────────────────────────────────────────────────── */
-  if (vp === 'top')         { wrap.style.top    = GAP + 'px'; }
-  else if (vp === 'bottom') { wrap.style.bottom = GAP + 'px'; }
-  else if (vp === 'middle') {
-    wrap.style.top       = '50%';
-    wrap.style.transform = 'translateY(-50%)';
-  } else if (vp === 'custom') {
-    if (s.logo_custom_top    != null) wrap.style.top    = s.logo_custom_top    + 'px';
-    if (s.logo_custom_bottom != null) wrap.style.bottom = s.logo_custom_bottom + 'px';
+  const GAP = 20;
+  logoWrapEl.style.top = logoWrapEl.style.bottom = logoWrapEl.style.left = logoWrapEl.style.right = 'auto';
+  logoWrapEl.style.transform = 'none';
+  const lvp = s.logo_vertical_position   || 'top';
+  const lhp = s.logo_horizontal_position || 'right';
+  const lvc = (lvp === 'middle');
+  if      (lvp === 'top')    { logoWrapEl.style.top    = GAP + 'px'; }
+  else if (lvp === 'bottom') { logoWrapEl.style.bottom = GAP + 'px'; }
+  else if (lvp === 'middle') { logoWrapEl.style.top = '50%'; logoWrapEl.style.transform = 'translateY(-50%)'; }
+  else if (lvp === 'custom') {
+    if (s.logo_custom_top    != null) logoWrapEl.style.top    = s.logo_custom_top    + 'px';
+    if (s.logo_custom_bottom != null) logoWrapEl.style.bottom = s.logo_custom_bottom + 'px';
   }
-
-  /* ── Horizontal ──────────────────────────────────────────────────────── */
-  const vCenter = (vp === 'middle');
-  if (hp === 'right')       { wrap.style.right  = GAP + 'px'; }
-  else if (hp === 'left')   { wrap.style.left   = GAP + 'px'; }
-  else if (hp === 'center') {
-    wrap.style.left      = '50%';
-    wrap.style.transform = vCenter
-      ? 'translate(-50%, -50%)'
-      : (wrap.style.transform === 'translateY(-50%)' ? 'translate(-50%, -50%)' : 'translateX(-50%)');
-  } else if (hp === 'custom') {
-    if (s.logo_custom_left  != null) wrap.style.left  = s.logo_custom_left  + 'px';
-    if (s.logo_custom_right != null) wrap.style.right = s.logo_custom_right + 'px';
-    if (!vCenter) wrap.style.transform = 'none';
+  if      (lhp === 'right')  { logoWrapEl.style.right = GAP + 'px'; }
+  else if (lhp === 'left')   { logoWrapEl.style.left  = GAP + 'px'; }
+  else if (lhp === 'center') { logoWrapEl.style.left = '50%'; logoWrapEl.style.transform = lvc ? 'translate(-50%,-50%)' : 'translateX(-50%)'; }
+  else if (lhp === 'custom') {
+    if (s.logo_custom_left  != null) logoWrapEl.style.left  = s.logo_custom_left  + 'px';
+    if (s.logo_custom_right != null) logoWrapEl.style.right = s.logo_custom_right + 'px';
+    if (!lvc) logoWrapEl.style.transform = 'none';
   }
 }
 
@@ -703,23 +678,35 @@ function runContinuous(s) {
     [secEl,  'secondary_text_animation'],
     [coEl,   'company_name_animation'],
   ].forEach(([el, key]) => {
-    const a = resolveAnim(s[key], s.text_animation);
+    const a = (resolveAnim(s[key], s.text_animation) === 'auto')
+      ? pickRandom(AUTO_CONTINUOUS)
+      : resolveAnim(s[key], s.text_animation);
     stripClass(el, 'text-');
     if (!el.textContent.trim()) return;
     if (CONTINUOUS_SET.has(a)) {
       el.classList.add('text-' + a);
       el.style.animationDuration = durS;
-    } else if (a === 'wave' && !el.querySelector('.wave-letter')) {
+    } else if (a === 'wave') {
       applyWave(el, el.textContent, parseFloat(s.text_animation_speed) || 2);
     }
   });
 }
 
+/* Pool of all one-shot animations used when 'auto' is selected */
+const AUTO_ONESHOT = [
+  'typewriter','fade-in-words','slide-in-words','letter-cascade',
+  'scramble','fade-in-letters','roll-up','split-reveal','wave'
+];
+const AUTO_CONTINUOUS = Array.from(CONTINUOUS_SET);
+
+function pickRandom(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
 function applyTextEl(el, text, anim, spd, key) {
   stripClass(el, 'text-');
   el.className = el.className.split(' ').filter(c => c !== 'wave-letter').join(' ');
   el.style.animation = el.style.overflow = '';
-  switch (anim) {
+  const resolved = (anim === 'auto') ? pickRandom(AUTO_ONESHOT) : anim;
+  switch (resolved) {
     case 'typewriter':      applyTypewriter(el, text, key, spd); break;
     case 'fade-in-words':   applyFadeWords(el, text, spd);       break;
     case 'slide-in-words':  applySlideWords(el, text, spd);      break;
@@ -876,24 +863,50 @@ function startRotation(s) {
   const dur  = (s.secondary_display_duration    || 3)   * 1000;
   const type = s.secondary_transition_type      || 'fade';
   const tDur = (s.secondary_transition_duration || 0.5) * 1000;
+  const anim = resolveAnim(s.secondary_text_animation, s.text_animation);
+  const spd  = s.text_animation_speed || 1.0;
+
+  function showNextPhrase(next) {
+    secEl.style.transition = '';
+    secEl.style.transform  = '';
+    secEl.style.opacity    = '';
+    killTw('sec');
+    applyTextEl(secEl, next, anim, spd, 'sec');
+    const contDelay = calcEntranceWait(s) * 1000 + 150;
+    setTimeout(() => {
+      stripClass(secEl, 'text-');
+      if (CONTINUOUS_SET.has(anim)) {
+        secEl.classList.add('text-' + anim);
+        secEl.style.animationDuration = (spd || 2) + 's';
+      }
+    }, contDelay);
+  }
+
   rotTimer = setInterval(() => {
     phraseIdx = (phraseIdx + 1) % phrases.length;
     const next = phrases[phraseIdx];
+
     if (type === 'fade') {
       secEl.style.transition = `opacity ${tDur}ms`;
       secEl.style.opacity    = '0';
-      setTimeout(() => { secEl.textContent = next; secEl.style.opacity = '1'; }, tDur);
+      rotPendingTimer = setTimeout(() => { rotPendingTimer = null; showNextPhrase(next); }, tDur);
     } else if (type === 'slide') {
-      secEl.style.transition = `transform ${tDur}ms,opacity ${tDur}ms`;
+      secEl.style.transition = `transform ${tDur}ms, opacity ${tDur}ms`;
       secEl.style.transform  = 'translateX(-50px)';
       secEl.style.opacity    = '0';
-      setTimeout(() => { secEl.textContent = next; secEl.style.transform = 'translateX(0)'; secEl.style.opacity = '1'; }, tDur);
+      rotPendingTimer = setTimeout(() => { rotPendingTimer = null; showNextPhrase(next); }, tDur);
     } else {
-      secEl.textContent = next;
+      showNextPhrase(next);
     }
   }, dur);
 }
-function stopRotation() { if (rotTimer) { clearInterval(rotTimer); rotTimer = null; } }
+function stopRotation() {
+  if (rotTimer)        { clearInterval(rotTimer);        rotTimer        = null; }
+  if (rotPendingTimer) { clearTimeout(rotPendingTimer);  rotPendingTimer = null; }
+  /* Reset any in-progress transition on secEl so it doesn't linger */
+  secEl.style.transition = '';
+  secEl.style.transform  = '';
+}
 
 /* ════════════════════════════════════════════════════════════════════════════
    TICKER
@@ -948,9 +961,8 @@ function startCycle(s) {
   const EL = { main: mainEl, secondary: secEl, company: coEl };
 
   function snapHide() {
-    /* Add cycle-hidden FIRST so CSS immediately suppresses img/corners,
-       then kill the animation — eliminating the one-frame flash. */
     ovEl.classList.add('cycle-hidden');
+    Object.values(EL).forEach(el => { el.style.opacity = '0'; el.style.animation = ''; });
     ovEl.style.visibility = 'hidden';
     ovEl.style.opacity    = '0';
     ovEl.style.animation  = ovEl.style.clipPath = '';
@@ -962,6 +974,16 @@ function startCycle(s) {
     Object.values(EL).forEach(el => {
       el.style.opacity = el.style.transform = el.style.filter = el.style.animation = '';
     });
+  }
+  /* Reveal text elements after entry and restart rotation */
+  function fadeInEls() {
+    Object.values(EL).forEach(el => {
+      if (!el.textContent.trim()) return;
+      el.style.transition = 'opacity 300ms ease';
+      el.style.opacity = '';
+      setTimeout(() => { el.style.transition = ''; }, 350);
+    });
+    if (s.secondary_rotation_enabled && phrases.length > 0) startRotation(s);
   }
 
   function staggerOut(done) {
@@ -988,7 +1010,13 @@ function startCycle(s) {
       const el = EL[k]; if (!el) return;
       setTimeout(() => el.style.animation = `${def.i} 500ms ease forwards`, i * delay);
     });
-    cycleTimer = setTimeout(() => { if (cycleOn) { resetEls(); done(); } }, order.length * delay + 560);
+    cycleTimer = setTimeout(() => {
+      if (cycleOn) {
+        resetEls();
+        if (s.secondary_rotation_enabled && phrases.length > 0) startRotation(s);
+        done();
+      }
+    }, order.length * delay + 560);
   }
 
   function doEntry() {
@@ -1006,29 +1034,34 @@ function startCycle(s) {
         if (!cycleOn) return;
         ovEl.style.animation = ovEl.style.clipPath = ovEl.style.transformOrigin = '';
         if (s.stagger_enabled) staggerIn(() => { cycleTimer = setTimeout(doExit, SHOW); });
-        else                   cycleTimer = setTimeout(doExit, SHOW);
+        else                   { fadeInEls(); cycleTimer = setTimeout(doExit, SHOW); }
       }, TRANS);
     }));
   }
 
   function doExit() {
     if (!cycleOn) return;
+    /* Stop rotation immediately so it doesn't fire mid-stagger or mid-exit */
+    stopRotation();
     ovEl.style.transformOrigin = zOut ? '0% 100%' : '';
-    function runExit() {
+
+    function runContainerExit() {
       if (!cycleOn) return;
       ovEl.style.animation = `${xAnim.o} ${TRANS}ms ease forwards`;
       cycleTimer = setTimeout(() => {
         if (!cycleOn) return;
-        /* Stamp cycle-hidden BEFORE clearing animation so sub-elements
-           are already CSS-suppressed when animation-fill-mode resets. */
-        ovEl.classList.add('cycle-hidden');
-        ovEl.style.visibility = 'hidden';
-        ovEl.style.opacity    = '0';
-        ovEl.style.animation  = ovEl.style.clipPath = ovEl.style.transformOrigin = '';
+        snapHide();
+        ovEl.style.transformOrigin = '';
         cycleTimer = setTimeout(doEntry, HIDE);
       }, TRANS);
     }
-    if (s.stagger_enabled) staggerOut(runExit); else runExit();
+
+    if (s.stagger_enabled) {
+      /* Stagger elements out first, then run the configured container exit animation */
+      staggerOut(runContainerExit);
+    } else {
+      runContainerExit();
+    }
   }
 
   doEntry();
@@ -1044,8 +1077,7 @@ async function poll() {
     if (data.settings) {
       const ns = data.settings;
       if (JSON.stringify(ns) !== JSON.stringify(cur)) {
-        cur     = ns;
-        phrases = ns.secondary_phrases || [];
+        cur = ns;
         applySettings(ns);
       }
     }

@@ -12,6 +12,8 @@ import io
 
 logger = logging.getLogger(__name__)
 
+MAX_FILE_SIZE_BYTES = 1024 * 1024  # 1024 KB — OCR.space free tier limit
+
 
 class OCRService:
     """
@@ -31,9 +33,49 @@ class OCRService:
 
         logger.info("OCR.space API initialized - 25,000 free requests/month")
 
+    def compress_image_under_limit(self, img: Image.Image, max_bytes: int = MAX_FILE_SIZE_BYTES) -> bytes:
+        """
+        Compress a PIL image to JPEG bytes under max_bytes.
+        Tries decreasing quality first, then downscales if needed.
+
+        Args:
+            img: PIL Image (RGB)
+            max_bytes: Maximum allowed size in bytes
+
+        Returns:
+            Compressed image bytes (JPEG)
+        """
+        # Try JPEG compression at decreasing quality levels
+        for quality in [95, 85, 75, 65, 55, 45, 35]:
+            buf = io.BytesIO()
+            img.save(buf, format='JPEG', quality=quality, optimize=True)
+            data = buf.getvalue()
+            if len(data) <= max_bytes:
+                logger.debug(f"Compressed to {len(data) / 1024:.1f} KB at quality={quality}")
+                return data
+
+        # If still too large, downscale progressively and re-compress
+        scale = 0.9
+        while scale >= 0.2:
+            width, height = img.size
+            new_size = (int(width * scale), int(height * scale))
+            resized = img.resize(new_size, Image.Resampling.LANCZOS)
+            buf = io.BytesIO()
+            resized.save(buf, format='JPEG', quality=55, optimize=True)
+            data = buf.getvalue()
+            if len(data) <= max_bytes:
+                logger.debug(f"Compressed to {len(data) / 1024:.1f} KB at scale={scale:.1f}")
+                return data
+            scale -= 0.1
+
+        # Last resort — return whatever we have at smallest scale
+        logger.warning("Could not compress image under limit; sending smallest possible version")
+        return data
+
     def preprocess_image_basic(self, image_path: str) -> bytes:
         """
-        Basic image preprocessing to improve OCR accuracy
+        Basic image preprocessing to improve OCR accuracy,
+        while ensuring the output stays under OCR.space's 1024 KB limit.
 
         Args:
             image_path: Path to the image file
@@ -48,30 +90,53 @@ class OCRService:
             if img.mode != 'RGB':
                 img = img.convert('RGB')
 
-            # Resize if too small
+            # Resize if too small (upscale only small images)
             width, height = img.size
             if width < 300 or height < 300:
                 scale_factor = max(300 / height, 300 / width, 1.5)
                 new_size = (int(width * scale_factor), int(height * scale_factor))
                 img = img.resize(new_size, Image.Resampling.LANCZOS)
 
-            # Increase contrast
-            enhancer = ImageEnhance.Contrast(img)
-            img = enhancer.enhance(1.5)
+            # Increase contrast and sharpness for better OCR
+            img = ImageEnhance.Contrast(img).enhance(1.5)
+            img = ImageEnhance.Sharpness(img).enhance(1.5)
 
-            # Increase sharpness
-            enhancer = ImageEnhance.Sharpness(img)
-            img = enhancer.enhance(1.5)
-
-            # Convert to bytes
-            img_byte_arr = io.BytesIO()
-            img.save(img_byte_arr, format='PNG', optimize=True)
-            img_byte_arr = img_byte_arr.getvalue()
-
-            return img_byte_arr
+            # Compress to stay within API size limit
+            return self.compress_image_under_limit(img)
 
         except Exception as e:
             logger.error(f"Error in preprocessing: {str(e)}")
+            # Fallback: read raw file; if it's oversized we'll catch it later
+            with open(image_path, 'rb') as f:
+                return f.read()
+
+    def compress_raw_image(self, image_path: str) -> bytes:
+        """
+        Compress a raw image file (no enhancements) to fit the size limit.
+        Used when preprocessing='none' but the file is still too large.
+
+        Args:
+            image_path: Path to the image file
+
+        Returns:
+            Compressed image bytes
+        """
+        try:
+            file_size = os.path.getsize(image_path)
+            if file_size <= MAX_FILE_SIZE_BYTES:
+                # File is already small enough — read as-is
+                with open(image_path, 'rb') as f:
+                    return f.read()
+
+            # File is too large — compress it
+            logger.info(f"File {os.path.basename(image_path)} is {file_size / 1024:.1f} KB, compressing…")
+            img = Image.open(image_path)
+            if img.mode != 'RGB':
+                img = img.convert('RGB')
+            return self.compress_image_under_limit(img)
+
+        except Exception as e:
+            logger.error(f"Error compressing raw image: {str(e)}")
             with open(image_path, 'rb') as f:
                 return f.read()
 
@@ -92,20 +157,25 @@ class OCRService:
         Returns:
             Dictionary with extracted text and confidence
         """
+        temp_path = None
         try:
-            # Preprocess if requested
+            # Prepare image bytes — always enforce the size limit
             if preprocessing == 'basic':
-                image_data = self.preprocess_image_basic(image_path)
-                # Save preprocessed image temporarily
-                temp_path = image_path + '.processed.png'
-                with open(temp_path, 'wb') as f:
-                    f.write(image_data)
-                image_path_to_use = temp_path
+                image_bytes = self.preprocess_image_basic(image_path)
+                filename = os.path.basename(image_path) + '.processed.jpg'
             else:
-                image_path_to_use = image_path
+                image_bytes = self.compress_raw_image(image_path)
+                filename = os.path.basename(image_path)
+
+            # Write to a temp file so we can open it as a file object for requests
+            temp_path = image_path + '.ocr_tmp.jpg'
+            with open(temp_path, 'wb') as f:
+                f.write(image_bytes)
+
+            logger.debug(f"Sending {len(image_bytes) / 1024:.1f} KB to OCR.space")
 
             # Prepare API request
-            with open(image_path_to_use, 'rb') as f:
+            with open(temp_path, 'rb') as f:
                 payload = {
                     'apikey': self.api_key,
                     'language': lang,
@@ -115,7 +185,7 @@ class OCRService:
                     'OCREngine': 2  # Engine 2 is more accurate
                 }
 
-                files = {'file': f}
+                files = {'file': (filename, f, 'image/jpeg')}
 
                 # Make API request
                 response = requests.post(
@@ -124,10 +194,6 @@ class OCRService:
                     data=payload,
                     timeout=30
                 )
-
-            # Clean up temp file if created
-            if preprocessing == 'basic' and os.path.exists(temp_path):
-                os.remove(temp_path)
 
             # Parse response
             result = response.json()
@@ -172,6 +238,13 @@ class OCRService:
                 'confidence': 0,
                 'error': str(e)
             }
+        finally:
+            # Always clean up temp file
+            if temp_path and os.path.exists(temp_path):
+                try:
+                    os.remove(temp_path)
+                except Exception:
+                    pass
 
     def extract_text_with_multiple_strategies(
         self,

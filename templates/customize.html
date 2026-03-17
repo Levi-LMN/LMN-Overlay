@@ -495,14 +495,45 @@ input[type="range"]{accent-color:#4F46E5}
                 <p class="text-sm font-semibold text-gray-700 mb-3">Text Colors</p>
                 <div class="grid-2">
                     {{ color_pair('Main Text Color','main_text_color_picker','main_text_color', settings.main_text_color or '#FFFFFF','main_text_color') }}
-                    {{ color_pair('Main Text Background','main_text_bg_color_picker','main_text_bg_color', settings.main_text_bg_color or '#000000','main_text_bg_color') }}
+                    <div class="form-group">
+                        <label class="form-label">Main Text Background</label>
+                        <div class="color-input-group">
+                            <input type="color" id="main_text_bg_color_picker" class="color-input" value="{{ settings.main_text_bg_color or '#000000' }}"
+                                   onchange="document.getElementById('main_text_bg_color').value=this.value; updateSetting('main_text_bg_color',this.value); autoOpacity('main_text_bg_opacity', {{ settings.main_text_bg_opacity or 0 }})">
+                            <input type="text" id="main_text_bg_color" class="form-input" value="{{ settings.main_text_bg_color or '#000000' }}"
+                                   onchange="document.getElementById('main_text_bg_color_picker').value=this.value; updateSetting('main_text_bg_color',this.value); autoOpacity('main_text_bg_opacity', {{ settings.main_text_bg_opacity or 0 }})">
+                        </div>
+                    </div>
+                </div>
+                {{ range_slider('main_text_bg_opacity','Main Text Background Opacity', settings.main_text_bg_opacity if settings.main_text_bg_opacity is not none else 0.0, 0, 1, 0.05, '', 'main_text_bg_opacity', hint='0 = no background') }}
+                <div class="grid-2">
                     {{ color_pair('Secondary Text Color','secondary_text_color_picker','secondary_text_color', settings.secondary_text_color or '#FFD700','secondary_text_color') }}
-                    {{ color_pair('Secondary Text Background','secondary_text_bg_color_picker','secondary_text_bg_color', settings.secondary_text_bg_color or '#000000','secondary_text_bg_color') }}
+                    <div class="form-group">
+                        <label class="form-label">Secondary Text Background</label>
+                        <div class="color-input-group">
+                            <input type="color" id="secondary_text_bg_color_picker" class="color-input" value="{{ settings.secondary_text_bg_color or '#000000' }}"
+                                   onchange="document.getElementById('secondary_text_bg_color').value=this.value; updateSetting('secondary_text_bg_color',this.value); autoOpacity('secondary_text_bg_opacity', {{ settings.secondary_text_bg_opacity or 0 }})">
+                            <input type="text" id="secondary_text_bg_color" class="form-input" value="{{ settings.secondary_text_bg_color or '#000000' }}"
+                                   onchange="document.getElementById('secondary_text_bg_color_picker').value=this.value; updateSetting('secondary_text_bg_color',this.value); autoOpacity('secondary_text_bg_opacity', {{ settings.secondary_text_bg_opacity or 0 }})">
+                        </div>
+                    </div>
+                </div>
+                {{ range_slider('secondary_text_bg_opacity','Secondary Text Background Opacity', settings.secondary_text_bg_opacity if settings.secondary_text_bg_opacity is not none else 0.0, 0, 1, 0.05, '', 'secondary_text_bg_opacity', hint='0 = no background') }}
+                <div class="grid-2">
                     {{ color_pair('Ticker Text Color','ticker_text_color_picker','ticker_text_color', settings.ticker_text_color or '#FFFFFF','ticker_text_color') }}
                     {{ color_pair('Ticker Background','ticker_bg_color_picker','ticker_bg_color', settings.ticker_bg_color or '#1a1a1a','ticker_bg_color') }}
                     {{ color_pair('Company Name Color','company_name_color_picker','company_name_color', settings.company_name_color or '#FFD700','company_name_color') }}
-                    {{ color_pair('Company Name Background','company_name_bg_color_picker','company_name_bg_color', settings.company_name_bg_color or '#000000','company_name_bg_color') }}
+                    <div class="form-group">
+                        <label class="form-label">Company Name Background</label>
+                        <div class="color-input-group">
+                            <input type="color" id="company_name_bg_color_picker" class="color-input" value="{{ settings.company_name_bg_color or '#000000' }}"
+                                   onchange="document.getElementById('company_name_bg_color').value=this.value; updateSetting('company_name_bg_color',this.value); autoOpacity('company_name_bg_opacity', {{ settings.company_name_bg_opacity or 0 }})">
+                            <input type="text" id="company_name_bg_color" class="form-input" value="{{ settings.company_name_bg_color or '#000000' }}"
+                                   onchange="document.getElementById('company_name_bg_color_picker').value=this.value; updateSetting('company_name_bg_color',this.value); autoOpacity('company_name_bg_opacity', {{ settings.company_name_bg_opacity or 0 }})">
+                        </div>
+                    </div>
                 </div>
+                {{ range_slider('company_name_bg_opacity','Company Name Background Opacity', settings.company_name_bg_opacity if settings.company_name_bg_opacity is not none else 0.0, 0, 1, 0.05, '', 'company_name_bg_opacity', hint='0 = no background') }}
                 {{ range_slider('ticker_bg_opacity','Ticker Background Opacity', settings.ticker_bg_opacity or 0.8, 0, 1, 0.05, '', 'ticker_bg_opacity') }}
 
                 <hr class="my-4 border-gray-100">
@@ -1018,6 +1049,19 @@ function updateSetting(key, value) {
         .then(r => r.json())
         .then(d => { if (d.success) showToast('Saved', 'success'); else showToast('Failed to save', 'error'); })
         .catch(() => showToast('Failed to save', 'error'));
+}
+
+// When a user picks a bg color but opacity is still 0, auto-set it to 1
+// so the color is immediately visible without needing to touch the slider.
+function autoOpacity(opacityField, currentOpacity) {
+    if (parseFloat(currentOpacity) > 0) return; // already has opacity, don't override
+    const slider = document.getElementById(opacityField);
+    if (!slider) return;
+    slider.value = 1;
+    // Update display label
+    const display = document.getElementById(opacityField + '_display');
+    if (display) display.textContent = '1';
+    updateSetting(opacityField, 1);
 }
 
 function toggleBoolean(el, field) {

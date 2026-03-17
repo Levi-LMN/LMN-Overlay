@@ -30,7 +30,13 @@ def manage_settings(category):
             'image_shape', 'image_position', 'image_fit', 'image_object_position',
             'main_font_family', 'secondary_font_family',
             'ticker_font_family', 'company_name_font_family',
-            'logo_vertical_position', 'logo_horizontal_position'
+            'logo_vertical_position', 'logo_horizontal_position',
+            # clock
+            'clock_format', 'clock_animation', 'clock_position', 'clock_font_family',
+            # live indicator
+            'live_label', 'live_location', 'live_indicator_animation',
+            'live_indicator_font_family',
+            'live_indicator_vertical_position', 'live_indicator_horizontal_position',
         ]
 
         for field in fields:
@@ -53,7 +59,13 @@ def manage_settings(category):
             'footer_text_color', 'footer_bg_color',
             'accent_color', 'border_color',
             'bg_color', 'text_color',
-            'image_border_color'
+            'image_border_color',
+            # sectioned bg
+            'overlay_bg_top_color', 'overlay_bg_bottom_color',
+            # clock
+            'clock_color', 'clock_bg_color',
+            # live indicator
+            'live_indicator_color', 'live_indicator_bg_color',
         ]
 
         for field in color_fields:
@@ -70,7 +82,13 @@ def manage_settings(category):
             'container_min_width', 'container_padding', 'text_max_lines',
             'border_width', 'logo_border_radius',
             'image_size', 'image_border_width', 'image_zoom',
-            'logo_custom_top', 'logo_custom_bottom', 'logo_custom_left', 'logo_custom_right'
+            'logo_custom_top', 'logo_custom_bottom', 'logo_custom_left', 'logo_custom_right',
+            # sectioned bg
+            'overlay_bg_top_height', 'overlay_bg_bottom_height',
+            # clock
+            'clock_font_size',
+            # live indicator
+            'live_indicator_font_size',
         ]
 
         for field in int_fields:
@@ -93,7 +111,13 @@ def manage_settings(category):
             'image_display_animation_duration', 'image_display_animation_frequency',
             'text_animation_repeat_interval',
             'overlay_visible_duration', 'overlay_hidden_duration',
-            'cycle_transition_duration', 'stagger_delay'
+            'cycle_transition_duration', 'stagger_delay',
+            # sectioned bg
+            'overlay_bg_top_opacity', 'overlay_bg_bottom_opacity',
+            # clock
+            'clock_bg_opacity',
+            # live indicator
+            'live_indicator_bg_opacity',
         ]
 
         for field in float_fields:
@@ -130,7 +154,14 @@ def manage_settings(category):
             ('image_display_animation_enabled', 'image_display_animation_enabled'),
             ('company_name_italic', 'company_name_italic'),
             ('overlay_cycle_enabled', 'overlay_cycle_enabled'),
-            ('stagger_enabled', 'stagger_enabled')
+            ('stagger_enabled', 'stagger_enabled'),
+            # sectioned bg
+            ('overlay_bg_sections_enabled', 'overlay_bg_sections_enabled'),
+            # clock
+            ('show_clock', 'show_clock'),
+            ('clock_show_time', 'clock_show_time'),
+            # live indicator
+            ('show_live_indicator', 'show_live_indicator'),
         ]
 
         for field_name, db_field in boolean_fields:
@@ -309,18 +340,52 @@ def settings_to_dict(settings):
         # Granular Color Controls
         'overlay_bg_color': settings.overlay_bg_color,
         'overlay_bg_opacity': settings.overlay_bg_opacity,
-        'main_text_color': settings.main_text_color,
-        'main_text_bg_color': settings.main_text_bg_color,
-        'main_text_bg_opacity': settings.main_text_bg_opacity,
-        'secondary_text_color': settings.secondary_text_color,
-        'secondary_text_bg_color': settings.secondary_text_bg_color,
-        'secondary_text_bg_opacity': settings.secondary_text_bg_opacity,
-        'ticker_text_color': settings.ticker_text_color,
-        'ticker_bg_color': settings.ticker_bg_color,
-        'ticker_bg_opacity': settings.ticker_bg_opacity,
-        'company_name_color': settings.company_name_color,
-        'company_name_bg_color': settings.company_name_bg_color,
-        'company_name_bg_opacity': settings.company_name_bg_opacity,
+
+        # Sectioned background
+        'overlay_bg_sections_enabled': settings.overlay_bg_sections_enabled or False,
+        'overlay_bg_top_color':        settings.overlay_bg_top_color    or '#222222',
+        'overlay_bg_top_opacity':      settings.overlay_bg_top_opacity  if settings.overlay_bg_top_opacity  is not None else 0.95,
+        'overlay_bg_top_height':       settings.overlay_bg_top_height   if settings.overlay_bg_top_height   is not None else 25,
+        'overlay_bg_bottom_color':     settings.overlay_bg_bottom_color or '#222222',
+        'overlay_bg_bottom_opacity':   settings.overlay_bg_bottom_opacity if settings.overlay_bg_bottom_opacity is not None else 0.95,
+        'overlay_bg_bottom_height':    settings.overlay_bg_bottom_height   if settings.overlay_bg_bottom_height  is not None else 25,
+
+        # Day & Time Bar
+        'show_clock':        settings.show_clock         or False,
+        'clock_format':      settings.clock_format       or '24h',
+        'clock_show_time':   settings.clock_show_time    if settings.clock_show_time    is not None else True,
+        'clock_font_size':   settings.clock_font_size    or 13,
+        'clock_font_family': settings.clock_font_family,
+        'clock_color':       settings.clock_color        or '#FFFFFF',
+        'clock_bg_color':    settings.clock_bg_color     or '#000000',
+        'clock_bg_opacity':  settings.clock_bg_opacity   if settings.clock_bg_opacity   is not None else 0.0,
+        'clock_animation':   settings.clock_animation    or 'none',
+        'clock_position':    settings.clock_position     or 'bottom',
+
+        # Live indicator
+        'show_live_indicator':               settings.show_live_indicator              or False,
+        'live_label':                        settings.live_label                       or 'LIVE',
+        'live_location':                     settings.live_location                    or '',
+        'live_indicator_color':              settings.live_indicator_color             or '#FFFFFF',
+        'live_indicator_bg_color':           settings.live_indicator_bg_color          or '#CC0000',
+        'live_indicator_bg_opacity':         settings.live_indicator_bg_opacity        if settings.live_indicator_bg_opacity is not None else 0.9,
+        'live_indicator_font_size':          settings.live_indicator_font_size         or 16,
+        'live_indicator_font_family':        settings.live_indicator_font_family,
+        'live_indicator_animation':          settings.live_indicator_animation         or 'pulse',
+        'live_indicator_vertical_position':  settings.live_indicator_vertical_position or 'top',
+        'live_indicator_horizontal_position':settings.live_indicator_horizontal_position or 'left',
+        'main_text_color':       settings.main_text_color,
+        'main_text_bg_color':    settings.main_text_bg_color    or '#000000',
+        'main_text_bg_opacity':  settings.main_text_bg_opacity  if settings.main_text_bg_opacity  is not None else 0.0,
+        'secondary_text_color':       settings.secondary_text_color,
+        'secondary_text_bg_color':    settings.secondary_text_bg_color    or '#000000',
+        'secondary_text_bg_opacity':  settings.secondary_text_bg_opacity  if settings.secondary_text_bg_opacity  is not None else 0.0,
+        'ticker_text_color':  settings.ticker_text_color,
+        'ticker_bg_color':    settings.ticker_bg_color,
+        'ticker_bg_opacity':  settings.ticker_bg_opacity,
+        'company_name_color':      settings.company_name_color,
+        'company_name_bg_color':   settings.company_name_bg_color   or '#000000',
+        'company_name_bg_opacity': settings.company_name_bg_opacity if settings.company_name_bg_opacity is not None else 0.0,
         'footer_text_color': settings.footer_text_color,
         'footer_bg_color': settings.footer_bg_color,
         'footer_bg_opacity': settings.footer_bg_opacity,
@@ -335,7 +400,7 @@ def settings_to_dict(settings):
         # Font Sizes
         'main_font_size': settings.main_font_size,
         'secondary_font_size': settings.secondary_font_size,
-        'ticker_font_size': settings.ticker_font_size,
+        'ticker_font_size': settings.ticker_font_size or 13,
         'company_name_font_size': settings.company_name_font_size,
         'footer_font_size': settings.footer_font_size,
 

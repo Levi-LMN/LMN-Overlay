@@ -18,6 +18,7 @@ body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;position:relative}
 /* ─── Overlay Container ──────────────────────────────────────────────────── */
 #ov{
   position:absolute;
+  overflow:visible;
   opacity:0;visibility:hidden;pointer-events:none;
   backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
   transition:opacity .6s ease,visibility .6s ease;
@@ -25,19 +26,18 @@ body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;position:relative}
 #ov.vis{opacity:1;visibility:visible;pointer-events:auto}
 /* Disable CSS transition during cycle so keyframes are sole opacity driver */
 #ov.no-tr{transition:none!important}
-/* When ticker is showing, push overlay up slightly */
-#ov.ticker-active{margin-bottom:50px}
 
 /* ─── Inner layout ───────────────────────────────────────────────────────── */
 #ov-inner{position:relative;display:flex;flex-direction:row;align-items:center;width:100%;height:100%}
 
-/* ─── Corner accents ─────────────────────────────────────────────────────── */
-.ca{position:absolute;width:50px;height:50px;border:2px solid;opacity:.5;pointer-events:none;display:none}
-.ca-tl{top:-2px;left:-2px;border-right:none;border-bottom:none}
-.ca-br{bottom:-2px;right:-2px;border-left:none;border-top:none}
+/* ─── Corner accents — frame outside the overlay ─────────────────────────── */
+.ca{position:absolute;width:18px;height:18px;border:2px solid;opacity:.7;pointer-events:none;display:none;z-index:20}
+/* Offset outward by gap so they sit just outside the container border */
+.ca-tl{top:-8px;left:-8px;border-right:none;border-bottom:none;border-radius:2px 0 0 0}
+.ca-br{bottom:-8px;right:-8px;border-left:none;border-top:none;border-radius:0 0 2px 0}
 
 /* ─── Category image ─────────────────────────────────────────────────────── */
-#img-wrap{position:absolute;z-index:4;display:none}
+#img-wrap{position:absolute;z-index:50;display:none}
 #img-wrap.vis{display:block}
 #cat-img{display:block}
 
@@ -56,11 +56,26 @@ body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;position:relative}
 #sec-wrap{position:relative;display:block}
 #sec-txt{display:block}
 
-/* ─── Ticker ─────────────────────────────────────────────────────────────── */
-#ticker-wrap{position:fixed;bottom:0;left:0;width:100%;overflow:hidden;z-index:50;display:none;box-shadow:0 -4px 20px rgba(0,0,0,.25)}
+/* ─── Clip shell — clips clock+ticker to the overlay's border-radius ─────── */
+/* #ov stays overflow:visible so the category image can overhang outside it.  */
+/* This inner shell mirrors the exact same border-radius and clips the strip.  */
+#clip-shell{
+  position:absolute;
+  inset:0;
+  border-radius:inherit;
+  overflow:hidden;
+  pointer-events:none;
+  z-index:8;
+}
+
+/* ─── Ticker (inside overlay, bottom strip) ──────────────────────────────── */
+#ticker-wrap{position:absolute;bottom:0;left:0;right:0;overflow:hidden;display:none;z-index:8}
 #ticker-wrap.vis{display:block}
-#ticker-inner{position:relative;width:100%;overflow:hidden}
-#ticker-txt{display:inline-block;white-space:nowrap;padding:14px 0;font-weight:500;letter-spacing:.5px;will-change:transform}
+/* When clock is on — ticker left edge gets a \ slash matching clock's \ slash */
+#ticker-wrap.clock-adjacent.pos-bottom{ clip-path:polygon(0 0,100% 0,100% 100%,28px 100%); }
+#ticker-wrap.clock-adjacent.pos-top   { clip-path:polygon(28px 0,100% 0,100% 100%,0 100%); }
+#ticker-inner{position:relative;width:100%;overflow:hidden;display:flex;align-items:center}
+#ticker-txt{display:inline-block;white-space:nowrap;padding:0;font-weight:500;letter-spacing:.5px;will-change:transform}
 
 /* ════════════════════════════════════════════════════════════════════════════
    ENTRANCE ANIMATIONS  (class = "anim-" + settings value)
@@ -205,6 +220,61 @@ body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;position:relative}
 @media(max-width:768px){
   #cat-img{width:100px!important;height:100px!important}
 }
+
+/* ─── Clock tab (inside overlay, left-flush, right side slanted) ─────────── */
+#clock-el{
+  display:none;
+  position:absolute;
+  left:0;
+  white-space:nowrap;
+  font-variant-numeric:tabular-nums;
+  letter-spacing:.06em;
+  padding:0 44px 0 20px;
+  pointer-events:none;
+  z-index:10;
+  /* height + line-height set in JS to match ticker */
+  align-items:center;
+  justify-content:flex-start;
+}
+#clock-el.vis{display:flex}
+/* Bottom-left — right edge slants: top-right recedes, bottom-right is at container left-flush */
+#clock-el.pos-bottom{
+  bottom:0;top:auto;
+  clip-path:polygon(0 0,calc(100% - 28px) 0,100% 100%,0 100%);
+}
+/* Top-left — mirror: right edge slants the other way */
+#clock-el.pos-top{
+  top:0;bottom:auto;
+  clip-path:polygon(0 0,100% 0,calc(100% - 28px) 100%,0 100%);
+}
+
+
+/* ─── Live Indicator ─────────────────────────────────────────────────────── */
+#live-indicator{
+  position:fixed;
+  z-index:200;
+  display:none;
+  align-items:center;
+  gap:8px;
+  padding:6px 14px;
+  border-radius:6px;
+  backdrop-filter:blur(6px);
+  -webkit-backdrop-filter:blur(6px);
+  pointer-events:none;
+}
+#live-indicator.vis{display:flex}
+#live-dot{
+  width:10px;height:10px;border-radius:50%;background:currentColor;
+  animation:liveDotPulse 1.4s ease-in-out infinite;
+  flex-shrink:0;
+}
+@keyframes liveDotPulse{
+  0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(255,255,255,.5)}
+  50%{opacity:.25;box-shadow:0 0 0 5px rgba(255,255,255,0)}
+}
+#live-label-txt{font-weight:800;letter-spacing:2px;font-size:inherit;text-transform:uppercase}
+#live-sep{margin:0 6px;font-size:.85em;font-weight:300;line-height:1}
+#live-location-txt{font-weight:400;font-size:.9em;letter-spacing:.5px;opacity:.9;text-transform:uppercase}
 </style>
 </head>
 <body>
@@ -212,11 +282,30 @@ body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;position:relative}
 <!-- Company Logo -->
 <div id="logo-wrap"><img id="logo-img" src="" alt="Logo"></div>
 
+<!-- Live Indicator -->
+<div id="live-indicator">
+  <div id="live-dot"></div>
+  <span id="live-label-txt">LIVE</span>
+  <span id="live-sep">&#x2502;</span>
+  <span id="live-location-txt"></span>
+</div>
+
 <!-- Main Overlay -->
 <div id="ov">
   <div id="ov-inner">
     <div class="ca ca-tl"></div>
     <div class="ca ca-br"></div>
+    <!-- Clip shell: clips clock+ticker to border-radius; ov stays overflow:visible for image -->
+    <div id="clip-shell">
+      <!-- Clock tab — inside overlay, left edge flush with container, right side slanted -->
+      <div id="clock-el"></div>
+      <!-- Ticker — inside overlay, bottom strip; left offset when clock is on -->
+      <div id="ticker-wrap">
+        <div id="ticker-inner">
+          <div id="ticker-txt"></div>
+        </div>
+      </div>
+    </div>
     <div id="img-wrap"><img id="cat-img" src="" alt=""></div>
     <div id="txt">
       <div id="main-txt"></div>
@@ -224,13 +313,6 @@ body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;position:relative}
       <div id="sec-wrap"><div id="sec-txt"></div></div>
       <div id="co-name"></div>
     </div>
-  </div>
-</div>
-
-<!-- Ticker -->
-<div id="ticker-wrap">
-  <div id="ticker-inner">
-    <div id="ticker-txt"></div>
   </div>
 </div>
 
@@ -253,6 +335,12 @@ const tickerWrapEl = document.getElementById('ticker-wrap');
 const tickerTxtEl  = document.getElementById('ticker-txt');
 const txtEl        = document.getElementById('txt');
 const cornerEls    = document.querySelectorAll('.ca');
+const clockEl      = document.getElementById('clock-el');
+const liveIndEl    = document.getElementById('live-indicator');
+const liveLabelEl  = document.getElementById('live-label-txt');
+const liveSepEl    = document.getElementById('live-sep');
+const liveLocEl    = document.getElementById('live-location-txt');
+const liveDotEl    = document.getElementById('live-dot');
 
 /* ── Runtime state ────────────────────────────────────────────────────────── */
 let cur = {}, phrases = [], phraseIdx = 0;
@@ -260,6 +348,7 @@ let rotTimer = null, rotPendingTimer = null, tickerRAF = null;
 let cycleTimer = null, cycleOn = false;
 let twTimers = { main: null, sec: null, co: null };
 let txtAnimTO = null, txtRepeatTO = null;
+let clockRAF = null;
 
 /* ── Lookup tables ────────────────────────────────────────────────────────── */
 const CYCLE_MAP = {
@@ -324,6 +413,10 @@ function applySettings(s) {
 
   /* 5. Animations — last, so elements exist and are visible */
   applyAnimations(s);
+
+  /* 6. Clock & live indicator */
+  applyClock(s);
+  applyLiveIndicator(s);
 }
 
 /* ════════════════════════════════════════════════════════════════════════════
@@ -405,8 +498,28 @@ function applyStyling(s) {
   const gf = s.font_family || 'Segoe UI,sans-serif';
 
   /* Overall overlay */
-  ovEl.style.backgroundColor = toRgba(s.overlay_bg_color || '#1a1a1a', s.overlay_bg_opacity != null ? s.overlay_bg_opacity : 0.85);
-  ovEl.style.borderRadius    = (s.border_radius || 15) + 'px';
+  if (s.overlay_bg_sections_enabled) {
+    const topH    = Math.max(0, Math.min(50, s.overlay_bg_top_height    || 25));
+    const botH    = Math.max(0, Math.min(50, s.overlay_bg_bottom_height || 25));
+    const midH    = 100 - topH - botH;
+    const topRgba = toRgba(s.overlay_bg_top_color    || '#222222', s.overlay_bg_top_opacity    != null ? s.overlay_bg_top_opacity    : 0.95);
+    const midRgba = toRgba(s.overlay_bg_color        || '#000000', s.overlay_bg_opacity        != null ? s.overlay_bg_opacity        : 0.90);
+    const botRgba = toRgba(s.overlay_bg_bottom_color || '#222222', s.overlay_bg_bottom_opacity != null ? s.overlay_bg_bottom_opacity : 0.95);
+    ovEl.style.background = `linear-gradient(to bottom,
+      ${topRgba} 0%,
+      ${topRgba} ${topH}%,
+      ${midRgba} ${topH}%,
+      ${midRgba} ${topH + midH}%,
+      ${botRgba} ${topH + midH}%,
+      ${botRgba} 100%)`;
+  } else {
+    ovEl.style.background = '';
+    ovEl.style.backgroundColor = toRgba(s.overlay_bg_color || '#1a1a1a', s.overlay_bg_opacity != null ? s.overlay_bg_opacity : 0.85);
+  }
+  const _br = (s.border_radius || 15) + 'px';
+  ovEl.style.borderRadius = _br;
+  /* clip-shell uses overflow:hidden to clip clock+ticker — must match ov's radius exactly */
+  document.getElementById('clip-shell').style.borderRadius = _br;
   /* Store target opacity so cycle engine can restore it on show */
   const targetOp = s.opacity != null ? s.opacity : 0.9;
   ovEl.dataset.targetOpacity = targetOp;
@@ -473,7 +586,7 @@ function applyStyling(s) {
   coEl.style.fontStyle  = (s.company_name_italic !== false) ? 'italic' : 'normal';
 
   /* Ticker */
-  const tkFontSize = s.ticker_font_size || 18;
+  const tkFontSize = s.ticker_font_size || 13;
   tickerWrapEl.style.backgroundColor = toRgba(s.ticker_bg_color || '#1a1a1a', s.ticker_bg_opacity != null ? s.ticker_bg_opacity : 0.8);
   tickerTxtEl.style.fontSize         = tkFontSize + 'px';
   tickerTxtEl.style.color            = s.ticker_text_color  || '#FFFFFF';
@@ -532,7 +645,7 @@ function applyPositioning(s) {
 
   const sz   = s.image_size || 128;
   const half = Math.round(sz / 2);
-  const gap  = 16;
+  const gap  = 4;
   const ipos = s.image_position || 'left';
 
   /* Full reset of image wrapper position */
@@ -616,15 +729,14 @@ function applyAssets(s) {
     logoWrapEl.classList.remove('vis');
   }
 
-  /* Ticker — also toggle .ticker-active on overlay so it respects margin-bottom */
+  /* Ticker — lives inside overlay bottom strip; offset right of clock when clock is on */
   if (s.show_ticker && s.ticker_text) {
     tickerTxtEl.textContent = s.ticker_text;
     tickerWrapEl.classList.add('vis');
-    ovEl.classList.add('ticker-active');
+    syncTickerOffset(s);
     startTicker(s);
   } else {
     tickerWrapEl.classList.remove('vis');
-    ovEl.classList.remove('ticker-active');
     stopTicker();
   }
 }
@@ -917,11 +1029,68 @@ function stopRotation() {
 /* ════════════════════════════════════════════════════════════════════════════
    TICKER
 ════════════════════════════════════════════════════════════════════════════ */
+/* ─── syncTickerOffset ────────────────────────────────────────────────────
+   Shifts the ticker-wrap left edge to sit flush with the right edge of
+   the clock tab when the clock is on, or back to 0 when the clock is off.
+   Called whenever either component changes state.
+──────────────────────────────────────────────────────────────────────────── */
+/* ─── syncStripHeight ─────────────────────────────────────────────────────
+   Forces clock tab and ticker to the SAME pixel height so their shared
+   slant is a perfect diagonal and the seam is invisible.
+──────────────────────────────────────────────────────────────────────────── */
+function syncStripHeight(s) {
+  const clockFs  = parseFloat(s.clock_font_size  || 13);
+  const tickerFs = parseFloat(s.ticker_font_size || 13);
+  const clockOn  = s.show_clock;
+  const tickerOn = s.show_ticker && s.ticker_text;
+  // Use whichever is visible to drive the height; if both visible use larger
+  let fs = clockFs;
+  if (tickerOn) fs = Math.max(clockFs, tickerFs);
+  const h = Math.round(fs * 2.4); // generous multiplier so text breathes
+  const hpx = h + 'px';
+  clockEl.style.height      = hpx;
+  tickerWrapEl.style.height = hpx;
+  tickerWrapEl.querySelector('#ticker-inner').style.height = hpx;
+
+  // Pad #txt bottom just enough to clear the strip + a small breathing gap.
+  // The strip is position:absolute so we only need to push text up by strip height + gap.
+  const pad = s.container_padding != null ? s.container_padding : 25;
+  if (clockOn || tickerOn) {
+    txtEl.style.paddingBottom = (h + 10) + 'px';
+  } else {
+    txtEl.style.paddingBottom = pad + 'px';
+  }
+}
+
+function syncTickerOffset(s) {
+  if (s) syncStripHeight(s);
+  const clockOn  = s && s.show_clock && clockEl.classList.contains('vis');
+  const clockPos = (s && s.clock_position) || 'bottom';
+
+  // Mirror clock position class onto ticker so the right slash variant fires
+  tickerWrapEl.classList.toggle('pos-bottom', clockPos === 'bottom');
+  tickerWrapEl.classList.toggle('pos-top',    clockPos === 'top');
+
+  if (clockOn) {
+    tickerWrapEl.classList.add('clock-adjacent');
+    requestAnimationFrame(() => {
+      const cw = clockEl.offsetWidth;
+      // Offset by (clockWidth - 28) so both slash edges share the same two points
+      tickerWrapEl.style.left = Math.max(0, cw - 28) + 'px';
+      if (s.show_ticker && s.ticker_text) startTicker(s);
+    });
+  } else {
+    tickerWrapEl.classList.remove('clock-adjacent');
+    tickerWrapEl.style.left = '0';
+    if (s && s.show_ticker && s.ticker_text) startTicker(s);
+  }
+}
+
 function startTicker(s) {
   stopTicker();
   requestAnimationFrame(() => {
     const cw = tickerWrapEl.offsetWidth, tw = tickerTxtEl.scrollWidth;
-    if (tw <= cw) { tickerTxtEl.style.transform = 'translateX(0)'; return; }
+    if (tw <= 0 || cw <= 0) return;
     const pps   = (s.ticker_speed || 50) * 2;
     const total = tw + cw;
     const dur   = (total / pps) * 1000;
@@ -1074,6 +1243,151 @@ function startCycle(s) {
 }
 
 /* ════════════════════════════════════════════════════════════════════════════
+   CLOCK
+════════════════════════════════════════════════════════════════════════════ */
+function startClock(s) {
+  if (clockRAF) cancelAnimationFrame(clockRAF);
+
+  const DAYS   = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+  function tick() {
+    // Always Kenyan time — East Africa Time (UTC+3)
+    const eat = new Date(new Date().toLocaleString('en-US', { timeZone: 'Africa/Nairobi' }));
+
+    const day  = DAYS[eat.getDay()];
+    const date = eat.getDate() + ' ' + MONTHS[eat.getMonth()] + ' ' + eat.getFullYear();
+
+    const h24 = eat.getHours();
+    const m   = String(eat.getMinutes()).padStart(2, '0');
+    const sec = String(eat.getSeconds()).padStart(2, '0');
+
+    // clock_show_time: when false, hide the time entirely — show day • date only
+    if (s.clock_show_time === false) {
+      clockEl.textContent = day + '  \u2022  ' + date;
+    } else {
+      let time;
+      if (s.clock_format === '12h') {
+        const h12  = h24 % 12 || 12;
+        const ampm = h24 < 12 ? 'AM' : 'PM';
+        time = `${String(h12).padStart(2,'0')}:${m}:${sec} ${ampm}`;
+      } else {
+        time = `${String(h24).padStart(2,'0')}:${m}:${sec}`;
+      }
+      clockEl.textContent = day + '  \u2022  ' + date + '  \u2022  ' + time;
+    }
+    clockRAF = requestAnimationFrame(tick);
+  }
+  tick();
+}
+
+function applyClock(s) {
+  if (!s.show_clock) {
+    clockEl.classList.remove('vis');
+    if (clockRAF) { cancelAnimationFrame(clockRAF); clockRAF = null; }
+    return;
+  }
+  clockEl.classList.add('vis');
+
+  const gf = s.font_family || 'Segoe UI,sans-serif';
+  clockEl.style.fontSize   = (s.clock_font_size || 13) + 'px';
+  clockEl.style.fontFamily = s.clock_font_family || gf;
+  clockEl.style.color      = s.clock_color || '#FFFFFF';
+
+  // Background — match overlay bg so tab looks like it grows from the container
+  const bgOp = parseFloat(s.clock_bg_opacity);
+  if (s.clock_bg_color && s.clock_bg_color !== 'transparent' && !isNaN(bgOp) && bgOp > 0) {
+    clockEl.style.backgroundColor = toRgba(s.clock_bg_color, bgOp);
+  } else {
+    const ovOp = parseFloat(s.overlay_bg_opacity) || 0.9;
+    clockEl.style.backgroundColor = toRgba(s.overlay_bg_color || '#000000', ovOp);
+  }
+
+  // Border-radius — the left edge is flush with the container wall.
+  // Match the overlay's corner radius on the two left corners so they blend.
+  const r = parseInt(s.border_radius) || 0;
+  const pos = s.clock_position || 'bottom';
+  clockEl.classList.toggle('pos-bottom', pos === 'bottom');
+  clockEl.classList.toggle('pos-top',    pos === 'top');
+
+  // Push text right enough to clear the border-radius curve.
+  // When radius is large the curve eats deeply into the strip horizontally.
+  // Use r * 0.6 as a reliable inset (covers even very large radii), min 20px.
+  const leftPad = Math.max(20, Math.ceil(r * 0.6) + 8);
+  clockEl.style.paddingLeft = leftPad + 'px';
+
+  if (pos === 'bottom') {
+    clockEl.style.borderRadius = `0 0 0 ${r}px`;
+  } else {
+    clockEl.style.borderRadius = `${r}px 0 0 0`;
+  }
+
+  // Continuous animation
+  stripClass(clockEl, 'text-');
+  if (s.clock_animation && s.clock_animation !== 'none') {
+    clockEl.classList.add('text-' + s.clock_animation);
+  }
+
+  syncStripHeight(s);
+  startClock(s);
+  // Keep ticker offset in sync whenever clock is applied
+  syncTickerOffset(s);
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   LIVE INDICATOR
+════════════════════════════════════════════════════════════════════════════ */
+function applyLiveIndicator(s) {
+  if (!s.show_live_indicator) {
+    liveIndEl.classList.remove('vis');
+    return;
+  }
+  liveIndEl.classList.add('vis');
+
+  // Text content
+  const label = s.live_label || 'LIVE';
+  const loc   = s.live_location || '';
+  liveLabelEl.textContent = label;
+  liveLocEl.textContent   = loc;
+  liveSepEl.style.display = loc ? 'inline' : 'none';
+
+  // Colors / styles
+  const gf = s.font_family || 'Segoe UI,sans-serif';
+  const bgRgba = toRgba(s.live_indicator_bg_color || '#CC0000', s.live_indicator_bg_opacity != null ? s.live_indicator_bg_opacity : 0.9);
+  const accentCol = s.accent_color || '#FFD700';
+  liveIndEl.style.backgroundColor = bgRgba;
+  liveIndEl.style.color           = s.live_indicator_color || '#FFFFFF';
+  liveIndEl.style.fontSize        = (s.live_indicator_font_size || 16) + 'px';
+  liveIndEl.style.fontFamily      = s.live_indicator_font_family || gf;
+  // Dot and separator use the overlay accent color for a branded look
+  liveDotEl.style.color           = accentCol;
+  liveDotEl.style.background      = accentCol;
+  liveSepEl.style.color           = accentCol;
+
+  // Animation on label
+  stripClass(liveIndEl, 'text-');
+  if (s.live_indicator_animation && s.live_indicator_animation !== 'none') {
+    liveIndEl.classList.add('text-' + s.live_indicator_animation);
+  }
+
+  // Position — opposite side from logo by default, but fully user-customizable
+  const vp = s.live_indicator_vertical_position   || 'top';
+  const hp = s.live_indicator_horizontal_position || 'left';
+  const GAP = '20px';
+  liveIndEl.style.top = liveIndEl.style.bottom = 'auto';
+  liveIndEl.style.left = liveIndEl.style.right = 'auto';
+  liveIndEl.style.transform = 'none';
+
+  if (vp === 'top')    liveIndEl.style.top    = GAP;
+  else if (vp === 'bottom') liveIndEl.style.bottom = GAP;
+  else if (vp === 'middle') { liveIndEl.style.top = '50%'; liveIndEl.style.transform = 'translateY(-50%)'; }
+
+  if (hp === 'left')   liveIndEl.style.left  = GAP;
+  else if (hp === 'right')  liveIndEl.style.right = GAP;
+  else if (hp === 'center') { liveIndEl.style.left = '50%'; liveIndEl.style.transform += ' translateX(-50%)'; }
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
    POLLING
 ════════════════════════════════════════════════════════════════════════════ */
 async function poll() {
@@ -1090,7 +1404,7 @@ async function poll() {
   } catch (e) { console.warn('Poll error:', e); }
 }
 
-setInterval(poll, 2000);
+setInterval(poll, 300);
 poll();
 </script>
 </body>

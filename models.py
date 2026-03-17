@@ -141,15 +141,49 @@ class OverlaySettings(db.Model):
     overlay_bg_color = db.Column(db.String(7), default='#000000')
     overlay_bg_opacity = db.Column(db.Float, default=0.9)
 
+    # ── Sectioned Background (top / middle / bottom strips) ────────────────
+    overlay_bg_sections_enabled = db.Column(db.Boolean, default=False)
+    overlay_bg_top_color        = db.Column(db.String(7),  default='#222222')
+    overlay_bg_top_opacity      = db.Column(db.Float,      default=0.95)
+    overlay_bg_top_height       = db.Column(db.Integer,    default=25)   # % of overlay height
+    overlay_bg_bottom_color     = db.Column(db.String(7),  default='#222222')
+    overlay_bg_bottom_opacity   = db.Column(db.Float,      default=0.95)
+    overlay_bg_bottom_height    = db.Column(db.Integer,    default=25)   # % of overlay height
+
+    # ── Clock / Time Display ────────────────────────────────────────────────
+    show_clock          = db.Column(db.Boolean,     default=False)
+    clock_format        = db.Column(db.String(5),   default='24h')   # 12h | 24h
+    clock_show_time     = db.Column(db.Boolean,     default=True)    # renamed from clock_show_seconds
+    clock_font_size     = db.Column(db.Integer,     default=13)
+    clock_font_family   = db.Column(db.String(100), default=None)
+    clock_color         = db.Column(db.String(7),   default='#FFFFFF')
+    clock_bg_color      = db.Column(db.String(7),   default='#000000')
+    clock_bg_opacity    = db.Column(db.Float,       default=0.0)
+    clock_animation     = db.Column(db.String(50),  default='none')
+    clock_position      = db.Column(db.String(20),  default='bottom')
+
+    # ── Live Location Indicator ─────────────────────────────────────────────
+    show_live_indicator              = db.Column(db.Boolean,     default=False)
+    live_label                       = db.Column(db.String(50),  default='LIVE')
+    live_location                    = db.Column(db.String(100), default='')
+    live_indicator_color             = db.Column(db.String(7),   default='#FFFFFF')
+    live_indicator_bg_color          = db.Column(db.String(7),   default='#CC0000')
+    live_indicator_bg_opacity        = db.Column(db.Float,       default=0.9)
+    live_indicator_font_size         = db.Column(db.Integer,     default=16)
+    live_indicator_font_family       = db.Column(db.String(100), default=None)
+    live_indicator_animation         = db.Column(db.String(50),  default='pulse')
+    live_indicator_vertical_position   = db.Column(db.String(20), default='top')
+    live_indicator_horizontal_position = db.Column(db.String(20), default='left')
+
     # ── Main Text Colors ───────────────────────────────────────────────────
     main_text_color = db.Column(db.String(7), default='#FFFFFF')
-    main_text_bg_color = db.Column(db.String(7), default='transparent')
-    main_text_bg_opacity = db.Column(db.Float, default=1.0)
+    main_text_bg_color = db.Column(db.String(7), default='#000000')
+    main_text_bg_opacity = db.Column(db.Float, default=0.0)
 
     # ── Secondary Text Colors ──────────────────────────────────────────────
     secondary_text_color = db.Column(db.String(7), default='#FFD700')
-    secondary_text_bg_color = db.Column(db.String(7), default='transparent')
-    secondary_text_bg_opacity = db.Column(db.Float, default=1.0)
+    secondary_text_bg_color = db.Column(db.String(7), default='#000000')
+    secondary_text_bg_opacity = db.Column(db.Float, default=0.0)
 
     # ── Ticker Colors ──────────────────────────────────────────────────────
     ticker_text_color = db.Column(db.String(7), default='#FFFFFF')
@@ -158,8 +192,8 @@ class OverlaySettings(db.Model):
 
     # ── Company Name Colors ────────────────────────────────────────────────
     company_name_color = db.Column(db.String(7), default='#FFD700')
-    company_name_bg_color = db.Column(db.String(7), default='transparent')
-    company_name_bg_opacity = db.Column(db.Float, default=1.0)
+    company_name_bg_color = db.Column(db.String(7), default='#000000')
+    company_name_bg_opacity = db.Column(db.Float, default=0.0)
 
     # ── Footer Colors ──────────────────────────────────────────────────────
     footer_text_color = db.Column(db.String(7), default='#CCCCCC')
@@ -338,22 +372,59 @@ class OverlaySettings(db.Model):
             'image_display_animation_frequency': 5.0,
         }
 
+        # ── New feature defaults (same for all categories — off by default) ─
+        _shared_new_features = {
+            # Sectioned background
+            'overlay_bg_sections_enabled': False,
+            'overlay_bg_top_color':        '#222222',
+            'overlay_bg_top_opacity':      0.95,
+            'overlay_bg_top_height':       25,
+            'overlay_bg_bottom_color':     '#222222',
+            'overlay_bg_bottom_opacity':   0.95,
+            'overlay_bg_bottom_height':    25,
+            # Day & Time Bar
+            'show_clock':          False,
+            'clock_format':        '24h',
+            'clock_show_time':     True,    # renamed from clock_show_seconds
+            'clock_font_size':     13,      # sized to fit the bottom strip
+            'clock_font_family':   None,
+            'clock_color':         '#FFFFFF',
+            'clock_bg_color':      '#000000',
+            'clock_bg_opacity':    0.0,     # transparent by default; use opacity
+            'clock_animation':     'none',
+            'clock_position':      'bottom',
+            # Ticker (inside overlay strip)
+            'ticker_font_size':    13,      # match clock strip height by default
+            # Live indicator
+            'show_live_indicator':               False,
+            'live_label':                        'LIVE',
+            'live_location':                     '',
+            'live_indicator_color':              '#FFFFFF',
+            'live_indicator_bg_color':           '#CC0000',
+            'live_indicator_bg_opacity':         0.9,
+            'live_indicator_font_size':          16,
+            'live_indicator_font_family':        None,
+            'live_indicator_animation':          'pulse',
+            'live_indicator_vertical_position':  'top',
+            'live_indicator_horizontal_position':'left',
+        }
+
         defaults = {
             'funeral': {
                 # Colors
                 'overlay_bg_color': '#000000',
                 'overlay_bg_opacity': 0.9,
                 'main_text_color': '#FFFFFF',
-                'main_text_bg_color': 'transparent',
+                'main_text_bg_color': '#000000',
                 'main_text_bg_opacity': 1.0,
                 'secondary_text_color': '#FFD700',
-                'secondary_text_bg_color': 'transparent',
+                'secondary_text_bg_color': '#000000',
                 'secondary_text_bg_opacity': 1.0,
                 'ticker_text_color': '#FFFFFF',
                 'ticker_bg_color': '#1a1a1a',
                 'ticker_bg_opacity': 0.8,
                 'company_name_color': '#FFD700',
-                'company_name_bg_color': 'transparent',
+                'company_name_bg_color': '#000000',
                 'company_name_bg_opacity': 1.0,
                 'footer_text_color': '#CCCCCC',
                 'footer_bg_color': '#1a1a1a',
@@ -376,22 +447,23 @@ class OverlaySettings(db.Model):
                 **_shared_image,
                 **_shared_fonts,
                 **_shared_display_anim,
+                **_shared_new_features,
             },
             'wedding': {
                 # Colors
                 'overlay_bg_color': '#FFFFFF',
                 'overlay_bg_opacity': 0.95,
                 'main_text_color': '#D4AF37',
-                'main_text_bg_color': 'transparent',
+                'main_text_bg_color': '#000000',
                 'main_text_bg_opacity': 1.0,
                 'secondary_text_color': '#8B7355',
-                'secondary_text_bg_color': 'transparent',
+                'secondary_text_bg_color': '#000000',
                 'secondary_text_bg_opacity': 1.0,
                 'ticker_text_color': '#333333',
                 'ticker_bg_color': '#F5F5DC',
                 'ticker_bg_opacity': 0.9,
                 'company_name_color': '#D4AF37',
-                'company_name_bg_color': 'transparent',
+                'company_name_bg_color': '#000000',
                 'company_name_bg_opacity': 1.0,
                 'footer_text_color': '#666666',
                 'footer_bg_color': '#F5F5DC',
@@ -415,22 +487,23 @@ class OverlaySettings(db.Model):
                 **{**_shared_image, 'image_position': 'right'},
                 **_shared_fonts,
                 **_shared_display_anim,
+                **_shared_new_features,
             },
             'ceremony': {
                 # Colors
                 'overlay_bg_color': '#1a237e',
                 'overlay_bg_opacity': 0.9,
                 'main_text_color': '#FFFFFF',
-                'main_text_bg_color': 'transparent',
+                'main_text_bg_color': '#000000',
                 'main_text_bg_opacity': 1.0,
                 'secondary_text_color': '#FFD700',
-                'secondary_text_bg_color': 'transparent',
+                'secondary_text_bg_color': '#000000',
                 'secondary_text_bg_opacity': 1.0,
                 'ticker_text_color': '#FFFFFF',
                 'ticker_bg_color': '#0d47a1',
                 'ticker_bg_opacity': 0.8,
                 'company_name_color': '#FFD700',
-                'company_name_bg_color': 'transparent',
+                'company_name_bg_color': '#000000',
                 'company_name_bg_opacity': 1.0,
                 'footer_text_color': '#DDDDDD',
                 'footer_bg_color': '#0d47a1',
@@ -461,6 +534,7 @@ class OverlaySettings(db.Model):
                    'image_position': 'top'},
                 **_shared_fonts,
                 **_shared_display_anim,
+                **_shared_new_features,
             },
         }
 

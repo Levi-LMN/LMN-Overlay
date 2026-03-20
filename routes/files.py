@@ -16,6 +16,7 @@ from werkzeug.utils import secure_filename
 from datetime import datetime
 from models import db, OverlaySettings
 from utils.decorators import login_required
+from PIL import Image as PILImage
 import os
 
 files_bp = Blueprint('files', __name__, url_prefix='/files')
@@ -23,8 +24,45 @@ files_bp = Blueprint('files', __name__, url_prefix='/files')
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp', 'svg', 'bmp'}
 
 
+THUMB_SUFFIX   = '_thumb'
+THUMB_SIZE     = (400, 260)   # max dimensions — fast to load, still looks sharp on retina
+THUMB_QUALITY  = 72           # JPEG quality for thumbnails
+
+
 def _allowed(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
+def _make_thumbnail(src_path: str, thumb_path: str) -> bool:
+    """
+    Generate a JPEG thumbnail from *src_path* and save to *thumb_path*.
+    Returns True on success, False if anything goes wrong (caller falls back
+    to serving the original).
+    """
+    try:
+        with PILImage.open(src_path) as img:
+            # Preserve orientation from EXIF if present
+            try:
+                from PIL import ImageOps
+                img = ImageOps.exif_transpose(img)
+            except Exception:
+                pass
+
+            if img.mode not in ('RGB', 'RGBA'):
+                img = img.convert('RGB')
+            elif img.mode == 'RGBA':
+                # Flatten alpha onto white background so JPEG is clean
+                bg = PILImage.new('RGB', img.size, (255, 255, 255))
+                bg.paste(img, mask=img.split()[3])
+                img = bg
+            else:
+                img = img.convert('RGB')
+
+            img.thumbnail(THUMB_SIZE, PILImage.Resampling.LANCZOS)
+            img.save(thumb_path, 'JPEG', quality=THUMB_QUALITY, optimize=True)
+        return True
+    except Exception:
+        return False
 
 
 def _upload_dir():
@@ -66,19 +104,40 @@ def _build_file_list():
         ext = entry.name.rsplit('.', 1)[-1].lower() if '.' in entry.name else ''
         if ext not in ALLOWED_EXTENSIONS:
             continue
+        # Skip thumbnail files — they're internal, not user files
+        name_stem = entry.name.rsplit('.', 1)[0]
+        if name_stem.endswith(THUMB_SUFFIX):
+            continue
 
         stat       = entry.stat()
         rel_path   = f"uploads/{entry.name}"
         assignment = assignments.get(rel_path)
 
+        # Derive thumbnail path — thumb lives alongside the original with _thumb suffix
+        name_no_ext  = entry.name.rsplit('.', 1)[0]
+        thumb_name   = name_no_ext + THUMB_SUFFIX + '.jpg'
+        thumb_path   = os.path.join(upload_dir, thumb_name)
+        thumb_rel    = f"uploads/{thumb_name}"
+
+        # Generate thumbnail on-the-fly if it doesn't exist yet
+        if not os.path.isfile(thumb_path):
+            _make_thumbnail(entry.path, thumb_path)
+
+        thumb_url = (
+            url_for('static', filename=thumb_rel)
+            if os.path.isfile(thumb_path)
+            else url_for('static', filename=rel_path)   # fallback to original
+        )
+
         files.append({
-            'filename':   entry.name,
-            'rel_path':   rel_path,
-            'url':        url_for('static', filename=rel_path),
-            'size_kb':    round(stat.st_size / 1024, 1),
-            'modified':   datetime.fromtimestamp(stat.st_mtime).strftime('%Y-%m-%d %H:%M'),
-            'ext':        ext,
-            'assigned_to': assignment,   # None  or  {category, slot}
+            'filename':    entry.name,
+            'rel_path':    rel_path,
+            'url':         url_for('static', filename=rel_path),
+            'thumb_url':   thumb_url,
+            'size_kb':     round(stat.st_size / 1024, 1),
+            'modified':    datetime.fromtimestamp(stat.st_mtime).strftime('%Y-%m-%d %H:%M'),
+            'ext':         ext,
+            'assigned_to': assignment,
         })
 
     return files
@@ -103,6 +162,7 @@ def list_files():
         os.path.getsize(os.path.join(_upload_dir(), f['filename']))
         for f in files
         if os.path.isfile(os.path.join(_upload_dir(), f['filename']))
+        and not f['filename'].rsplit('.', 1)[0].endswith(THUMB_SUFFIX)
     )
     return jsonify({
         'success':     True,
@@ -163,6 +223,11 @@ def delete_bulk():
 
         try:
             os.remove(full_path)
+            # Also remove thumbnail
+            name_no_ext = filename.rsplit('.', 1)[0]
+            thumb_path  = os.path.join(upload_dir, name_no_ext + THUMB_SUFFIX + '.jpg')
+            if os.path.isfile(thumb_path):
+                os.remove(thumb_path)
             deleted.append(filename)
         except OSError as e:
             failed.append({'filename': filename, 'error': str(e)})
@@ -209,6 +274,10 @@ def upload():
         filename  = f"fm_{timestamp}_{original}"
         filepath  = os.path.join(upload_dir, filename)
         file.save(filepath)
+        # Generate thumbnail immediately so the grid loads fast
+        thumb_name = f"fm_{timestamp}_{original.rsplit('.',1)[0]}{THUMB_SUFFIX}.jpg"
+        thumb_path = os.path.join(upload_dir, thumb_name)
+        _make_thumbnail(filepath, thumb_path)
         saved.append(filename)
 
     return jsonify({
@@ -263,6 +332,11 @@ def delete_file():
 
     try:
         os.remove(full_path)
+        # Also remove the thumbnail if it exists
+        name_no_ext = filename.rsplit('.', 1)[0]
+        thumb_path  = os.path.join(upload_dir, name_no_ext + THUMB_SUFFIX + '.jpg')
+        if os.path.isfile(thumb_path):
+            os.remove(thumb_path)
     except OSError as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 

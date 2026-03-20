@@ -216,6 +216,30 @@
 .fm-modal-btn-cancel{background:#f1f5f9;color:#475569}
 .fm-modal-btn-cancel:hover{background:#e2e8f0}
 
+/* ── Skeleton shimmer ─────────────────────────────────────────────────── */
+@keyframes shimmer{
+    0%{background-position:-400px 0}
+    100%{background-position:400px 0}
+}
+.fm-thumb-skeleton{
+    width:100%;height:100%;
+    background:linear-gradient(90deg,#f1f5f9 25%,#e2e8f0 50%,#f1f5f9 75%);
+    background-size:800px 100%;
+    animation:shimmer 1.4s ease-in-out infinite;
+}
+
+/* ── Blur-up image reveal ─────────────────────────────────────────────── */
+.fm-thumb img{
+    /* start blurred + faded, transition to sharp once loaded */
+    filter:blur(8px);
+    opacity:0;
+    transition:filter .35s ease, opacity .35s ease;
+}
+.fm-thumb img.loaded{
+    filter:blur(0);
+    opacity:1;
+}
+
 /* ── Lightbox ────────────────────────────────────────────────────────── */
 #fm-lightbox{
     position:fixed;inset:0;background:rgba(0,0,0,.88);
@@ -454,7 +478,12 @@ function cardHtml(f) {
     return `
     <div class="fm-card${sel?' selected':''}" data-filename="${esc(f.filename)}">
         <div class="fm-thumb" onclick="openLightbox('${esc(f.url)}')">
-            <img src="${esc(f.url)}" alt="${esc(f.filename)}" loading="lazy"
+            <div class="fm-thumb-skeleton" id="sk-${esc(f.filename)}"></div>
+            <img src="${esc(f.thumb_url)}" alt="${esc(f.filename)}"
+                 loading="lazy"
+                 decoding="async"
+                 data-full="${esc(f.url)}"
+                 onload="this.classList.add('loaded'); const sk=document.getElementById('sk-${esc(f.filename)}'); if(sk) sk.remove();"
                  onerror="this.parentElement.innerHTML='<i class=&quot;fas fa-file-image text-3xl text-gray-300&quot;></i>'">
             ${badge}
         </div>

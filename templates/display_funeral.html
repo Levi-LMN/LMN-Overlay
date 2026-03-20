@@ -272,9 +272,19 @@ body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;position:relative}
   0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(255,255,255,.5)}
   50%{opacity:.25;box-shadow:0 0 0 5px rgba(255,255,255,0)}
 }
-#live-label-txt{font-weight:800;letter-spacing:2px;font-size:inherit;text-transform:uppercase}
-#live-sep{margin:0 6px;font-size:.85em;font-weight:300;line-height:1}
-#live-location-txt{font-weight:400;font-size:.9em;letter-spacing:.5px;opacity:.9;text-transform:uppercase}
+#live-label-txt{
+  font-weight:800;letter-spacing:2px;font-size:inherit;text-transform:uppercase;
+  display:inline-flex;align-items:center;
+  border-radius:4px;
+  /* padding/bg set via JS when a per-part background is active */
+}
+#live-sep{margin:0 4px;font-size:.85em;font-weight:300;line-height:1}
+#live-location-txt{
+  font-weight:400;font-size:.9em;letter-spacing:.5px;text-transform:uppercase;
+  display:inline-flex;align-items:center;
+  border-radius:4px;
+  /* padding/bg set via JS when a per-part background is active */
+}
 </style>
 </head>
 <body>
@@ -1344,45 +1354,74 @@ function applyLiveIndicator(s) {
   }
   liveIndEl.classList.add('vis');
 
-  // Text content
+  // ── Text content ──────────────────────────────────────────────────────────
   const label = s.live_label || 'LIVE';
   const loc   = s.live_location || '';
   liveLabelEl.textContent = label;
   liveLocEl.textContent   = loc;
   liveSepEl.style.display = loc ? 'inline' : 'none';
 
-  // Colors / styles
-  const gf = s.font_family || 'Segoe UI,sans-serif';
-  const bgRgba = toRgba(s.live_indicator_bg_color || '#CC0000', s.live_indicator_bg_opacity != null ? s.live_indicator_bg_opacity : 0.9);
-  const accentCol = s.accent_color || '#FFD700';
-  liveIndEl.style.backgroundColor = bgRgba;
-  liveIndEl.style.color           = s.live_indicator_color || '#FFFFFF';
-  liveIndEl.style.fontSize        = (s.live_indicator_font_size || 16) + 'px';
-  liveIndEl.style.fontFamily      = s.live_indicator_font_family || gf;
-  // Dot and separator use the overlay accent color for a branded look
-  liveDotEl.style.color           = accentCol;
-  liveDotEl.style.background      = accentCol;
-  liveSepEl.style.color           = accentCol;
+  // ── Typography ────────────────────────────────────────────────────────────
+  const gf = s.live_indicator_font_family || s.font_family || 'Segoe UI,sans-serif';
+  const fs = (s.live_indicator_font_size || 16) + 'px';
+  liveIndEl.style.fontSize   = fs;
+  liveIndEl.style.fontFamily = gf;
+  liveLabelEl.style.fontFamily = gf;
+  liveLocEl.style.fontFamily   = gf;
 
-  // Animation on label
+  // ── Outer badge background (wraps both parts) ─────────────────────────────
+  const outerOp = s.live_indicator_bg_opacity != null ? s.live_indicator_bg_opacity : 0.9;
+  liveIndEl.style.backgroundColor = toRgba(s.live_indicator_bg_color || '#CC0000', outerOp);
+
+  // ── Live Label — independent text + background colour ────────────────────
+  const labelBgOp = s.live_label_bg_opacity != null ? s.live_label_bg_opacity : 0.9;
+  liveLabelEl.style.color = s.live_label_color || '#FFFFFF';
+  if (labelBgOp > 0 && s.live_label_bg_color) {
+    liveLabelEl.style.backgroundColor = toRgba(s.live_label_bg_color, labelBgOp);
+    liveLabelEl.style.padding         = '3px 8px';
+    liveLabelEl.style.borderRadius    = '4px';
+  } else {
+    liveLabelEl.style.backgroundColor = 'transparent';
+    liveLabelEl.style.padding         = '0';
+  }
+
+  // ── Location Text — independent text + background colour ─────────────────
+  const locBgOp = s.live_location_bg_opacity != null ? s.live_location_bg_opacity : 0.0;
+  liveLocEl.style.color = s.live_location_color || '#FFFFFF';
+  if (locBgOp > 0 && s.live_location_bg_color) {
+    liveLocEl.style.backgroundColor = toRgba(s.live_location_bg_color, locBgOp);
+    liveLocEl.style.padding         = '3px 8px';
+    liveLocEl.style.borderRadius    = '4px';
+  } else {
+    liveLocEl.style.backgroundColor = 'transparent';
+    liveLocEl.style.padding         = '0';
+  }
+
+  // ── Pulsing dot + separator use accent colour for branded look ────────────
+  const accentCol = s.accent_color || '#FFD700';
+  liveDotEl.style.color      = accentCol;
+  liveDotEl.style.background = accentCol;
+  liveSepEl.style.color      = accentCol;
+
+  // ── Badge animation (applied to the whole badge element) ─────────────────
   stripClass(liveIndEl, 'text-');
   if (s.live_indicator_animation && s.live_indicator_animation !== 'none') {
     liveIndEl.classList.add('text-' + s.live_indicator_animation);
   }
 
-  // Position — opposite side from logo by default, but fully user-customizable
-  const vp = s.live_indicator_vertical_position   || 'top';
-  const hp = s.live_indicator_horizontal_position || 'left';
+  // ── Position ──────────────────────────────────────────────────────────────
+  const vp  = s.live_indicator_vertical_position   || 'top';
+  const hp  = s.live_indicator_horizontal_position || 'left';
   const GAP = '20px';
   liveIndEl.style.top = liveIndEl.style.bottom = 'auto';
   liveIndEl.style.left = liveIndEl.style.right = 'auto';
   liveIndEl.style.transform = 'none';
 
-  if (vp === 'top')    liveIndEl.style.top    = GAP;
+  if      (vp === 'top')    liveIndEl.style.top    = GAP;
   else if (vp === 'bottom') liveIndEl.style.bottom = GAP;
   else if (vp === 'middle') { liveIndEl.style.top = '50%'; liveIndEl.style.transform = 'translateY(-50%)'; }
 
-  if (hp === 'left')   liveIndEl.style.left  = GAP;
+  if      (hp === 'left')   liveIndEl.style.left  = GAP;
   else if (hp === 'right')  liveIndEl.style.right = GAP;
   else if (hp === 'center') { liveIndEl.style.left = '50%'; liveIndEl.style.transform += ' translateX(-50%)'; }
 }

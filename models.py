@@ -175,6 +175,14 @@ class OverlaySettings(db.Model):
     live_indicator_vertical_position   = db.Column(db.String(20), default='top')
     live_indicator_horizontal_position = db.Column(db.String(20), default='left')
 
+    # ── Live Label & Location — per-part colours ───────────────────────────
+    live_label_color         = db.Column(db.String(7),  default='#FFFFFF')
+    live_label_bg_color      = db.Column(db.String(7),  default='#CC0000')
+    live_label_bg_opacity    = db.Column(db.Float,      default=0.9)
+    live_location_color      = db.Column(db.String(7),  default='#FFFFFF')
+    live_location_bg_color   = db.Column(db.String(7),  default='#000000')
+    live_location_bg_opacity = db.Column(db.Float,      default=0.0)
+
     # ── Main Text Colors ───────────────────────────────────────────────────
     main_text_color = db.Column(db.String(7), default='#FFFFFF')
     main_text_bg_color = db.Column(db.String(7), default='#000000')

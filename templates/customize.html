@@ -773,12 +773,14 @@ input[type="range"]{accent-color:#4F46E5}
 
             <div class="settings-section" data-section-tab="animations">
                 <h3><i class="fas fa-broadcast-tower" style="color:#EF4444"></i>Live Location Indicator</h3>
-                <p class="text-sm text-gray-500 mb-4">A persistent badge showing e.g. <em>"LIVE — Nairobi"</em>.</p>
+                <p class="text-sm text-gray-500 mb-4">A persistent badge showing e.g. <em>"LIVE — Nairobi"</em>. Style the label and location text independently.</p>
                 <div class="form-group flex items-center justify-between mb-3">
                     <label class="form-label mb-0">Show Live Indicator</label>
                     <div class="toggle-checkbox {% if settings.show_live_indicator %}checked{% endif %}" onclick="toggleLiveIndicator(this)"></div>
                 </div>
                 <div id="live-indicator-settings-panel" style="{% if not settings.show_live_indicator %}display:none{% endif %}">
+
+                    {# ── Text Content ── #}
                     <div class="grid-2">
                         <div class="form-group">
                             <label class="form-label">Live Label</label>
@@ -788,6 +790,10 @@ input[type="range"]{accent-color:#4F46E5}
                             <label class="form-label">Location Text</label>
                             <input type="text" class="form-input" placeholder="e.g. Nairobi" value="{{ settings.live_location or '' }}" onchange="updateSetting('live_location',this.value)">
                         </div>
+                    </div>
+
+                    {# ── Position ── #}
+                    <div class="grid-2">
                         <div class="form-group">
                             <label class="form-label">Vertical Position</label>
                             <select class="form-input" onchange="updateSetting('live_indicator_vertical_position',this.value)">
@@ -804,6 +810,10 @@ input[type="range"]{accent-color:#4F46E5}
                                 <option value="right"  {% if settings.live_indicator_horizontal_position == 'right' %}selected{% endif %}>Right</option>
                             </select>
                         </div>
+                    </div>
+
+                    {# ── Typography ── #}
+                    <div class="grid-2">
                         <div class="form-group">
                             <label class="form-label">Font Size (px)</label>
                             <input type="number" min="10" max="60" class="form-input" value="{{ settings.live_indicator_font_size or 16 }}" onchange="updateSetting('live_indicator_font_size',this.value)">
@@ -813,21 +823,61 @@ input[type="range"]{accent-color:#4F46E5}
                             {{ font_select('live_indicator_font_family', settings.live_indicator_font_family, 'live_indicator_font_family') }}
                         </div>
                     </div>
-                    {{ color_pair('Text Color','live_ind_color_picker','live_indicator_color', settings.live_indicator_color or '#FFFFFF','live_indicator_color') }}
+
+                    <hr class="my-3 border-gray-100">
+
+                    {# ── Live Label colours ── #}
+                    <p class="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-1">
+                        <span class="inline-block w-2 h-2 rounded-full bg-red-500"></span> Live Label
+                    </p>
+                    <div class="grid-2">
+                        {{ color_pair('Text Color','live_label_color_picker','live_label_color', settings.live_label_color or '#FFFFFF','live_label_color') }}
+                        {{ color_pair('Background Color','live_label_bg_color_picker','live_label_bg_color', settings.live_label_bg_color or '#CC0000','live_label_bg_color') }}
+                    </div>
+                    {{ range_slider('live_label_bg_opacity','Label Background Opacity', settings.live_label_bg_opacity if settings.live_label_bg_opacity is not none else 0.9, 0, 1, 0.05, '', 'live_label_bg_opacity', hint='0 = transparent') }}
+
+                    <hr class="my-3 border-gray-100">
+
+                    {# ── Location Text colours ── #}
+                    <p class="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-1">
+                        <span class="inline-block w-2 h-2 rounded-full bg-indigo-500"></span> Location Text
+                    </p>
+                    <div class="grid-2">
+                        {{ color_pair('Text Color','live_location_color_picker','live_location_color', settings.live_location_color or '#FFFFFF','live_location_color') }}
+                        {{ color_pair('Background Color','live_location_bg_color_picker','live_location_bg_color', settings.live_location_bg_color or '#000000','live_location_bg_color') }}
+                    </div>
+                    {{ range_slider('live_location_bg_opacity','Location Background Opacity', settings.live_location_bg_opacity if settings.live_location_bg_opacity is not none else 0.0, 0, 1, 0.05, '', 'live_location_bg_opacity', hint='0 = transparent') }}
+
+                    <hr class="my-3 border-gray-100">
+
+                    {# ── Outer badge background (wraps both parts) ── #}
+                    <p class="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-1">
+                        <span class="inline-block w-2 h-2 rounded-full bg-gray-400"></span> Badge Outer Background
+                    </p>
                     <div class="grid-2">
                         {{ color_pair('Background Color','live_ind_bg_color_picker','live_indicator_bg_color', settings.live_indicator_bg_color or '#CC0000','live_indicator_bg_color') }}
                     </div>
-                    {{ range_slider('live_indicator_bg_opacity','Background Opacity', settings.live_indicator_bg_opacity if settings.live_indicator_bg_opacity is not none else 0.9, 0, 1, 0.05, '', 'live_indicator_bg_opacity') }}
+                    {{ range_slider('live_indicator_bg_opacity','Badge Background Opacity', settings.live_indicator_bg_opacity if settings.live_indicator_bg_opacity is not none else 0.9, 0, 1, 0.05, '', 'live_indicator_bg_opacity', hint='Overall badge wrapper — set to 0 if using per-part backgrounds') }}
+
+                    <hr class="my-3 border-gray-100">
+
+                    {# ── Animation ── #}
                     <div class="form-group">
-                        <label class="form-label">Animation</label>
+                        <label class="form-label">Badge Animation</label>
                         <select class="form-input" onchange="updateSetting('live_indicator_animation',this.value)">
-                            <option value="none"        {% if settings.live_indicator_animation == 'none' %}selected{% endif %}>None</option>
-                            <option value="pulse"       {% if settings.live_indicator_animation == 'pulse' or not settings.live_indicator_animation %}selected{% endif %}>💓 Pulse</option>
-                            <option value="glow"        {% if settings.live_indicator_animation == 'glow' %}selected{% endif %}>🌟 Glow</option>
-                            <option value="float"       {% if settings.live_indicator_animation == 'float' %}selected{% endif %}>🎈 Float</option>
-                            <option value="shimmer"     {% if settings.live_indicator_animation == 'shimmer' %}selected{% endif %}>✨ Shimmer</option>
-                            <option value="neon-flicker"{% if settings.live_indicator_animation == 'neon-flicker' %}selected{% endif %}>🔦 Neon Flicker</option>
-                            <option value="bounce"      {% if settings.live_indicator_animation == 'bounce' %}selected{% endif %}>🏀 Bounce</option>
+                            <option value="none"           {% if settings.live_indicator_animation == 'none' %}selected{% endif %}>None</option>
+                            <option value="pulse"          {% if settings.live_indicator_animation == 'pulse' or not settings.live_indicator_animation %}selected{% endif %}>💓 Pulse</option>
+                            <option value="glow"           {% if settings.live_indicator_animation == 'glow' %}selected{% endif %}>🌟 Glow</option>
+                            <option value="float"          {% if settings.live_indicator_animation == 'float' %}selected{% endif %}>🎈 Float</option>
+                            <option value="bounce"         {% if settings.live_indicator_animation == 'bounce' %}selected{% endif %}>🏀 Bounce</option>
+                            <option value="shake"          {% if settings.live_indicator_animation == 'shake' %}selected{% endif %}>📳 Shake</option>
+                            <option value="zoom"           {% if settings.live_indicator_animation == 'zoom' %}selected{% endif %}>🔍 Zoom</option>
+                            <option value="shimmer"        {% if settings.live_indicator_animation == 'shimmer' %}selected{% endif %}>✨ Shimmer</option>
+                            <option value="neon-flicker"   {% if settings.live_indicator_animation == 'neon-flicker' %}selected{% endif %}>🔦 Neon Flicker</option>
+                            <option value="glitch"         {% if settings.live_indicator_animation == 'glitch' %}selected{% endif %}>⚡ Glitch</option>
+                            <option value="gradient-sweep" {% if settings.live_indicator_animation == 'gradient-sweep' %}selected{% endif %}>🌈 Gradient Sweep</option>
+                            <option value="color-cycle"    {% if settings.live_indicator_animation == 'color-cycle' %}selected{% endif %}>🎨 Color Cycle</option>
+                            <option value="blur-pulse"     {% if settings.live_indicator_animation == 'blur-pulse' %}selected{% endif %}>🌀 Blur Pulse</option>
                         </select>
                     </div>
                 </div>

@@ -66,6 +66,8 @@ def manage_settings(category):
             'clock_color', 'clock_bg_color',
             # live indicator
             'live_indicator_color', 'live_indicator_bg_color',
+            'live_label_color', 'live_label_bg_color',
+            'live_location_color', 'live_location_bg_color',
         ]
 
         for field in color_fields:
@@ -118,6 +120,7 @@ def manage_settings(category):
             'clock_bg_opacity',
             # live indicator
             'live_indicator_bg_opacity',
+            'live_label_bg_opacity', 'live_location_bg_opacity',
         ]
 
         for field in float_fields:
@@ -374,6 +377,15 @@ def settings_to_dict(settings):
         'live_indicator_animation':          settings.live_indicator_animation         or 'pulse',
         'live_indicator_vertical_position':  settings.live_indicator_vertical_position or 'top',
         'live_indicator_horizontal_position':settings.live_indicator_horizontal_position or 'left',
+
+        # Live indicator per-part colours
+        'live_label_color':         settings.live_label_color         or '#FFFFFF',
+        'live_label_bg_color':      settings.live_label_bg_color      or '#CC0000',
+        'live_label_bg_opacity':    settings.live_label_bg_opacity    if settings.live_label_bg_opacity    is not None else 0.9,
+        'live_location_color':      settings.live_location_color      or '#FFFFFF',
+        'live_location_bg_color':   settings.live_location_bg_color   or '#000000',
+        'live_location_bg_opacity': settings.live_location_bg_opacity if settings.live_location_bg_opacity is not None else 0.0,
+
         'main_text_color':       settings.main_text_color,
         'main_text_bg_color':    settings.main_text_bg_color    or '#000000',
         'main_text_bg_opacity':  settings.main_text_bg_opacity  if settings.main_text_bg_opacity  is not None else 0.0,

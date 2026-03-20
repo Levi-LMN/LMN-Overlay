@@ -12,13 +12,12 @@ Import  →  POST /backup/import
 
 from flask import (
     Blueprint, request, jsonify, render_template,
-    session, send_file, flash, redirect, url_for
+    session, Response, flash, redirect, url_for
 )
 from datetime import datetime
 from models import db, OverlaySettings
 from utils.decorators import login_required, admin_required
 import json
-import io
 
 backup_bp = Blueprint('backup', __name__, url_prefix='/backup')
 
@@ -225,17 +224,24 @@ def export_settings():
         'categories': [_settings_to_dict(s) for s in settings_rows],
     }
 
-    buf = io.BytesIO(json.dumps(payload, indent=2, default=str).encode('utf-8'))
-    buf.seek(0)
+    json_bytes = json.dumps(payload, indent=2, default=str).encode('utf-8')
 
     filename_parts = [s.category for s in settings_rows]
-    filename = f"overlay_backup_{'_'.join(filename_parts)}_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}.json"
+    filename = (
+        f"overlay_backup_{'_'.join(filename_parts)}"
+        f"_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}.json"
+    )
 
-    return send_file(
-        buf,
+    # Use Response directly — avoids io.UnsupportedOperation: fileno
+    # which occurs when send_file() calls .fileno() on a BytesIO object
+    # under Passenger/WSGI environments.
+    return Response(
+        json_bytes,
         mimetype='application/json',
-        as_attachment=True,
-        download_name=filename
+        headers={
+            'Content-Disposition': f'attachment; filename="{filename}"',
+            'Content-Length': str(len(json_bytes)),
+        }
     )
 
 

@@ -97,6 +97,18 @@
                             <i class="fas fa-file-alt mr-2 text-xs"></i>OCR
                         </a>
 
+                        <a href="{{ url_for('files.index') }}"
+                           class="inline-flex items-center px-3 py-2 my-3 rounded-md text-sm font-medium transition-colors
+                                  {% if request.endpoint and 'files' in request.endpoint %}
+                                      bg-indigo-50 text-indigo-700
+                                  {% else %}
+                                      text-gray-500 hover:bg-gray-100 hover:text-gray-800
+                                  {% endif %}">
+                            <i class="fas fa-photo-video mr-2 text-xs"></i>
+                            <span class="hidden lg:inline">Files</span>
+                            <span class="lg:hidden">Files</span>
+                        </a>
+
                         {% if session.is_admin %}
                         <a href="{{ url_for('main.users') }}"
                            class="inline-flex items-center px-3 py-2 my-3 rounded-md text-sm font-medium transition-colors
@@ -200,6 +212,12 @@
                    class="flex items-center gap-3 px-3 py-3 rounded-md text-sm font-medium transition-colors
                           {% if request.endpoint and 'ocr' in request.endpoint %}bg-indigo-50 text-indigo-700{% else %}text-gray-600 hover:bg-gray-100{% endif %}">
                     <i class="fas fa-file-alt w-5 text-center"></i>OCR Tools
+                </a>
+
+                <a href="{{ url_for('files.index') }}" onclick="closeMobileSidebar()"
+                   class="flex items-center gap-3 px-3 py-3 rounded-md text-sm font-medium transition-colors
+                          {% if request.endpoint and 'files' in request.endpoint %}bg-indigo-50 text-indigo-700{% else %}text-gray-600 hover:bg-gray-100{% endif %}">
+                    <i class="fas fa-photo-video w-5 text-center"></i>File Manager
                 </a>
 
                 {% if session.is_admin %}

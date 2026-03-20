@@ -7,6 +7,7 @@ from routes.licensing import licensing_bp
 from routes.api import api_bp
 from routes.ocr import ocr_bp
 from routes.backup import backup_bp
+from routes.files import files_bp
 from werkzeug.security import generate_password_hash
 from datetime import datetime
 import os
@@ -42,6 +43,7 @@ def create_app(config_class=Config):
     app.register_blueprint(api_bp)
     app.register_blueprint(ocr_bp)
     app.register_blueprint(backup_bp)
+    app.register_blueprint(files_bp)
 
     # Initialize database
     with app.app_context():

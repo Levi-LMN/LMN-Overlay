@@ -1,0 +1,631 @@
+{% extends "base.html" %}
+
+{% block title %}File Manager — {{ company_name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+/* ── Grid ────────────────────────────────────────────────────────────── */
+.fm-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(200px,1fr));
+    gap:1rem;
+}
+@media(max-width:480px){.fm-grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}}
+
+/* ── File Card ───────────────────────────────────────────────────────── */
+.fm-card{
+    background:#fff;border-radius:.75rem;
+    box-shadow:0 1px 4px rgba(0,0,0,.07);
+    border:2px solid transparent;
+    overflow:hidden;
+    transition:border-color .18s,box-shadow .18s,transform .15s;
+    position:relative;
+}
+.fm-card:hover{
+    border-color:#e0e7ff;
+    box-shadow:0 6px 20px rgba(79,70,229,.1);
+    transform:translateY(-2px);
+}
+.fm-card.selected{
+    border-color:#4f46e5 !important;
+    box-shadow:0 0 0 3px rgba(79,70,229,.18) !important;
+    transform:none;
+}
+
+/* ── Select checkbox overlay ─────────────────────────────────────────── */
+.fm-select-check{
+    position:absolute;top:.5rem;right:.5rem;z-index:10;
+    width:22px;height:22px;border-radius:6px;
+    border:2px solid rgba(255,255,255,.85);
+    background:rgba(0,0,0,.35);
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;transition:background .15s,border-color .15s;
+    backdrop-filter:blur(3px);
+}
+.fm-select-check:hover{background:rgba(79,70,229,.7);border-color:#fff}
+.fm-select-check.checked{background:#4f46e5;border-color:#4f46e5}
+.fm-select-check.checked::after{
+    content:'';width:5px;height:9px;
+    border:2px solid #fff;border-top:none;border-left:none;
+    transform:rotate(45deg) translateY(-1px);display:block;
+}
+
+/* ── Thumbnail area ──────────────────────────────────────────────────── */
+.fm-thumb{
+    width:100%;aspect-ratio:16/10;
+    background:#f1f5f9;overflow:hidden;
+    position:relative;
+    display:flex;align-items:center;justify-content:center;
+    cursor:zoom-in;
+}
+.fm-thumb img{width:100%;height:100%;object-fit:cover;transition:transform .25s}
+.fm-card:hover .fm-thumb img{transform:scale(1.04)}
+.fm-card.selected .fm-thumb img{filter:brightness(.82)}
+
+/* ── Assignment badge ────────────────────────────────────────────────── */
+.fm-badge{
+    position:absolute;top:.45rem;left:.45rem;
+    display:inline-flex;align-items:center;gap:.3rem;
+    padding:.18rem .55rem;border-radius:999px;
+    font-size:.68rem;font-weight:700;letter-spacing:.04em;
+    pointer-events:none;
+}
+.fm-badge-logo    {background:#dbeafe;color:#1d4ed8}
+.fm-badge-image   {background:#dcfce7;color:#15803d}
+.fm-badge-funeral {background:#f1f5f9;color:#475569}
+.fm-badge-wedding {background:#fce7f3;color:#9d174d}
+.fm-badge-ceremony{background:#fef9c3;color:#92400e}
+
+/* ── Card footer ─────────────────────────────────────────────────────── */
+.fm-footer{padding:.6rem .75rem;border-top:1px solid #f3f4f6}
+.fm-name{font-size:.78rem;font-weight:600;color:#1e293b;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:.2rem}
+.fm-meta{font-size:.7rem;color:#94a3b8}
+
+/* ── Card actions ────────────────────────────────────────────────────── */
+.fm-actions{display:flex;gap:.35rem;padding:.5rem .75rem .65rem;flex-wrap:wrap}
+.fm-btn{
+    flex:1;min-width:0;
+    display:inline-flex;align-items:center;justify-content:center;gap:.3rem;
+    padding:.33rem .5rem;border-radius:.4rem;font-size:.72rem;font-weight:600;
+    border:none;cursor:pointer;transition:background .15s;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.fm-btn-assign{background:#eef2ff;color:#4f46e5}
+.fm-btn-assign:hover{background:#e0e7ff}
+.fm-btn-delete{background:#fef2f2;color:#dc2626}
+.fm-btn-delete:hover{background:#fee2e2}
+.fm-btn:disabled{opacity:.4;cursor:not-allowed}
+
+/* ── Toolbar ─────────────────────────────────────────────────────────── */
+.fm-toolbar{display:flex;align-items:center;gap:.75rem;flex-wrap:wrap;margin-bottom:1.25rem}
+.fm-toolbar-left{display:flex;align-items:center;gap:.75rem;flex:1;flex-wrap:wrap;min-width:0}
+
+/* ── Storage card ────────────────────────────────────────────────────── */
+.storage-card{
+    background:#fff;border-radius:.75rem;
+    box-shadow:0 1px 4px rgba(0,0,0,.07);
+    padding:1rem 1.25rem;
+    margin-bottom:1.25rem;
+    display:flex;align-items:center;gap:1.25rem;flex-wrap:wrap;
+}
+.storage-bar-wrap{flex:1;min-width:180px}
+.storage-bar-label{font-size:.8rem;font-weight:600;color:#374151;margin-bottom:.4rem;
+    display:flex;align-items:center;justify-content:space-between}
+.storage-bar-track{height:9px;background:#e2e8f0;border-radius:999px;overflow:hidden}
+.storage-bar-fill{
+    height:100%;border-radius:999px;
+    background:linear-gradient(90deg,#4f46e5,#818cf8);
+    transition:width .6s cubic-bezier(.4,0,.2,1);
+    min-width:4px;
+}
+.storage-bar-fill.warn  {background:linear-gradient(90deg,#f59e0b,#fbbf24)}
+.storage-bar-fill.danger{background:linear-gradient(90deg,#dc2626,#f87171)}
+.storage-divider{width:1px;height:40px;background:#e5e7eb;flex-shrink:0}
+.storage-stats{display:flex;gap:1.5rem;flex-wrap:wrap}
+.storage-stat{text-align:center;min-width:48px}
+.storage-stat-val{font-size:1.15rem;font-weight:700;color:#1e293b;display:block;line-height:1.2}
+.storage-stat-lbl{font-size:.67rem;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em}
+@media(max-width:480px){.storage-divider{display:none}.storage-stats{gap:1rem}}
+
+/* ── Bulk action bar ─────────────────────────────────────────────────── */
+#fm-bulk-bar{
+    display:none;
+    position:sticky;bottom:1.25rem;z-index:40;
+    margin-top:1.25rem;
+    background:#1e293b;border-radius:.75rem;
+    padding:.8rem 1.1rem;
+    box-shadow:0 8px 32px rgba(0,0,0,.28);
+    align-items:center;gap:1rem;flex-wrap:wrap;
+    animation:bulkSlideUp .22s ease-out;
+}
+#fm-bulk-bar.visible{display:flex}
+@keyframes bulkSlideUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+.bulk-count{color:#e2e8f0;font-size:.875rem;font-weight:600;flex:1;min-width:0}
+.bulk-btns{display:flex;gap:.5rem;flex-shrink:0;flex-wrap:wrap}
+.bulk-btn{
+    display:inline-flex;align-items:center;gap:.4rem;
+    padding:.4rem 1rem;border-radius:.5rem;
+    font-size:.8rem;font-weight:600;
+    border:none;cursor:pointer;transition:background .15s;
+}
+.bulk-btn-delete{background:#dc2626;color:#fff}
+.bulk-btn-delete:hover{background:#b91c1c}
+.bulk-btn-secondary{background:rgba(255,255,255,.12);color:#e2e8f0}
+.bulk-btn-secondary:hover{background:rgba(255,255,255,.22)}
+.bulk-btn:disabled{opacity:.4;cursor:not-allowed}
+
+/* ── Drop zone ───────────────────────────────────────────────────────── */
+#fm-drop-zone{
+    border:2px dashed #cbd5e1;border-radius:.75rem;
+    padding:2rem 1rem;text-align:center;cursor:pointer;
+    background:#f8fafc;color:#94a3b8;
+    transition:border-color .2s,background .2s,color .2s;
+    margin-bottom:1.25rem;
+}
+#fm-drop-zone.drag-over{border-color:#4f46e5;background:#eef2ff;color:#4f46e5}
+
+/* ── Filter pills ────────────────────────────────────────────────────── */
+.filter-pill{
+    display:inline-flex;align-items:center;gap:.3rem;
+    padding:.3rem .8rem;border-radius:2rem;font-size:.8rem;font-weight:600;
+    border:2px solid #e2e8f0;color:#64748b;background:#fff;
+    cursor:pointer;transition:all .15s;
+}
+.filter-pill:hover{border-color:#94a3b8}
+.filter-pill.active{border-color:#4f46e5;background:#eef2ff;color:#4f46e5}
+
+/* ── Misc ────────────────────────────────────────────────────────────── */
+.fm-stats{display:flex;gap:1.5rem;flex-wrap:wrap;font-size:.8rem;color:#64748b;margin-bottom:1rem}
+.fm-stats strong{color:#1e293b}
+.fm-empty{text-align:center;padding:4rem 1rem;color:#94a3b8;grid-column:1/-1}
+.fm-empty i{font-size:3rem;margin-bottom:1rem;opacity:.4;display:block}
+.fm-spin{animation:fmSpin 1s linear infinite;display:inline-block}
+@keyframes fmSpin{to{transform:rotate(360deg)}}
+
+/* ── Assign modal ────────────────────────────────────────────────────── */
+.fm-modal-overlay{
+    position:fixed;inset:0;background:rgba(0,0,0,.45);
+    z-index:500;display:none;align-items:center;justify-content:center;padding:1rem;
+}
+.fm-modal-overlay.open{display:flex}
+.fm-modal{
+    background:#fff;border-radius:1rem;padding:1.5rem;
+    width:100%;max-width:420px;
+    box-shadow:0 20px 60px rgba(0,0,0,.2);
+}
+.fm-modal h3{font-size:1rem;font-weight:700;color:#1e293b;margin-bottom:1rem}
+.fm-modal-thumb{
+    width:100%;max-height:140px;object-fit:contain;
+    border-radius:.5rem;background:#f1f5f9;padding:.5rem;margin-bottom:1rem;
+}
+.fm-mselect{
+    width:100%;padding:.5rem .75rem;
+    border:1px solid #d1d5db;border-radius:.375rem;
+    font-size:.875rem;margin-bottom:.75rem;background:#fff;
+}
+.fm-mselect:focus{outline:none;border-color:#4f46e5;box-shadow:0 0 0 3px rgba(79,70,229,.1)}
+.fm-modal-btns{display:flex;gap:.5rem;justify-content:flex-end;margin-top:.5rem}
+.fm-modal-btn{
+    display:inline-flex;align-items:center;gap:.4rem;
+    padding:.5rem 1.1rem;border-radius:.4rem;font-size:.875rem;font-weight:600;
+    border:none;cursor:pointer;transition:background .15s;
+}
+.fm-modal-btn-ok{background:#4f46e5;color:#fff}
+.fm-modal-btn-ok:hover{background:#4338ca}
+.fm-modal-btn-cancel{background:#f1f5f9;color:#475569}
+.fm-modal-btn-cancel:hover{background:#e2e8f0}
+
+/* ── Lightbox ────────────────────────────────────────────────────────── */
+#fm-lightbox{
+    position:fixed;inset:0;background:rgba(0,0,0,.88);
+    z-index:600;display:none;align-items:center;justify-content:center;cursor:zoom-out;
+}
+#fm-lightbox.open{display:flex}
+#fm-lightbox img{max-width:90vw;max-height:90vh;border-radius:.5rem;cursor:default}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+    <!-- Header -->
+    <div class="mb-6">
+        <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center gap-3">
+            <i class="fas fa-photo-video text-indigo-600"></i>File Manager
+        </h1>
+        <p class="mt-1 text-sm text-gray-500">All uploaded images — preview, assign to a category, or delete.</p>
+    </div>
+
+    <!-- Storage card -->
+    <div class="storage-card">
+        <div class="storage-bar-wrap">
+            <div class="storage-bar-label">
+                <span><i class="fas fa-hdd text-indigo-400 mr-1"></i>Storage Used</span>
+                <span id="storage-size-label" class="text-indigo-600 font-bold">—</span>
+            </div>
+            <div class="storage-bar-track">
+                <div class="storage-bar-fill" id="storage-fill" style="width:0%"></div>
+            </div>
+            <p class="text-xs text-gray-400 mt-1" id="storage-sub">Loading…</p>
+        </div>
+        <div class="storage-divider"></div>
+        <div class="storage-stats">
+            <div class="storage-stat">
+                <span class="storage-stat-val" id="stat-files">—</span>
+                <span class="storage-stat-lbl">Files</span>
+            </div>
+            <div class="storage-stat">
+                <span class="storage-stat-val" id="stat-assigned">—</span>
+                <span class="storage-stat-lbl">Assigned</span>
+            </div>
+            <div class="storage-stat">
+                <span class="storage-stat-val" id="stat-unassigned">—</span>
+                <span class="storage-stat-lbl">Free</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Upload drop-zone -->
+    <div id="fm-drop-zone"
+         onclick="document.getElementById('fm-file-input').click()"
+         ondragover="fmDragOver(event)" ondragleave="fmDragLeave()" ondrop="fmDrop(event)">
+        <i class="fas fa-cloud-upload-alt text-3xl mb-2 block"></i>
+        <p class="font-semibold text-sm">Click to upload or drag &amp; drop images here</p>
+        <p class="text-xs mt-1">PNG · JPG · GIF · WebP · SVG · BMP</p>
+    </div>
+    <input type="file" id="fm-file-input" accept="image/*" multiple class="hidden" onchange="fmUpload(this.files)">
+
+    <!-- Toolbar -->
+    <div class="fm-toolbar">
+        <div class="fm-toolbar-left">
+            <button class="filter-pill active" data-filter="all"        onclick="setFilter('all',this)"><i class="fas fa-th-large"></i> All</button>
+            <button class="filter-pill"        data-filter="assigned"   onclick="setFilter('assigned',this)"><i class="fas fa-link"></i> Assigned</button>
+            <button class="filter-pill"        data-filter="unassigned" onclick="setFilter('unassigned',this)"><i class="fas fa-unlink"></i> Unassigned</button>
+            {% for cat in categories %}
+            <button class="filter-pill" data-filter="{{ cat }}" onclick="setFilter('{{ cat }}',this)">
+                <i class="fas {% if cat == 'funeral' %}fa-dove{% elif cat == 'wedding' %}fa-heart{% else %}fa-trophy{% endif %}"></i>
+                {{ cat | capitalize }}
+            </button>
+            {% endfor %}
+        </div>
+        <div class="relative">
+            <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs pointer-events-none"></i>
+            <input type="text" id="fm-search" placeholder="Search files…" oninput="renderGrid()"
+                   class="pl-8 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-300 w-48">
+        </div>
+    </div>
+
+    <!-- Stats row -->
+    <div class="fm-stats" id="fm-stats"></div>
+
+    <!-- Upload progress -->
+    <div id="fm-upload-progress" class="hidden mb-4 text-sm text-indigo-600 font-medium flex items-center gap-2">
+        <i class="fas fa-circle-notch fm-spin"></i>
+        <span id="fm-upload-msg">Uploading…</span>
+    </div>
+
+    <!-- Grid -->
+    <div class="fm-grid" id="fm-grid">
+        <div class="fm-empty"><i class="fas fa-circle-notch fm-spin"></i><p class="mt-2 text-sm">Loading files…</p></div>
+    </div>
+
+    <!-- Bulk action bar -->
+    <div id="fm-bulk-bar">
+        <span class="bulk-count" id="fm-bulk-count">0 selected</span>
+        <div class="bulk-btns">
+            <button class="bulk-btn bulk-btn-secondary" onclick="selectAll()">
+                <i class="fas fa-check-double"></i> Select All Visible
+            </button>
+            <button class="bulk-btn bulk-btn-secondary" onclick="clearSelection()">
+                <i class="fas fa-times"></i> Clear
+            </button>
+            <button class="bulk-btn bulk-btn-delete" id="fm-bulk-delete-btn" onclick="bulkDelete()">
+                <i class="fas fa-trash"></i> Delete Selected
+            </button>
+        </div>
+    </div>
+
+</div>
+
+<!-- Assign Modal -->
+<div class="fm-modal-overlay" id="fm-assign-modal" onclick="if(event.target===this)closeAssign()">
+    <div class="fm-modal">
+        <h3><i class="fas fa-link text-indigo-500 mr-2"></i>Assign to Category</h3>
+        <img id="fm-modal-thumb" src="" alt="" class="fm-modal-thumb">
+        <p class="text-xs text-gray-500 mb-3 truncate" id="fm-modal-fname"></p>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Category</label>
+        <select id="fm-modal-category" class="fm-mselect">
+            {% for cat in categories %}<option value="{{ cat }}">{{ cat | capitalize }}</option>{% endfor %}
+        </select>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Assign as</label>
+        <select id="fm-modal-slot" class="fm-mselect">
+            <option value="image">📷 Category Photo</option>
+            <option value="logo">🏷 Company Logo</option>
+        </select>
+        <div class="fm-modal-btns">
+            <button class="fm-modal-btn fm-modal-btn-cancel" onclick="closeAssign()">Cancel</button>
+            <button class="fm-modal-btn fm-modal-btn-ok" onclick="confirmAssign()"><i class="fas fa-check"></i> Assign</button>
+        </div>
+    </div>
+</div>
+
+<!-- Lightbox -->
+<div id="fm-lightbox" onclick="closeLightbox()">
+    <img id="fm-lightbox-img" src="" alt="">
+</div>
+{% endblock %}
+
+
+{% block extra_js %}
+<script>
+const CATEGORIES = {{ categories | tojson }};
+let allFiles     = [];
+let activeFilter = 'all';
+let assignTarget = null;
+let selected     = new Set();
+let visibleFiles = [];
+
+document.addEventListener('DOMContentLoaded', loadFiles);
+
+/* ── Load ────────────────────────────────────────────────────────────── */
+async function loadFiles() {
+    try {
+        const res  = await fetch('/files/list');
+        const data = await res.json();
+        allFiles   = data.files || [];
+        updateStorageBar(data);
+        renderGrid();
+    } catch(e) {
+        document.getElementById('fm-grid').innerHTML =
+            `<div class="fm-empty"><i class="fas fa-exclamation-triangle"></i><p class="mt-2 text-sm">Failed to load: ${esc(e.message)}</p></div>`;
+    }
+}
+
+/* ── Storage bar ─────────────────────────────────────────────────────── */
+function updateStorageBar(data) {
+    const mb       = data.total_mb || 0;
+    const kb       = data.total_kb || 0;
+    const total    = allFiles.length;
+    const assigned = allFiles.filter(f => f.assigned_to).length;
+
+    const sizeStr = mb >= 1 ? `${mb.toFixed(2)} MB` : `${kb} KB`;
+    document.getElementById('storage-size-label').textContent  = sizeStr;
+    document.getElementById('stat-files').textContent          = total;
+    document.getElementById('stat-assigned').textContent       = assigned;
+    document.getElementById('stat-unassigned').textContent     = total - assigned;
+    document.getElementById('storage-sub').textContent         =
+        `${sizeStr} across ${total} image${total !== 1 ? 's' : ''}`;
+
+    // Visual fill — reference cap 50 MB
+    const CAP_MB = 50;
+    const pct    = Math.min((mb / CAP_MB) * 100, 100);
+    const fill   = document.getElementById('storage-fill');
+    fill.style.width  = Math.max(pct, mb > 0 ? 1 : 0).toFixed(1) + '%';
+    fill.className    = 'storage-bar-fill' + (pct > 80 ? ' danger' : pct > 50 ? ' warn' : '');
+}
+
+/* ── Filter ──────────────────────────────────────────────────────────── */
+function setFilter(f, btn) {
+    activeFilter = f;
+    document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    selected.clear();
+    renderGrid();
+}
+function matchesFilter(file) {
+    if (activeFilter === 'all')        return true;
+    if (activeFilter === 'assigned')   return !!file.assigned_to;
+    if (activeFilter === 'unassigned') return !file.assigned_to;
+    return file.assigned_to && file.assigned_to.category === activeFilter;
+}
+
+/* ── Render ──────────────────────────────────────────────────────────── */
+function renderGrid() {
+    const q = document.getElementById('fm-search').value.trim().toLowerCase();
+    visibleFiles = allFiles.filter(f => matchesFilter(f) && (!q || f.filename.toLowerCase().includes(q)));
+
+    const assigned = allFiles.filter(f => f.assigned_to).length;
+    document.getElementById('fm-stats').innerHTML =
+        `<span><strong>${allFiles.length}</strong> total</span>` +
+        `<span><strong>${assigned}</strong> assigned</span>` +
+        `<span><strong>${allFiles.length - assigned}</strong> unassigned</span>` +
+        `<span>Showing <strong>${visibleFiles.length}</strong></span>`;
+
+    const grid = document.getElementById('fm-grid');
+    if (!visibleFiles.length) {
+        grid.innerHTML = `<div class="fm-empty"><i class="fas fa-images"></i><p class="mt-2 text-sm">No files match this filter.</p></div>`;
+    } else {
+        grid.innerHTML = visibleFiles.map(cardHtml).join('');
+    }
+    updateBulkBar();
+}
+
+function cardHtml(f) {
+    const a   = f.assigned_to;
+    const sel = selected.has(f.filename);
+    const badge = a
+        ? `<span class="fm-badge fm-badge-${a.slot} fm-badge-${a.category}">
+               <i class="fas ${a.slot==='logo'?'fa-tag':'fa-image'}"></i> ${esc(a.category)} ${a.slot}
+           </span>` : '';
+    const note = a
+        ? `<p class="text-xs text-indigo-500 font-medium mt-0.5 truncate">
+               <i class="fas fa-link mr-1"></i>${esc(a.category)} ${a.slot}</p>` : '';
+    return `
+    <div class="fm-card${sel?' selected':''}" data-filename="${esc(f.filename)}">
+        <div class="fm-thumb" onclick="openLightbox('${esc(f.url)}')">
+            <img src="${esc(f.url)}" alt="${esc(f.filename)}" loading="lazy"
+                 onerror="this.parentElement.innerHTML='<i class=&quot;fas fa-file-image text-3xl text-gray-300&quot;></i>'">
+            ${badge}
+        </div>
+        <div class="fm-select-check${sel?' checked':''}" title="Select / deselect"
+             onclick="toggleSelect('${esc(f.filename)}',this,event)"></div>
+        <div class="fm-footer">
+            <div class="fm-name" title="${esc(f.filename)}">${esc(shortName(f.filename))}</div>
+            <div class="fm-meta">${f.size_kb} KB &middot; ${f.modified}</div>
+            ${note}
+        </div>
+        <div class="fm-actions">
+            <button class="fm-btn fm-btn-assign" onclick="openAssign('${esc(f.filename)}','${esc(f.url)}')">
+                <i class="fas fa-link"></i> Assign
+            </button>
+            <button class="fm-btn fm-btn-delete" onclick="deleteSingle('${esc(f.filename)}',this)">
+                <i class="fas fa-trash"></i> Delete
+            </button>
+        </div>
+    </div>`;
+}
+
+function shortName(n) {
+    return n.replace(/^(fm_\d{14,18}_|[a-z]+_(logo|image)_\d{14}_)/,'') || n;
+}
+
+/* ── Selection ───────────────────────────────────────────────────────── */
+function toggleSelect(filename, checkEl, e) {
+    e.stopPropagation();
+    const card = checkEl.closest('.fm-card');
+    if (selected.has(filename)) {
+        selected.delete(filename);
+        checkEl.classList.remove('checked');
+        card.classList.remove('selected');
+    } else {
+        selected.add(filename);
+        checkEl.classList.add('checked');
+        card.classList.add('selected');
+    }
+    updateBulkBar();
+}
+function selectAll()    { visibleFiles.forEach(f => selected.add(f.filename)); renderGrid(); }
+function clearSelection(){ selected.clear(); renderGrid(); }
+
+function updateBulkBar() {
+    const n   = selected.size;
+    const bar = document.getElementById('fm-bulk-bar');
+    document.getElementById('fm-bulk-count').textContent = `${n} file${n!==1?'s':''} selected`;
+    n > 0 ? bar.classList.add('visible') : bar.classList.remove('visible');
+}
+
+/* ── Bulk delete ─────────────────────────────────────────────────────── */
+async function bulkDelete() {
+    const n = selected.size;
+    if (!n) return;
+    const assignedSel = [...selected].filter(fn => allFiles.find(x => x.filename===fn)?.assigned_to);
+    let msg = `Delete ${n} file${n!==1?'s':''}? This cannot be undone.`;
+    if (assignedSel.length)
+        msg += `\n\n⚠ ${assignedSel.length} of these are assigned — their assignments will be cleared.`;
+    if (!confirm(msg)) return;
+
+    const btn = document.getElementById('fm-bulk-delete-btn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-circle-notch fm-spin"></i> Deleting…';
+    try {
+        const res  = await fetch('/files/delete-bulk', {
+            method: 'POST', headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({ filenames: [...selected] })
+        });
+        const data = await res.json();
+        showToast(data.message, data.failed?.length ? 'warning' : 'success');
+        selected.clear();
+        await loadFiles();
+    } catch(e) {
+        showToast('Network error: ' + e.message, 'error');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-trash"></i> Delete Selected';
+    }
+}
+
+/* ── Single delete ───────────────────────────────────────────────────── */
+async function deleteSingle(filename, btn) {
+    if (!confirm(`Delete "${shortName(filename)}"? This cannot be undone.`)) return;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-circle-notch fm-spin"></i>';
+    try {
+        const res  = await fetch('/files/delete', {
+            method: 'POST', headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({ filename })
+        });
+        const data = await res.json();
+        if (data.success) {
+            selected.delete(filename);
+            showToast(data.message, 'success');
+            await loadFiles();
+        } else {
+            showToast(data.error || 'Delete failed', 'error');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-trash"></i> Delete';
+        }
+    } catch(e) {
+        showToast('Network error: ' + e.message, 'error');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-trash"></i> Delete';
+    }
+}
+
+/* ── Assign ──────────────────────────────────────────────────────────── */
+function openAssign(filename, url) {
+    assignTarget = filename;
+    document.getElementById('fm-modal-thumb').src = url;
+    document.getElementById('fm-modal-fname').textContent = shortName(filename);
+    document.getElementById('fm-assign-modal').classList.add('open');
+}
+function closeAssign() {
+    document.getElementById('fm-assign-modal').classList.remove('open');
+    assignTarget = null;
+}
+async function confirmAssign() {
+    if (!assignTarget) return;
+    const category = document.getElementById('fm-modal-category').value;
+    const slot     = document.getElementById('fm-modal-slot').value;
+    try {
+        const res  = await fetch('/files/assign', {
+            method: 'POST', headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({ filename: assignTarget, category, slot })
+        });
+        const data = await res.json();
+        showToast(data.success ? data.message : (data.error||'Failed'), data.success?'success':'error');
+        if (data.success) { closeAssign(); await loadFiles(); }
+    } catch(e) { showToast('Network error: '+e.message,'error'); }
+}
+
+/* ── Upload ──────────────────────────────────────────────────────────── */
+function fmDragOver(e){ e.preventDefault(); document.getElementById('fm-drop-zone').classList.add('drag-over'); }
+function fmDragLeave() { document.getElementById('fm-drop-zone').classList.remove('drag-over'); }
+function fmDrop(e)     { e.preventDefault(); fmDragLeave(); fmUpload(e.dataTransfer.files); }
+async function fmUpload(fileList) {
+    if (!fileList?.length) return;
+    const prog = document.getElementById('fm-upload-progress');
+    prog.classList.remove('hidden');
+    document.getElementById('fm-upload-msg').textContent = `Uploading ${fileList.length} file(s)…`;
+    const fd = new FormData();
+    for (const f of fileList) fd.append('files', f);
+    try {
+        const res  = await fetch('/files/upload', { method:'POST', body:fd });
+        const data = await res.json();
+        showToast(data.message || 'Done', data.errors?.length ? 'warning' : 'success');
+        await loadFiles();
+    } catch(e) { showToast('Upload error: '+e.message,'error'); }
+    finally { prog.classList.add('hidden'); document.getElementById('fm-file-input').value=''; }
+}
+
+/* ── Lightbox ────────────────────────────────────────────────────────── */
+function openLightbox(url) { document.getElementById('fm-lightbox-img').src=url; document.getElementById('fm-lightbox').classList.add('open'); }
+function closeLightbox()   { document.getElementById('fm-lightbox').classList.remove('open'); }
+document.addEventListener('keydown', e => { if(e.key==='Escape'){closeLightbox();closeAssign();} });
+
+/* ── Toast ───────────────────────────────────────────────────────────── */
+function showToast(message, type) {
+    const c={success:'bg-green-500',error:'bg-red-500',warning:'bg-yellow-500',info:'bg-blue-500'};
+    const i={success:'check-circle',error:'exclamation-circle',warning:'exclamation-triangle',info:'info-circle'};
+    const t=document.createElement('div');
+    t.className=`toast px-4 py-3 rounded-lg shadow-lg w-full sm:max-w-md ${c[type]||'bg-gray-700'} text-white text-sm`;
+    t.innerHTML=`<div class="flex items-center justify-between gap-2">
+        <div class="flex items-center gap-2 flex-1"><i class="fas fa-${i[type]||'bell'} shrink-0"></i><span>${esc(message)}</span></div>
+        <button onclick="this.closest('.toast').remove()" class="text-white/70 hover:text-white shrink-0"><i class="fas fa-times"></i></button>
+    </div>`;
+    document.getElementById('flash-container').appendChild(t);
+    setTimeout(()=>{t.classList.add('fade-out');setTimeout(()=>t.remove(),300);},4000);
+}
+function esc(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+</script>
+{% endblock %}

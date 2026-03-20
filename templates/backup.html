@@ -1,0 +1,408 @@
+{% extends "base.html" %}
+
+{% block title %}Backup & Restore — {{ company_name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ── card chrome ──────────────────────────────────────────────────── */
+    .bk-card {
+        background: #fff;
+        border-radius: 0.75rem;
+        box-shadow: 0 1px 6px rgba(0,0,0,.08);
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+    .bk-card h2 {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #1e293b;
+        display: flex;
+        align-items: center;
+        gap: .6rem;
+        margin-bottom: 1.1rem;
+    }
+
+    /* ── category checkbox pills ─────────────────────────────────────── */
+    .cat-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: .6rem;
+        margin-bottom: 1.2rem;
+    }
+    .cat-pill input[type="checkbox"] { display: none; }
+    .cat-pill label {
+        display: inline-flex;
+        align-items: center;
+        gap: .4rem;
+        padding: .4rem 1rem;
+        border: 2px solid #e2e8f0;
+        border-radius: 2rem;
+        cursor: pointer;
+        font-size: .88rem;
+        font-weight: 600;
+        color: #475569;
+        transition: all .18s;
+        user-select: none;
+    }
+    .cat-pill input:checked + label {
+        border-color: #4f46e5;
+        background: #eef2ff;
+        color: #4f46e5;
+    }
+    .cat-pill label:hover {
+        border-color: #94a3b8;
+        background: #f8fafc;
+    }
+
+    /* icon tints per category */
+    .cat-funeral  { color: #6b7280; }
+    .cat-wedding  { color: #ec4899; }
+    .cat-ceremony { color: #f59e0b; }
+
+    /* ── primary / ghost buttons ─────────────────────────────────────── */
+    .btn-primary {
+        display: inline-flex; align-items: center; gap: .45rem;
+        padding: .55rem 1.3rem;
+        background: #4f46e5; color: #fff;
+        border-radius: .5rem; font-size: .9rem; font-weight: 600;
+        border: none; cursor: pointer; transition: background .2s;
+        text-decoration: none;
+    }
+    .btn-primary:hover  { background: #4338ca; }
+    .btn-primary:disabled { background: #a5b4fc; cursor: not-allowed; }
+    .btn-ghost {
+        display: inline-flex; align-items: center; gap: .45rem;
+        padding: .5rem 1.2rem;
+        background: transparent; color: #475569;
+        border: 2px solid #e2e8f0; border-radius: .5rem;
+        font-size: .9rem; font-weight: 600; cursor: pointer;
+        transition: all .2s; text-decoration: none;
+    }
+    .btn-ghost:hover { border-color: #94a3b8; background: #f8fafc; }
+
+    /* ── drop-zone ───────────────────────────────────────────────────── */
+    #drop-zone {
+        border: 2px dashed #cbd5e1;
+        border-radius: .75rem;
+        padding: 2.5rem 1rem;
+        text-align: center;
+        cursor: pointer;
+        transition: all .2s;
+        background: #f8fafc;
+        color: #94a3b8;
+    }
+    #drop-zone.drag-over,
+    #drop-zone:hover { border-color: #4f46e5; background: #eef2ff; color: #4f46e5; }
+    #drop-zone.has-file { border-color: #10b981; background: #f0fdf4; color: #065f46; }
+
+    /* ── result banner ───────────────────────────────────────────────── */
+    .result-banner {
+        border-radius: .6rem;
+        padding: .9rem 1.1rem;
+        font-size: .88rem;
+        display: none;
+    }
+    .result-banner.success { background: #f0fdf4; border: 1px solid #86efac; color: #166534; }
+    .result-banner.error   { background: #fef2f2; border: 1px solid #fca5a5; color: #991b1b; }
+    .result-banner.warning { background: #fffbeb; border: 1px solid #fcd34d; color: #92400e; }
+
+    /* ── warning list ────────────────────────────────────────────────── */
+    .warning-list {
+        margin-top: .6rem;
+        padding-left: 1.2rem;
+        font-size: .83rem;
+        color: #78350f;
+    }
+
+    /* ── divider ─────────────────────────────────────────────────────── */
+    .section-divider {
+        display: flex; align-items: center; gap: 1rem;
+        color: #94a3b8; font-size: .78rem; font-weight: 600;
+        text-transform: uppercase; letter-spacing: .05em;
+        margin: 2rem 0;
+    }
+    .section-divider::before,
+    .section-divider::after {
+        content: ''; flex: 1; height: 1px; background: #e2e8f0;
+    }
+
+    /* ── info note ───────────────────────────────────────────────────── */
+    .info-note {
+        background: #eff6ff;
+        border: 1px solid #bfdbfe;
+        border-radius: .5rem;
+        padding: .75rem 1rem;
+        font-size: .83rem;
+        color: #1e40af;
+        display: flex; gap: .5rem; align-items: flex-start;
+    }
+    .info-note i { margin-top: .05rem; flex-shrink: 0; }
+
+    /* ── progress spinner ────────────────────────────────────────────── */
+    .spin { animation: spin 1s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+
+    <!-- Page header -->
+    <div class="mb-7">
+        <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center gap-3">
+            <i class="fas fa-archive text-indigo-600"></i>
+            Backup &amp; Restore
+        </h1>
+        <p class="mt-1 text-sm text-gray-500">
+            Export your overlay customisations to a JSON file, then re-import them on any instance or after a DB migration.
+        </p>
+    </div>
+
+    <!-- ════════════════════════════════ EXPORT ════════════════════════════ -->
+    <div class="bk-card">
+        <h2>
+            <i class="fas fa-download text-indigo-500"></i>
+            Export Settings
+        </h2>
+
+        <p class="text-sm text-gray-500 mb-4">
+            Select the categories you want to include in the backup file.
+            The downloaded <code class="bg-gray-100 px-1 rounded">.json</code> file contains
+            every customisation field — colours, fonts, animations, ticker text, positions, and more.
+        </p>
+
+        <!-- Category selector -->
+        <div class="cat-grid" id="exp-cat-grid">
+            {% for cat in categories %}
+            <div class="cat-pill">
+                <input type="checkbox" id="exp_{{ cat }}" value="{{ cat }}" checked>
+                <label for="exp_{{ cat }}">
+                    <i class="fas
+                        {% if cat == 'funeral' %}fa-dove cat-funeral
+                        {% elif cat == 'wedding' %}fa-heart cat-wedding
+                        {% else %}fa-trophy cat-ceremony{% endif %}">
+                    </i>
+                    {{ cat | capitalize }}
+                </label>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Select all / none shortcuts -->
+        <div class="flex gap-3 mb-5">
+            <button class="btn-ghost text-xs py-1 px-3" onclick="toggleAll('exp', true)">
+                Select all
+            </button>
+            <button class="btn-ghost text-xs py-1 px-3" onclick="toggleAll('exp', false)">
+                None
+            </button>
+        </div>
+
+        <div class="info-note mb-5">
+            <i class="fas fa-info-circle"></i>
+            <span>
+                Uploaded images (logos, category photos) are <strong>not</strong> embedded in the backup.
+                Their file-path references are recorded so you know which files to re-upload after a restore.
+            </span>
+        </div>
+
+        <button class="btn-primary" onclick="doExport()">
+            <i class="fas fa-file-download"></i>
+            Download Backup
+        </button>
+    </div>
+
+    <div class="section-divider">or restore</div>
+
+    <!-- ════════════════════════════════ IMPORT ════════════════════════════ -->
+    <div class="bk-card">
+        <h2>
+            <i class="fas fa-upload text-emerald-500"></i>
+            Restore from Backup
+        </h2>
+
+        <p class="text-sm text-gray-500 mb-4">
+            Upload a previously exported <code class="bg-gray-100 px-1 rounded">.json</code> file.
+            Settings are written directly into the database — the page will confirm what was restored.
+        </p>
+
+        <!-- Drop-zone -->
+        <div id="drop-zone"
+             onclick="document.getElementById('backup-file-input').click()"
+             ondragover="onDragOver(event)"
+             ondragleave="onDragLeave(event)"
+             ondrop="onDrop(event)">
+            <i class="fas fa-cloud-upload-alt text-3xl mb-3 block"></i>
+            <p class="font-semibold text-sm">Click to choose a file, or drag &amp; drop here</p>
+            <p class="text-xs mt-1">Accepts <code>.json</code> backup files only</p>
+        </div>
+        <input type="file" id="backup-file-input" accept=".json,application/json"
+               class="hidden" onchange="onFileChosen(this)">
+
+        <!-- Optional category filter for import -->
+        <div class="mt-5 mb-4">
+            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                Categories to restore
+                <span class="font-normal text-gray-400">(leave all unchecked to restore everything in the file)</span>
+            </label>
+            <div class="cat-grid" id="imp-cat-grid">
+                {% for cat in categories %}
+                <div class="cat-pill">
+                    <input type="checkbox" id="imp_{{ cat }}" value="{{ cat }}">
+                    <label for="imp_{{ cat }}">
+                        <i class="fas
+                            {% if cat == 'funeral' %}fa-dove cat-funeral
+                            {% elif cat == 'wedding' %}fa-heart cat-wedding
+                            {% else %}fa-trophy cat-ceremony{% endif %}">
+                        </i>
+                        {{ cat | capitalize }}
+                    </label>
+                </div>
+                {% endfor %}
+            </div>
+            <div class="flex gap-3 mt-2">
+                <button class="btn-ghost text-xs py-1 px-3" onclick="toggleAll('imp', true)">
+                    Select all
+                </button>
+                <button class="btn-ghost text-xs py-1 px-3" onclick="toggleAll('imp', false)">
+                    None
+                </button>
+            </div>
+        </div>
+
+        <!-- Result banners -->
+        <div id="import-result" class="result-banner"></div>
+
+        <!-- Upload button -->
+        <button id="import-btn" class="btn-primary mt-4" onclick="doImport()" disabled>
+            <i class="fas fa-database"></i>
+            Restore Settings
+        </button>
+    </div>
+
+</div>
+{% endblock %}
+
+
+{% block extra_js %}
+<script>
+/* ── helpers ──────────────────────────────────────────────────────────── */
+function toggleAll(prefix, checked) {
+    document.querySelectorAll(`#${prefix}-cat-grid input[type=checkbox]`)
+        .forEach(cb => cb.checked = checked);
+}
+
+function selectedCategories(prefix) {
+    return [...document.querySelectorAll(`#${prefix}-cat-grid input[type=checkbox]:checked`)]
+        .map(cb => cb.value);
+}
+
+/* ── export ───────────────────────────────────────────────────────────── */
+function doExport() {
+    const cats = selectedCategories('exp');
+    if (!cats.length) {
+        alert('Please select at least one category to export.');
+        return;
+    }
+    const url = `/backup/export?categories=${cats.join(',')}`;
+    window.location.href = url;
+}
+
+/* ── drag-and-drop / file chooser ─────────────────────────────────────── */
+let chosenFile = null;
+
+function onDragOver(e) {
+    e.preventDefault();
+    document.getElementById('drop-zone').classList.add('drag-over');
+}
+function onDragLeave() {
+    document.getElementById('drop-zone').classList.remove('drag-over');
+}
+function onDrop(e) {
+    e.preventDefault();
+    const dz = document.getElementById('drop-zone');
+    dz.classList.remove('drag-over');
+    const file = e.dataTransfer.files[0];
+    if (file) setFile(file);
+}
+function onFileChosen(input) {
+    if (input.files[0]) setFile(input.files[0]);
+}
+function setFile(file) {
+    chosenFile = file;
+    const dz = document.getElementById('drop-zone');
+    dz.classList.add('has-file');
+    dz.innerHTML = `
+        <i class="fas fa-file-alt text-3xl mb-2 block"></i>
+        <p class="font-semibold text-sm">${escHtml(file.name)}</p>
+        <p class="text-xs mt-1">${(file.size / 1024).toFixed(1)} KB — click to change</p>`;
+    document.getElementById('import-btn').disabled = false;
+    clearResult();
+}
+
+/* ── import ───────────────────────────────────────────────────────────── */
+async function doImport() {
+    if (!chosenFile) { alert('Please choose a backup file first.'); return; }
+
+    const btn = document.getElementById('import-btn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-circle-notch spin"></i> Restoring…';
+
+    clearResult();
+
+    const fd = new FormData();
+    fd.append('file', chosenFile);
+
+    const cats = selectedCategories('imp');
+    if (cats.length) fd.append('categories', cats.join(','));
+
+    try {
+        const res = await fetch('/backup/import', { method: 'POST', body: fd });
+        const data = await res.json();
+
+        if (data.success) {
+            showResult('success',
+                `<i class="fas fa-check-circle mr-2"></i>${escHtml(data.message)}`,
+                data.warnings || []
+            );
+        } else {
+            showResult('error',
+                `<i class="fas fa-times-circle mr-2"></i>${escHtml(data.error || 'Import failed.')}`,
+                []
+            );
+        }
+    } catch (err) {
+        showResult('error',
+            `<i class="fas fa-times-circle mr-2"></i>Network error: ${escHtml(err.message)}`,
+            []
+        );
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-database"></i> Restore Settings';
+    }
+}
+
+function showResult(type, html, warnings) {
+    const el = document.getElementById('import-result');
+    el.className = `result-banner ${type}`;
+    el.style.display = 'block';
+    let inner = `<div>${html}</div>`;
+    if (warnings.length) {
+        const items = warnings.map(w => `<li>${escHtml(w)}</li>`).join('');
+        inner += `<ul class="warning-list">${items}</ul>`;
+    }
+    el.innerHTML = inner;
+}
+function clearResult() {
+    const el = document.getElementById('import-result');
+    el.style.display = 'none';
+    el.innerHTML = '';
+}
+
+function escHtml(str) {
+    return String(str)
+        .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+        .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+</script>
+{% endblock %}

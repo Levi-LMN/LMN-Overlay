@@ -3,1368 +3,755 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Zearom — Live Streaming Overlays for Every Occasion</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400&family=DM+Sans:wght@300;400;500;600&family=Bebas+Neue&display=swap" rel="stylesheet">
+<title>Luminary Overlay — Live Event Graphics</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,700;0,900;1,300;1,700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      colors: {
+        brand: '#18C76A',
+        'brand-dim': '#0F8A48',
+        gold: '#D4A843',
+        ink: '#0C0F0D',
+        surface: '#141914',
+      },
+      fontFamily: {
+        display: ['Fraunces', 'Georgia', 'serif'],
+        body: ['"DM Sans"', 'system-ui', 'sans-serif'],
+      }
+    }
+  }
+}
+</script>
 <style>
-  :root {
-    --gold: #C9A84C;
-    --gold-light: #E8C96B;
-    --gold-dim: rgba(201,168,76,0.15);
-    --dark: #0A0C10;
-    --dark-2: #111520;
-    --dark-3: #181D2A;
-    --dark-card: #141926;
-    --text: #E8EAF0;
-    --text-muted: #7A8299;
-    --border: rgba(201,168,76,0.18);
-    --red: #E05A5A;
-    --green: #4EC990;
-    --blue: #5A9EE0;
-    --radius: 12px;
-  }
+  * { box-sizing: border-box; }
+  body { font-family: 'DM Sans', system-ui, sans-serif; }
+  .display { font-family: 'Fraunces', Georgia, serif; }
 
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  /* Ticker */
+  .ticker-inner { animation: tick 20s linear infinite; white-space: nowrap; }
+  @keyframes tick { from { transform: translateX(0%); } to { transform: translateX(-50%); } }
 
-  html { scroll-behavior: smooth; }
+  /* Scroll reveal */
+  .sr { opacity: 0; transform: translateY(28px); transition: opacity .7s ease, transform .7s ease; }
+  .sr.on { opacity: 1; transform: none; }
+  .sr-l { opacity: 0; transform: translateX(-28px); transition: opacity .7s ease, transform .7s ease; }
+  .sr-l.on { opacity: 1; transform: none; }
+  .sr-r { opacity: 0; transform: translateX(28px); transition: opacity .7s ease, transform .7s ease; }
+  .sr-r.on { opacity: 1; transform: none; }
 
-  body {
-    background: var(--dark);
-    color: var(--text);
-    font-family: 'DM Sans', sans-serif;
-    font-weight: 300;
-    overflow-x: hidden;
-    cursor: default;
-  }
+  /* hover lift */
+  .lift { transition: transform .3s ease, box-shadow .3s ease; }
+  .lift:hover { transform: translateY(-6px); box-shadow: 0 24px 60px rgba(0,0,0,.18); }
 
-  /* ── NOISE TEXTURE ── */
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
-    pointer-events: none;
-    z-index: 9999;
-    opacity: 0.5;
-  }
+  /* Image zoom */
+  .iz { overflow: hidden; }
+  .iz img { transition: transform .7s ease; }
+  .iz:hover img { transform: scale(1.06); }
 
-  /* ── NAV ── */
-  nav {
-    position: fixed;
-    top: 0;
-    width: 100%;
-    z-index: 100;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 1.2rem 4rem;
-    background: rgba(10,12,16,0.85);
-    backdrop-filter: blur(16px);
-    border-bottom: 1px solid var(--border);
-  }
-  .nav-logo {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 1.8rem;
-    letter-spacing: 0.12em;
-    color: var(--gold);
-    text-decoration: none;
-  }
-  .nav-logo span { color: var(--text); }
-  .nav-links { display: flex; gap: 2rem; align-items: center; }
-  .nav-links a {
-    color: var(--text-muted);
-    text-decoration: none;
-    font-size: 0.85rem;
-    font-weight: 400;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-    transition: color 0.2s;
-  }
-  .nav-links a:hover { color: var(--gold); }
-  .nav-cta {
-    background: var(--gold) !important;
-    color: var(--dark) !important;
-    padding: 0.55rem 1.4rem !important;
-    border-radius: 6px !important;
-    font-weight: 600 !important;
-    font-size: 0.8rem !important;
-    transition: background 0.2s, transform 0.2s !important;
-  }
-  .nav-cta:hover { background: var(--gold-light) !important; transform: translateY(-1px); }
+  /* Nav active link underline */
+  .nav-link { position: relative; }
+  .nav-link::after { content: ''; position: absolute; bottom: -3px; left: 0; right: 0; height: 1.5px; background: #18C76A; transform: scaleX(0); transform-origin: left; transition: transform .25s; }
+  .nav-link:hover::after { transform: scaleX(1); }
 
-  /* ── HERO ── */
-  .hero {
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-    text-align: center;
-    padding: 8rem 2rem 4rem;
-    overflow: hidden;
-  }
-  .hero-grid {
-    position: absolute;
-    inset: 0;
-    background-image:
-      linear-gradient(rgba(201,168,76,0.06) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(201,168,76,0.06) 1px, transparent 1px);
-    background-size: 60px 60px;
-    mask-image: radial-gradient(ellipse 80% 60% at 50% 50%, black 30%, transparent 100%);
-  }
-  .hero-glow {
-    position: absolute;
-    width: 900px; height: 900px;
-    background: radial-gradient(ellipse, rgba(201,168,76,0.08) 0%, transparent 65%);
-    top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-    pointer-events: none;
-  }
-  .hero-eyebrow {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    background: var(--gold-dim);
-    border: 1px solid var(--border);
-    color: var(--gold);
-    font-size: 0.72rem;
-    font-weight: 500;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    padding: 0.4rem 1rem;
-    border-radius: 50px;
-    margin-bottom: 2rem;
-    animation: fadeUp 0.7s ease both;
-  }
-  .live-dot {
-    width: 7px; height: 7px;
-    background: var(--red);
-    border-radius: 50%;
-    animation: pulse 1.4s infinite;
-  }
-  @keyframes pulse {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.4; transform: scale(0.8); }
-  }
-  .hero h1 {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: clamp(3.2rem, 8vw, 7.5rem);
-    font-weight: 300;
-    line-height: 1;
-    letter-spacing: -0.02em;
-    margin-bottom: 1.5rem;
-    animation: fadeUp 0.7s 0.1s ease both;
-  }
-  .hero h1 em {
-    font-style: italic;
-    color: var(--gold);
-    display: block;
-  }
-  .hero-sub {
-    max-width: 560px;
-    font-size: 1rem;
-    color: var(--text-muted);
-    line-height: 1.75;
-    margin-bottom: 2.5rem;
-    animation: fadeUp 0.7s 0.2s ease both;
-  }
-  .hero-buttons {
-    display: flex;
-    gap: 1rem;
-    flex-wrap: wrap;
-    justify-content: center;
-    animation: fadeUp 0.7s 0.3s ease both;
-  }
-  .btn-primary {
-    background: var(--gold);
-    color: var(--dark);
-    padding: 0.85rem 2.2rem;
-    border-radius: 8px;
-    font-weight: 600;
-    font-size: 0.9rem;
-    text-decoration: none;
-    letter-spacing: 0.03em;
-    transition: all 0.2s;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    border: none;
-    cursor: pointer;
-  }
-  .btn-primary:hover { background: var(--gold-light); transform: translateY(-2px); box-shadow: 0 8px 32px rgba(201,168,76,0.3); }
-  .btn-secondary {
-    background: transparent;
-    color: var(--text);
-    padding: 0.85rem 2.2rem;
-    border-radius: 8px;
-    font-weight: 400;
-    font-size: 0.9rem;
-    text-decoration: none;
-    border: 1px solid rgba(255,255,255,0.15);
-    transition: all 0.2s;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-  }
-  .btn-secondary:hover { border-color: var(--gold); color: var(--gold); transform: translateY(-2px); }
+  /* Animated border glow on overlay preview */
+  .glow-border { box-shadow: 0 0 0 1px rgba(24,199,106,.25), 0 32px 80px rgba(0,0,0,.6); }
 
-  /* hero stats */
-  .hero-stats {
-    display: flex;
-    gap: 3rem;
-    margin-top: 4rem;
-    animation: fadeUp 0.7s 0.4s ease both;
-  }
-  .stat { text-align: center; }
-  .stat-num {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 2.4rem;
-    color: var(--gold);
-    letter-spacing: 0.05em;
-    line-height: 1;
-  }
-  .stat-label { font-size: 0.72rem; color: var(--text-muted); letter-spacing: 0.1em; text-transform: uppercase; margin-top: 0.3rem; }
-
-  /* ── BROADCAST PREVIEW ── */
-  .preview-section {
-    padding: 6rem 2rem;
-    position: relative;
-  }
-  .preview-frame {
-    max-width: 900px;
-    margin: 3rem auto 0;
-    border-radius: 16px;
-    overflow: hidden;
-    border: 1px solid var(--border);
-    box-shadow: 0 40px 100px rgba(0,0,0,0.7), 0 0 0 1px rgba(201,168,76,0.1);
-    position: relative;
-  }
-  .preview-screen {
-    background: linear-gradient(135deg, #0d1117 0%, #1a2744 50%, #0d1117 100%);
-    aspect-ratio: 16/9;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-    overflow: hidden;
-  }
-  .preview-bg-text {
-    position: absolute;
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 12rem;
-    color: rgba(255,255,255,0.02);
-    letter-spacing: 0.2em;
-    user-select: none;
-    top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-    white-space: nowrap;
-  }
-  .preview-overlay-bar {
-    position: absolute;
-    bottom: 0; left: 0; right: 0;
-    background: linear-gradient(to right, rgba(10,12,16,0.97) 0%, rgba(15,20,35,0.95) 100%);
-    padding: 1.2rem 2rem;
-    border-top: 2px solid var(--gold);
-  }
-  .overlay-main-text {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 1.8rem;
-    font-weight: 400;
-    color: var(--gold-light);
-    letter-spacing: 0.05em;
-  }
-  .overlay-secondary {
-    font-size: 0.75rem;
-    color: var(--text-muted);
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    margin-top: 0.25rem;
-  }
-  .ticker-bar {
-    background: var(--gold);
-    color: var(--dark);
-    font-size: 0.75rem;
-    font-weight: 600;
-    letter-spacing: 0.08em;
-    padding: 0.4rem 0;
-    overflow: hidden;
-    white-space: nowrap;
-  }
-  .ticker-inner {
-    display: inline-block;
-    animation: ticker 18s linear infinite;
-    padding-left: 100%;
-  }
-  @keyframes ticker {
-    0% { transform: translateX(0); }
-    100% { transform: translateX(-100%); }
-  }
-  .preview-live-badge {
-    position: absolute;
-    top: 1rem; right: 1rem;
-    background: var(--red);
-    color: white;
-    font-size: 0.65rem;
-    font-weight: 700;
-    letter-spacing: 0.2em;
-    padding: 0.3rem 0.7rem;
-    border-radius: 4px;
-    display: flex;
-    align-items: center;
-    gap: 0.35rem;
-  }
-  .preview-camera-icon {
-    position: absolute;
-    top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-    font-size: 4rem;
-    color: rgba(255,255,255,0.06);
-  }
-  .preview-bar {
-    background: var(--dark-card);
-    padding: 0.8rem 1.5rem;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    border-top: 1px solid var(--border);
-  }
-  .dot { width: 10px; height: 10px; border-radius: 50%; }
-  .dot-r { background: #ff5f56; }
-  .dot-y { background: #ffbd2e; }
-  .dot-g { background: #27c93f; }
-  .preview-url {
-    margin-left: 1rem;
-    font-size: 0.72rem;
-    color: var(--text-muted);
-    font-family: monospace;
-    background: rgba(255,255,255,0.05);
-    padding: 0.25rem 0.75rem;
-    border-radius: 4px;
-    flex: 1;
-  }
-
-  /* ── SECTION SHARED ── */
-  section { padding: 7rem 2rem; }
-  .section-inner { max-width: 1100px; margin: 0 auto; }
-  .section-label {
-    font-size: 0.7rem;
-    font-weight: 500;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    color: var(--gold);
-    margin-bottom: 1rem;
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-  }
-  .section-label::before {
-    content: '';
-    display: block;
-    width: 30px;
-    height: 1px;
-    background: var(--gold);
-  }
-  .section-heading {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: clamp(2.2rem, 5vw, 3.8rem);
-    font-weight: 300;
-    line-height: 1.1;
-    margin-bottom: 1rem;
-  }
-  .section-heading em { font-style: italic; color: var(--gold); }
-  .section-sub {
-    color: var(--text-muted);
-    max-width: 520px;
-    line-height: 1.7;
-    font-size: 0.95rem;
-  }
-
-  /* ── FEATURES ── */
-  #features { background: var(--dark-2); }
-  .features-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 1.5px;
-    margin-top: 4rem;
-    border-radius: var(--radius);
-    overflow: hidden;
-    border: 1px solid var(--border);
-  }
-  .feature-cell {
-    background: var(--dark-card);
-    padding: 2.2rem;
-    transition: background 0.3s;
-  }
-  .feature-cell:hover { background: #1a2030; }
-  .feature-icon {
-    width: 44px; height: 44px;
-    border-radius: 10px;
-    background: var(--gold-dim);
-    border: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 1.2rem;
-    font-size: 1.1rem;
-    color: var(--gold);
-  }
-  .feature-title {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 1.3rem;
-    font-weight: 600;
-    margin-bottom: 0.6rem;
-    color: var(--text);
-  }
-  .feature-desc {
-    font-size: 0.85rem;
-    color: var(--text-muted);
-    line-height: 1.7;
-  }
-  .feature-tag {
-    display: inline-block;
-    margin-top: 1rem;
-    font-size: 0.65rem;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--gold);
-    background: var(--gold-dim);
-    padding: 0.2rem 0.6rem;
-    border-radius: 4px;
-  }
-
-  /* ── OCCASIONS ── */
-  #occasions { background: var(--dark); }
-  .occasions-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 1.5rem;
-    margin-top: 3.5rem;
-  }
-  .occasion-card {
-    border-radius: var(--radius);
-    overflow: hidden;
-    border: 1px solid var(--border);
-    position: relative;
-    aspect-ratio: 3/4;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-end;
-    transition: transform 0.3s, box-shadow 0.3s;
-  }
-  .occasion-card:hover { transform: translateY(-6px); box-shadow: 0 24px 64px rgba(0,0,0,0.6); }
-  .occasion-bg {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 7rem;
-  }
-  .occasion-bg-funeral { background: linear-gradient(160deg, #0a0f1a 0%, #1a2040 100%); }
-  .occasion-bg-wedding { background: linear-gradient(160deg, #1a0f10 0%, #3a1020 100%); }
-  .occasion-bg-ceremony { background: linear-gradient(160deg, #0a1218 0%, #102030 100%); }
-  .occasion-overlay {
-    position: relative;
-    padding: 1.5rem;
-    background: linear-gradient(to top, rgba(5,7,12,0.97) 0%, transparent 100%);
-    padding-top: 3rem;
-  }
-  .occasion-name {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 1.7rem;
-    font-weight: 400;
-    color: var(--gold-light);
-    margin-bottom: 0.4rem;
-  }
-  .occasion-desc { font-size: 0.78rem; color: var(--text-muted); line-height: 1.6; }
-
-  /* ── HOW IT WORKS ── */
-  #how { background: var(--dark-2); }
-  .steps { display: flex; flex-direction: column; gap: 0; margin-top: 3.5rem; position: relative; }
-  .step {
-    display: grid;
-    grid-template-columns: 1fr 80px 1fr;
-    align-items: center;
-    gap: 0;
-  }
-  .step:nth-child(even) .step-content { grid-column: 3; }
-  .step:nth-child(even) .step-empty { grid-column: 1; }
-  .step-content {
-    background: var(--dark-card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 1.8rem 2rem;
-    margin: 0.75rem 0;
-    position: relative;
-  }
-  .step-content:hover { border-color: rgba(201,168,76,0.35); }
-  .step-number {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 0.85rem;
-    letter-spacing: 0.2em;
-    color: var(--gold);
-    margin-bottom: 0.5rem;
-  }
-  .step-title {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 1.35rem;
-    font-weight: 600;
-    margin-bottom: 0.5rem;
-  }
-  .step-desc { font-size: 0.83rem; color: var(--text-muted); line-height: 1.7; }
-  .step-center {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    height: 100%;
-  }
-  .step-dot {
-    width: 14px; height: 14px;
-    border-radius: 50%;
-    background: var(--gold);
-    border: 2px solid var(--dark-2);
-    box-shadow: 0 0 12px rgba(201,168,76,0.5);
-    z-index: 1;
-  }
-  .step-line {
-    width: 2px;
-    flex: 1;
-    background: linear-gradient(to bottom, var(--gold), transparent);
-    min-height: 20px;
-    opacity: 0.3;
-  }
-  .step-empty { /* empty grid cell */ }
-
-  /* ── PRICING ── */
-  #pricing { background: var(--dark); }
-  .pricing-toggle {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    margin-top: 2.5rem;
-  }
-  .toggle-pill {
-    position: relative;
-    width: 52px; height: 28px;
-    background: var(--gold-dim);
-    border-radius: 14px;
-    border: 1px solid var(--border);
-    cursor: pointer;
-    transition: background 0.3s;
-  }
-  .toggle-pill.on { background: var(--gold); }
-  .toggle-pill::after {
-    content: '';
-    position: absolute;
-    width: 20px; height: 20px;
-    background: white;
-    border-radius: 50%;
-    top: 3px; left: 3px;
-    transition: left 0.3s;
-  }
-  .toggle-pill.on::after { left: 29px; }
-  .toggle-label { font-size: 0.85rem; color: var(--text-muted); }
-  .toggle-label.active { color: var(--gold); font-weight: 500; }
-  .discount-badge {
-    background: linear-gradient(135deg, var(--green), #2da86b);
-    color: white;
-    font-size: 0.65rem;
-    font-weight: 600;
-    letter-spacing: 0.1em;
-    padding: 0.2rem 0.6rem;
-    border-radius: 50px;
-    text-transform: uppercase;
-  }
-  .plans-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 1.5rem;
-    margin-top: 3rem;
-  }
-  .plan-card {
-    background: var(--dark-card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 2.2rem;
-    position: relative;
-    transition: transform 0.3s, box-shadow 0.3s;
-    display: flex;
-    flex-direction: column;
-  }
-  .plan-card:hover { transform: translateY(-4px); box-shadow: 0 20px 60px rgba(0,0,0,0.4); }
-  .plan-card.featured {
-    background: linear-gradient(145deg, #1a2238 0%, #141926 100%);
-    border-color: var(--gold);
-    box-shadow: 0 0 40px rgba(201,168,76,0.12);
-  }
-  .plan-badge {
-    position: absolute;
-    top: -13px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: var(--gold);
-    color: var(--dark);
-    font-size: 0.65rem;
-    font-weight: 700;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    padding: 0.3rem 1rem;
-    border-radius: 50px;
-    white-space: nowrap;
-  }
-  .plan-name {
-    font-size: 0.72rem;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    color: var(--text-muted);
-    margin-bottom: 1rem;
-  }
-  .plan-price {
-    display: flex;
-    align-items: baseline;
-    gap: 0.3rem;
-    margin-bottom: 0.4rem;
-  }
-  .price-currency {
-    font-size: 1rem;
-    font-weight: 500;
-    color: var(--text-muted);
-    line-height: 1;
-  }
-  .price-amount {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 3.5rem;
-    color: var(--text);
-    line-height: 1;
-    letter-spacing: 0.02em;
-  }
-  .plan-card.featured .price-amount { color: var(--gold-light); }
-  .price-period { font-size: 0.75rem; color: var(--text-muted); }
-  .price-original {
-    font-size: 0.8rem;
-    color: var(--text-muted);
-    text-decoration: line-through;
-    margin-bottom: 1.2rem;
-  }
-  .plan-desc {
-    font-size: 0.82rem;
-    color: var(--text-muted);
-    line-height: 1.6;
-    padding-bottom: 1.5rem;
-    border-bottom: 1px solid var(--border);
-    margin-bottom: 1.5rem;
-  }
-  .plan-features { list-style: none; margin-bottom: 2rem; flex: 1; }
-  .plan-features li {
-    font-size: 0.83rem;
-    color: var(--text-muted);
-    display: flex;
-    align-items: center;
-    gap: 0.7rem;
-    padding: 0.45rem 0;
-  }
-  .plan-features li i {
-    font-size: 0.7rem;
-    color: var(--green);
-    flex-shrink: 0;
-  }
-  .plan-features li.dim i { color: var(--text-muted); opacity: 0.4; }
-  .plan-features li.dim { opacity: 0.45; }
-  .plan-btn {
-    display: block;
-    text-align: center;
-    padding: 0.85rem;
-    border-radius: 8px;
-    font-size: 0.85rem;
-    font-weight: 600;
-    text-decoration: none;
-    letter-spacing: 0.04em;
-    transition: all 0.2s;
-    border: none;
-    cursor: pointer;
-    width: 100%;
-  }
-  .plan-btn-outline {
-    background: transparent;
-    border: 1px solid var(--border);
-    color: var(--text);
-  }
-  .plan-btn-outline:hover { border-color: var(--gold); color: var(--gold); }
-  .plan-btn-gold {
-    background: var(--gold);
-    color: var(--dark);
-  }
-  .plan-btn-gold:hover { background: var(--gold-light); transform: translateY(-1px); }
-
-  /* savings callout */
-  .savings-callout {
-    margin-top: 2rem;
-    background: linear-gradient(135deg, rgba(78,201,144,0.08), rgba(78,201,144,0.04));
-    border: 1px solid rgba(78,201,144,0.2);
-    border-radius: var(--radius);
-    padding: 1.2rem 1.8rem;
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-  }
-  .savings-callout i { color: var(--green); font-size: 1.4rem; flex-shrink: 0; }
-  .savings-text { font-size: 0.85rem; color: var(--text-muted); line-height: 1.6; }
-  .savings-text strong { color: var(--green); }
-
-  /* mpesa badge */
-  .mpesa-row {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 1.5rem;
-    margin-top: 2.5rem;
-    flex-wrap: wrap;
-  }
-  .payment-badge {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    background: var(--dark-card);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 0.6rem 1.2rem;
-    font-size: 0.78rem;
-    color: var(--text-muted);
-  }
-  .payment-badge i { color: var(--green); }
-  .mpesa-icon { color: var(--green); font-weight: 700; font-size: 0.8rem; }
-
-  /* ── TESTIMONIALS ── */
-  #testimonials { background: var(--dark-2); }
-  .testimonials-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 1.5rem;
-    margin-top: 3.5rem;
-  }
-  .testimonial-card {
-    background: var(--dark-card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 1.8rem;
-    position: relative;
-  }
-  .testimonial-card::before {
-    content: '"';
-    position: absolute;
-    top: 1.2rem; right: 1.5rem;
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 5rem;
-    color: var(--gold);
-    opacity: 0.12;
-    line-height: 1;
-  }
-  .testimonial-stars { color: var(--gold); font-size: 0.75rem; margin-bottom: 1rem; letter-spacing: 0.1em; }
-  .testimonial-text {
-    font-size: 0.88rem;
-    color: var(--text-muted);
-    line-height: 1.7;
-    margin-bottom: 1.5rem;
-    font-style: italic;
-  }
-  .testimonial-author { display: flex; align-items: center; gap: 0.75rem; }
-  .author-avatar {
-    width: 36px; height: 36px;
-    border-radius: 50%;
-    background: var(--gold-dim);
-    border: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 0.9rem;
-    color: var(--gold);
-  }
-  .author-name { font-size: 0.82rem; font-weight: 500; }
-  .author-role { font-size: 0.7rem; color: var(--text-muted); }
-
-  /* ── CTA ── */
-  #cta {
-    background: var(--dark);
-    padding: 7rem 2rem;
-  }
-  .cta-box {
-    max-width: 800px;
-    margin: 0 auto;
-    text-align: center;
-    background: linear-gradient(145deg, #141926 0%, #1a2238 100%);
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    padding: 4rem 3rem;
-    position: relative;
-    overflow: hidden;
-  }
-  .cta-box::before {
-    content: '';
-    position: absolute;
-    top: -80px; left: 50%;
-    transform: translateX(-50%);
-    width: 400px; height: 400px;
-    background: radial-gradient(ellipse, rgba(201,168,76,0.06) 0%, transparent 65%);
-  }
-  .cta-box h2 {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: clamp(2rem, 5vw, 3.2rem);
-    font-weight: 300;
-    line-height: 1.15;
-    margin-bottom: 1rem;
-  }
-  .cta-box p {
-    color: var(--text-muted);
-    font-size: 0.95rem;
-    line-height: 1.7;
-    margin-bottom: 2.5rem;
-  }
-  .cta-btns { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
-
-  /* ── FOOTER ── */
-  footer {
-    background: var(--dark-2);
-    border-top: 1px solid var(--border);
-    padding: 3rem 4rem;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 2rem;
-    flex-wrap: wrap;
-  }
-  .footer-logo {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 1.5rem;
-    letter-spacing: 0.12em;
-    color: var(--gold);
-  }
-  .footer-links { display: flex; gap: 2rem; }
-  .footer-links a {
-    font-size: 0.78rem;
-    color: var(--text-muted);
-    text-decoration: none;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    transition: color 0.2s;
-  }
-  .footer-links a:hover { color: var(--gold); }
-  .footer-copy { font-size: 0.72rem; color: var(--text-muted); }
-
-  /* ── ANIMATIONS ── */
-  @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(24px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  .reveal {
-    opacity: 0;
-    transform: translateY(30px);
-    transition: opacity 0.6s ease, transform 0.6s ease;
-  }
-  .reveal.visible {
-    opacity: 1;
-    transform: translateY(0);
-  }
-
-  /* ── RESPONSIVE ── */
-  @media (max-width: 900px) {
-    nav { padding: 1rem 1.5rem; }
-    .nav-links { display: none; }
-    .occasions-grid { grid-template-columns: 1fr 1fr; }
-    .plans-grid { grid-template-columns: 1fr; max-width: 420px; margin-left: auto; margin-right: auto; }
-    .plan-card.featured { order: -1; }
-    .step { grid-template-columns: 1fr; }
-    .step-center { display: none; }
-    .step-content { margin: 0.5rem 0; }
-    .step:nth-child(even) .step-content { grid-column: auto; }
-    .step:nth-child(even) .step-empty { display: none; }
-    .hero-stats { gap: 2rem; }
-  }
-  @media (max-width: 600px) {
-    .occasions-grid { grid-template-columns: 1fr; }
-    .hero h1 { font-size: 2.8rem; }
-    footer { padding: 2rem 1.5rem; flex-direction: column; align-items: flex-start; }
-  }
-
-  /* ── SCROLLBAR ── */
-  ::-webkit-scrollbar { width: 6px; }
-  ::-webkit-scrollbar-track { background: var(--dark); }
-  ::-webkit-scrollbar-thumb { background: rgba(201,168,76,0.3); border-radius: 3px; }
+  /* Overlay badge pulse */
+  @keyframes livepulse { 0%,100%{opacity:1;transform:scale(1)} 60%{opacity:.5;transform:scale(1.4)} }
+  .live-dot { animation: livepulse 1.6s ease infinite; }
 </style>
 </head>
-<body>
+<body class="bg-white text-ink antialiased overflow-x-hidden">
 
-<!-- NAV -->
-<nav>
-  <a href="#" class="nav-logo">Z<span>earom</span></a>
-  <div class="nav-links">
-    <a href="#features">Features</a>
-    <a href="#occasions">Occasions</a>
-    <a href="#how">How it works</a>
-    <a href="#pricing">Pricing</a>
-    <a href="#pricing" class="nav-cta">Get Started</a>
-  </div>
-</nav>
+<!-- ─── NAV ──────────────────────────────────────────── -->
+<header class="fixed top-0 inset-x-0 z-50">
+  <nav class="mx-auto max-w-7xl px-5 lg:px-10 flex items-center justify-between h-16 mt-3">
+    <!-- glass pill nav -->
+    <div class="absolute inset-x-5 lg:inset-x-10 top-0 h-16 bg-white/80 backdrop-blur-xl rounded-2xl border border-white/60 shadow-lg shadow-black/5 -z-10"></div>
 
-<!-- HERO -->
-<section class="hero">
-  <div class="hero-grid"></div>
-  <div class="hero-glow"></div>
-
-  <div class="hero-eyebrow">
-    <div class="live-dot"></div>
-    Live Broadcast Overlay Management
-  </div>
-
-  <h1>
-    Elevate Every
-    <em>Broadcast Moment</em>
-  </h1>
-  <p class="hero-sub">
-    Professional live streaming overlays for funerals, weddings, and ceremonies — designed for Kenyan production teams who demand broadcast-grade quality.
-  </p>
-  <div class="hero-buttons">
-    <a href="#pricing" class="btn-primary">
-      <i class="fas fa-play"></i>
-      Start Free Trial
+    <!-- Logo -->
+    <a href="#" class="flex items-center gap-2.5 z-10">
+      <div class="w-8 h-8 bg-brand rounded-xl flex items-center justify-center shrink-0">
+        <i class="fas fa-broadcast-tower text-white text-[11px]"></i>
+      </div>
+      <span class="font-semibold text-[14px] text-ink tracking-tight">Luminary<span class="text-brand-dim"> Overlay</span></span>
     </a>
-    <a href="#features" class="btn-secondary">
-      <i class="fas fa-film"></i>
-      See Features
-    </a>
+
+    <!-- Links -->
+    <ul class="hidden md:flex items-center gap-7 z-10">
+      <li><a href="#features" class="nav-link text-[13px] font-medium text-gray-500 hover:text-ink transition-colors">Features</a></li>
+      <li><a href="#overlays" class="nav-link text-[13px] font-medium text-gray-500 hover:text-ink transition-colors">Overlays</a></li>
+      <li><a href="#how" class="nav-link text-[13px] font-medium text-gray-500 hover:text-ink transition-colors">How It Works</a></li>
+      <li><a href="#pricing" class="nav-link text-[13px] font-medium text-gray-500 hover:text-ink transition-colors">Pricing</a></li>
+    </ul>
+
+    <!-- CTA -->
+    <div class="flex items-center gap-3 z-10">
+      <a href="#" class="hidden md:block text-[13px] font-medium text-gray-500 hover:text-ink transition-colors">Log In</a>
+      <a href="#pricing" class="bg-brand text-white text-[12px] font-semibold px-4 py-2 rounded-xl hover:bg-brand-dim transition-colors shadow-md shadow-brand/25">
+        Get Started →
+      </a>
+    </div>
+  </nav>
+</header>
+
+
+<!-- ─── HERO ─────────────────────────────────────────── -->
+<section class="relative h-screen min-h-[680px] flex flex-col justify-end overflow-hidden">
+
+  <!-- Background image — full screen -->
+  <div class="absolute inset-0 iz">
+    <img
+      src="https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=1800&q=85"
+      alt="Live event broadcast"
+      class="w-full h-full object-cover scale-105"
+      style="transform-origin: center bottom;"
+    />
   </div>
-  <div class="hero-stats">
-    <div class="stat">
-      <div class="stat-num">3</div>
-      <div class="stat-label">Overlay Types</div>
+
+  <!-- Gradient overlays for depth -->
+  <div class="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-black/10"></div>
+  <div class="absolute inset-0 bg-gradient-to-r from-black/60 via-transparent to-transparent"></div>
+
+  <!-- Floating LIVE badge -->
+  <div class="absolute top-24 left-5 lg:left-10 flex items-center gap-2 bg-red-600 text-white text-[11px] font-bold tracking-widest uppercase px-3 py-1.5 rounded-lg z-10">
+    <span class="w-1.5 h-1.5 bg-white rounded-full live-dot"></span> Live
+  </div>
+
+  <!-- Hero text content — bottom left -->
+  <div class="relative z-10 max-w-7xl mx-auto px-5 lg:px-10 w-full pb-16 lg:pb-20">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-end">
+
+      <!-- Left: headline -->
+      <div>
+        <div class="flex items-center gap-2 mb-5">
+          <span class="w-6 h-px bg-brand"></span>
+          <span class="text-brand text-[11px] font-semibold tracking-[.18em] uppercase">Professional Broadcast Overlays</span>
+        </div>
+        <h1 class="display text-[3.5rem] sm:text-[4.5rem] lg:text-[5.5rem] font-black text-white leading-[.93] mb-6" style="font-style: italic;">
+          Beautiful<br>overlays for<br><span class="text-brand not-italic" style="font-style:normal">every event</span>
+        </h1>
+        <p class="text-white/55 text-[15px] leading-relaxed max-w-md mb-8">
+          Real-time lower-thirds for funerals, weddings &amp; ceremonies — controlled from your phone, shown on screen.
+        </p>
+        <div class="flex flex-wrap gap-3">
+          <a href="#pricing" class="inline-flex items-center gap-2 bg-brand text-white font-semibold text-[14px] px-7 py-3.5 rounded-xl hover:bg-brand-dim transition-all hover:-translate-y-0.5 shadow-xl shadow-brand/30">
+            Start Free Trial
+          </a>
+          <a href="#overlays" class="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm text-white font-medium text-[14px] px-7 py-3.5 rounded-xl border border-white/20 hover:bg-white/20 transition-colors">
+            <i class="fas fa-play-circle text-brand"></i> See Overlays
+          </a>
+        </div>
+      </div>
+
+      <!-- Right: live overlay preview card -->
+      <div class="hidden lg:block">
+        <div class="glow-border rounded-2xl overflow-hidden bg-black/30 backdrop-blur-sm border border-white/10">
+          <!-- Mock "stream" window -->
+          <div class="relative aspect-video bg-black/40 overflow-hidden">
+            <img
+              src="https://images.unsplash.com/photo-1438232992991-995b671a1b29?w=900&q=80"
+              alt="Church service"
+              class="w-full h-full object-cover opacity-60"
+            />
+            <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
+
+            <!-- LIVE top-left -->
+            <div class="absolute top-3 left-3 flex items-center gap-1.5 bg-red-600/90 text-white text-[9px] font-bold tracking-widest uppercase px-2.5 py-1 rounded">
+              <span class="w-1.5 h-1.5 bg-white rounded-full live-dot"></span> Live
+            </div>
+            <!-- Timer top-right -->
+            <div class="absolute top-3 right-3 bg-black/60 text-white/70 text-[10px] font-mono px-2.5 py-1 rounded">
+              02:14:38
+            </div>
+
+            <!-- Ticker bar -->
+            <div class="absolute bottom-[52px] left-0 right-0 h-7 bg-brand/90 flex items-center overflow-hidden">
+              <div class="bg-ink text-white text-[9px] font-bold uppercase tracking-widest px-2.5 h-full flex items-center shrink-0">Programme</div>
+              <div class="overflow-hidden flex-1">
+                <div class="ticker-inner inline-block text-[10px] text-white font-medium ml-3">
+                  Reading: John 11:25–26 &nbsp;·&nbsp; Next: Family Tribute &nbsp;·&nbsp; Officiating: Rev. Kamau &nbsp;·&nbsp; Venue: Nairobi Baptist &nbsp;·&nbsp; Song: It Is Well &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Reading: John 11:25–26 &nbsp;·&nbsp; Next: Family Tribute &nbsp;·&nbsp; Officiating: Rev. Kamau &nbsp;·&nbsp; Venue: Nairobi Baptist &nbsp;·&nbsp; Song: It Is Well
+                </div>
+              </div>
+            </div>
+
+            <!-- Lower third name plate -->
+            <div class="absolute bottom-0 left-0 right-0 bg-ink/90 border-t-2 border-brand px-4 py-2.5 flex items-center gap-3">
+              <div class="w-8 h-8 bg-brand/20 border border-brand/30 rounded-lg flex items-center justify-center shrink-0">
+                <i class="fas fa-dove text-brand text-xs"></i>
+              </div>
+              <div>
+                <p class="text-[8px] uppercase tracking-widest text-brand font-semibold leading-none mb-0.5">In Loving Memory</p>
+                <p class="text-white text-[13px] font-semibold display italic">Dr. James Mwangi Gitau · 1948–2024</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card bottom: quick stats -->
+          <div class="grid grid-cols-3 divide-x divide-white/10 bg-white/5">
+            <div class="px-4 py-3 text-center">
+              <p class="text-white text-sm font-bold">200+</p>
+              <p class="text-white/40 text-[10px] mt-0.5">Videographers</p>
+            </div>
+            <div class="px-4 py-3 text-center">
+              <p class="text-brand text-sm font-bold">KES 700</p>
+              <p class="text-white/40 text-[10px] mt-0.5">Per month</p>
+            </div>
+            <div class="px-4 py-3 text-center">
+              <p class="text-white text-sm font-bold">3K+</p>
+              <p class="text-white/40 text-[10px] mt-0.5">Events live</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
     </div>
-    <div class="stat">
-      <div class="stat-num">7</div>
-      <div class="stat-label">Day Free Trial</div>
+  </div>
+
+  <!-- Mobile stats bar at very bottom -->
+  <div class="lg:hidden relative z-10 grid grid-cols-3 border-t border-white/10 bg-black/50 backdrop-blur-md">
+    <div class="py-3 text-center border-r border-white/10">
+      <p class="text-white text-[15px] font-bold">200+</p>
+      <p class="text-white/40 text-[10px]">Videographers</p>
     </div>
-    <div class="stat">
-      <div class="stat-num">OCR</div>
-      <div class="stat-label">Text Extraction</div>
+    <div class="py-3 text-center border-r border-white/10">
+      <p class="text-brand text-[15px] font-bold">700 KES</p>
+      <p class="text-white/40 text-[10px]">Per month</p>
     </div>
-    <div class="stat">
-      <div class="stat-num">M-Pesa</div>
-      <div class="stat-label">Payments</div>
+    <div class="py-3 text-center">
+      <p class="text-white text-[15px] font-bold">3K+</p>
+      <p class="text-white/40 text-[10px]">Events</p>
     </div>
   </div>
 </section>
 
-<!-- BROWSER PREVIEW -->
-<div class="preview-section">
-  <div class="section-inner" style="text-align:center">
-    <div class="section-label" style="justify-content:center">Live Demo Preview</div>
-    <p style="color:var(--text-muted);font-size:0.9rem;max-width:450px;margin:0 auto 2rem;line-height:1.7;">Exactly what your streaming viewers see — clean, professional, broadcast-ready.</p>
-  </div>
-  <div class="preview-frame" style="max-width:860px;margin:0 auto;">
-    <div class="preview-bar">
-      <div class="dot dot-r"></div>
-      <div class="dot dot-y"></div>
-      <div class="dot dot-g"></div>
-      <div class="preview-url">zearom.app/display?category=funeral</div>
-    </div>
-    <div class="preview-screen">
-      <div class="preview-bg-text">LIVE</div>
-      <div class="preview-camera-icon"><i class="fas fa-video"></i></div>
-      <div class="preview-live-badge">
-        <div class="live-dot" style="width:6px;height:6px;"></div>
-        LIVE
-      </div>
-      <div class="preview-overlay-bar">
-        <div class="overlay-main-text">In Loving Memory — John Kimani Mwangi</div>
-        <div class="overlay-secondary">Service of Thanksgiving &nbsp;·&nbsp; Nairobi, Kenya &nbsp;·&nbsp; 14 March 2026</div>
-      </div>
-    </div>
-    <div class="ticker-bar">
-      <span class="ticker-inner">SURVIVED BY: Mary Wanjiku (Wife) &nbsp;&nbsp;·&nbsp;&nbsp; Peter Kimani (Son) &nbsp;&nbsp;·&nbsp;&nbsp; Grace Achieng (Daughter) &nbsp;&nbsp;·&nbsp;&nbsp; James Mwangi (Brother) &nbsp;&nbsp;·&nbsp;&nbsp; FUNERAL SERVICE AT NAIROBI BAPTIST CHURCH &nbsp;&nbsp;·&nbsp;&nbsp; BURIAL: MURANG'A COUNTY FARM &nbsp;&nbsp;·&nbsp;&nbsp;</span>
+
+<!-- ─── TRUSTED BY ──────────────────────────────────── -->
+<div class="bg-gray-50 border-y border-gray-100 py-5">
+  <div class="max-w-7xl mx-auto px-5 lg:px-10 flex flex-wrap items-center gap-x-10 gap-y-3">
+    <p class="text-[10px] text-gray-400 font-semibold uppercase tracking-widest shrink-0">Used at</p>
+    <div class="flex flex-wrap gap-x-8 gap-y-2">
+      <span class="flex items-center gap-2 text-[13px] font-medium text-gray-400 hover:text-brand-dim transition-colors cursor-default"><i class="fas fa-dove text-brand text-xs"></i> Funeral Services</span>
+      <span class="flex items-center gap-2 text-[13px] font-medium text-gray-400 hover:text-brand-dim transition-colors cursor-default"><i class="fas fa-ring text-brand text-xs"></i> Weddings</span>
+      <span class="flex items-center gap-2 text-[13px] font-medium text-gray-400 hover:text-brand-dim transition-colors cursor-default"><i class="fas fa-church text-brand text-xs"></i> Church Events</span>
+      <span class="flex items-center gap-2 text-[13px] font-medium text-gray-400 hover:text-brand-dim transition-colors cursor-default"><i class="fas fa-trophy text-brand text-xs"></i> Award Galas</span>
+      <span class="flex items-center gap-2 text-[13px] font-medium text-gray-400 hover:text-brand-dim transition-colors cursor-default"><i class="fas fa-graduation-cap text-brand text-xs"></i> Graduations</span>
     </div>
   </div>
 </div>
 
-<!-- FEATURES -->
-<section id="features">
-  <div class="section-inner">
-    <div class="section-label reveal">Platform Features</div>
-    <h2 class="section-heading reveal">Everything you need to run<br><em>a flawless live broadcast.</em></h2>
-    <p class="section-sub reveal">Built specifically for Kenyan event production teams — from solo operators to full broadcast studios.</p>
-    <div class="features-grid reveal">
-      <div class="feature-cell">
-        <div class="feature-icon"><i class="fas fa-sliders-h"></i></div>
-        <div class="feature-title">Real-Time Overlay Control</div>
-        <div class="feature-desc">Toggle overlays on/off instantly. Update main text, secondary text, and tickers live without refreshing the browser source.</div>
-        <span class="feature-tag">Live Control</span>
+
+<!-- ─── FEATURES ─────────────────────────────────────── -->
+<section class="py-24 bg-white" id="features">
+  <div class="max-w-7xl mx-auto px-5 lg:px-10">
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-end mb-16">
+      <div class="sr-l">
+        <span class="inline-flex items-center gap-2 text-brand text-[11px] font-semibold tracking-[.18em] uppercase mb-4">
+          <span class="w-5 h-px bg-brand"></span> Core Features
+        </span>
+        <h2 class="display text-[2.4rem] lg:text-[3rem] font-bold leading-[1.08] italic text-ink">
+          Focusing on quality,<br><span class="text-brand not-italic" style="font-style:normal">we maintain trust</span>
+        </h2>
       </div>
-      <div class="feature-cell">
-        <div class="feature-icon"><i class="fas fa-eye"></i></div>
-        <div class="feature-title">OBS / vMix Ready</div>
-        <div class="feature-desc">Drop the display URL directly into OBS Studio or vMix as a Browser Source. Zero-latency overlay rendering in-stream.</div>
-        <span class="feature-tag">OBS Compatible</span>
+      <div class="sr-r">
+        <p class="text-gray-500 text-[15px] leading-relaxed">We ensure every overlay has strict quality checks. Sustainable solutions for a dignified, professional live stream experience — built for Kenyan event videographers.</p>
       </div>
-      <div class="feature-cell">
-        <div class="feature-icon"><i class="fas fa-file-image"></i></div>
-        <div class="feature-title">OCR Text Extraction</div>
-        <div class="feature-desc">Photograph printed order-of-service programmes. Our OCR engine reads the text and populates your tickers automatically.</div>
-        <span class="feature-tag">OCR Powered</span>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+      <div class="lift sr bg-gray-50 rounded-2xl p-7 border border-gray-100 group">
+        <div class="w-11 h-11 bg-green-50 border border-green-100 rounded-xl flex items-center justify-center mb-5 group-hover:bg-brand group-hover:border-brand transition-colors">
+          <i class="fas fa-toggle-on text-brand text-base group-hover:text-white transition-colors"></i>
+        </div>
+        <h3 class="font-semibold text-ink text-[15px] mb-2">Real-Time Toggle</h3>
+        <p class="text-gray-500 text-[13px] leading-relaxed">Switch overlays on or off mid-broadcast. Changes appear on-screen within seconds — no page reload.</p>
       </div>
-      <div class="feature-cell">
-        <div class="feature-icon"><i class="fas fa-palette"></i></div>
-        <div class="feature-title">Full Customisation</div>
-        <div class="feature-desc">Control fonts, colours, animations, ticker speed, overlay position, and container width per event type.</div>
-        <span class="feature-tag">Per-Category</span>
+      <div class="lift sr bg-gray-50 rounded-2xl p-7 border border-gray-100 group">
+        <div class="w-11 h-11 bg-green-50 border border-green-100 rounded-xl flex items-center justify-center mb-5 group-hover:bg-brand group-hover:border-brand transition-colors">
+          <i class="fas fa-file-image text-brand text-base group-hover:text-white transition-colors"></i>
+        </div>
+        <h3 class="font-semibold text-ink text-[15px] mb-2">OCR Programme Import</h3>
+        <p class="text-gray-500 text-[13px] leading-relaxed">Photograph the printed order of service. Names and text extract automatically — no manual typing needed.</p>
       </div>
-      <div class="feature-cell">
-        <div class="feature-icon"><i class="fas fa-users-cog"></i></div>
-        <div class="feature-title">Team & User Management</div>
-        <div class="feature-desc">Create operator accounts, set admin permissions, and manage active/inactive users from one admin dashboard.</div>
-        <span class="feature-tag">Multi-User</span>
+      <div class="lift sr bg-gray-50 rounded-2xl p-7 border border-gray-100 group">
+        <div class="w-11 h-11 bg-green-50 border border-green-100 rounded-xl flex items-center justify-center mb-5 group-hover:bg-brand group-hover:border-brand transition-colors">
+          <i class="fas fa-scroll text-brand text-base group-hover:text-white transition-colors"></i>
+        </div>
+        <h3 class="font-semibold text-ink text-[15px] mb-2">Scrolling Ticker</h3>
+        <p class="text-gray-500 text-[13px] leading-relaxed">Live programme ticker keeps viewers informed of upcoming readings, speakers, and next items.</p>
       </div>
-      <div class="feature-cell">
-        <div class="feature-icon"><i class="fab fa-google"></i></div>
-        <div class="feature-title">Google Sign-In</div>
-        <div class="feature-desc">Operators log in with their Google accounts. No extra passwords to remember — fast, secure, frictionless access.</div>
-        <span class="feature-tag">OAuth 2.0</span>
+      <div class="lift sr bg-gray-50 rounded-2xl p-7 border border-gray-100 group">
+        <div class="w-11 h-11 bg-green-50 border border-green-100 rounded-xl flex items-center justify-center mb-5 group-hover:bg-brand group-hover:border-brand transition-colors">
+          <i class="fas fa-palette text-brand text-base group-hover:text-white transition-colors"></i>
+        </div>
+        <h3 class="font-semibold text-ink text-[15px] mb-2">Full Customization</h3>
+        <p class="text-gray-500 text-[13px] leading-relaxed">Adjust fonts, colors, positions and animations to match any event's brand or visual identity.</p>
+      </div>
+      <div class="lift sr bg-gray-50 rounded-2xl p-7 border border-gray-100 group">
+        <div class="w-11 h-11 bg-green-50 border border-green-100 rounded-xl flex items-center justify-center mb-5 group-hover:bg-brand group-hover:border-brand transition-colors">
+          <i class="fas fa-mobile-alt text-brand text-base group-hover:text-white transition-colors"></i>
+        </div>
+        <h3 class="font-semibold text-ink text-[15px] mb-2">Mobile Control Panel</h3>
+        <p class="text-gray-500 text-[13px] leading-relaxed">Full overlay management from your phone. Walk the venue while staying in complete control.</p>
+      </div>
+      <div class="lift sr bg-gray-50 rounded-2xl p-7 border border-gray-100 group">
+        <div class="w-11 h-11 bg-green-50 border border-green-100 rounded-xl flex items-center justify-center mb-5 group-hover:bg-brand group-hover:border-brand transition-colors">
+          <i class="fas fa-users text-brand text-base group-hover:text-white transition-colors"></i>
+        </div>
+        <h3 class="font-semibold text-ink text-[15px] mb-2">Team Access</h3>
+        <p class="text-gray-500 text-[13px] leading-relaxed">Create operator accounts for your crew with controlled permissions for larger productions.</p>
       </div>
     </div>
   </div>
 </section>
 
-<!-- OCCASIONS -->
-<section id="occasions">
-  <div class="section-inner">
-    <div class="section-label reveal">Designed For</div>
-    <h2 class="section-heading reveal">Three occasion types,<br><em>one powerful platform.</em></h2>
-    <div class="occasions-grid reveal">
-      <div class="occasion-card">
-        <div class="occasion-bg occasion-bg-funeral">🕊️</div>
-        <div class="occasion-overlay">
-          <div class="occasion-name">Funeral Services</div>
-          <div class="occasion-desc">Display the name of the departed, surviving family members, service order, and burial details — with dignified, respectful overlays.</div>
-        </div>
-      </div>
-      <div class="occasion-card">
-        <div class="occasion-bg occasion-bg-wedding">💍</div>
-        <div class="occasion-overlay">
-          <div class="occasion-name">Wedding Ceremonies</div>
-          <div class="occasion-desc">Celebrate the couple with elegant name overlays, programme tickers, and custom wedding branding throughout the ceremony broadcast.</div>
-        </div>
-      </div>
-      <div class="occasion-card">
-        <div class="occasion-bg occasion-bg-ceremony">🏆</div>
-        <div class="occasion-overlay">
-          <div class="occasion-name">Ceremonies & Events</div>
-          <div class="occasion-desc">Graduations, award nights, church services, corporate galas — flexible overlay templates that adapt to any formal occasion.</div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
 
-<!-- HOW IT WORKS -->
-<section id="how">
-  <div class="section-inner">
-    <div class="section-label reveal">Process</div>
-    <h2 class="section-heading reveal">From setup to<br><em>going live in minutes.</em></h2>
-    <div class="steps">
-      <div class="step reveal">
-        <div class="step-content">
-          <div class="step-number">STEP 01</div>
-          <div class="step-title">Create Your Account</div>
-          <div class="step-desc">Sign up with email or Google. Your 7-day free trial starts immediately — no credit card required. Access the full platform from day one.</div>
-        </div>
-        <div class="step-center">
-          <div class="step-dot"></div>
-          <div class="step-line"></div>
-        </div>
-        <div class="step-empty"></div>
-      </div>
-      <div class="step reveal">
-        <div class="step-empty"></div>
-        <div class="step-center">
-          <div class="step-line" style="background:linear-gradient(to bottom, transparent, var(--gold));"></div>
-          <div class="step-dot"></div>
-          <div class="step-line"></div>
-        </div>
-        <div class="step-content">
-          <div class="step-number">STEP 02</div>
-          <div class="step-title">Configure Your Overlays</div>
-          <div class="step-desc">Customise text, colours, ticker content, and position for each event type. Use the OCR tool to scan printed programmes and auto-fill tickers.</div>
-        </div>
-      </div>
-      <div class="step reveal">
-        <div class="step-content">
-          <div class="step-number">STEP 03</div>
-          <div class="step-title">Add to OBS or vMix</div>
-          <div class="step-desc">Copy the display URL for your event type and add it as a Browser Source in OBS Studio or vMix. The overlay renders transparently over your video.</div>
-        </div>
-        <div class="step-center">
-          <div class="step-line" style="background:linear-gradient(to bottom, transparent, var(--gold));"></div>
-          <div class="step-dot"></div>
-          <div class="step-line"></div>
-        </div>
-        <div class="step-empty"></div>
-      </div>
-      <div class="step reveal">
-        <div class="step-empty"></div>
-        <div class="step-center">
-          <div class="step-line" style="background:linear-gradient(to bottom, transparent, var(--gold));"></div>
-          <div class="step-dot"></div>
-        </div>
-        <div class="step-content">
-          <div class="step-number">STEP 04</div>
-          <div class="step-title">Go Live & Control in Real Time</div>
-          <div class="step-desc">During the event, toggle overlays on/off, update text, and control tickers live from any device — phone, tablet, or laptop — from the control panel.</div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
+<!-- ─── OVERLAY TYPES ─────────────────────────────────── -->
+<section class="py-24 bg-ink" id="overlays">
+  <div class="max-w-7xl mx-auto px-5 lg:px-10">
 
-<!-- PRICING -->
-<section id="pricing">
-  <div class="section-inner">
-    <div class="section-label reveal">Subscription Plans</div>
-    <h2 class="section-heading reveal">Simple, honest pricing<br><em>in Kenyan Shillings.</em></h2>
-    <p class="section-sub reveal">No hidden fees. No foreign exchange surprises. Pay with M-Pesa in seconds.</p>
-
-    <div class="pricing-toggle reveal" id="billing-toggle">
-      <span class="toggle-label active" id="label-monthly">Monthly</span>
-      <div class="toggle-pill" id="toggle-pill" onclick="toggleBilling()"></div>
-      <span class="toggle-label" id="label-yearly">Yearly</span>
-      <span class="discount-badge">Save 17%</span>
-    </div>
-
-    <div class="plans-grid reveal">
-
-      <!-- FREE TRIAL -->
-      <div class="plan-card">
-        <div class="plan-name">Free Trial</div>
-        <div class="plan-price">
-          <span class="price-currency">KSH</span>
-          <span class="price-amount">0</span>
-        </div>
-        <div class="price-period">7 days, no card needed</div>
-        <div style="height:1.4rem"></div>
-        <div class="plan-desc">
-          Everything you need to evaluate Zearom before committing. Full platform access for 7 days — completely free.
-        </div>
-        <ul class="plan-features">
-          <li><i class="fas fa-check"></i> All 3 overlay categories</li>
-          <li><i class="fas fa-check"></i> Real-time text control</li>
-          <li><i class="fas fa-check"></i> OBS / vMix Browser Source</li>
-          <li><i class="fas fa-check"></i> OCR text extraction</li>
-          <li><i class="fas fa-check"></i> 1 operator account</li>
-          <li class="dim"><i class="fas fa-times"></i> Multi-user management</li>
-          <li class="dim"><i class="fas fa-times"></i> Priority support</li>
-        </ul>
-        <a href="#" class="plan-btn plan-btn-outline">Start Free Trial</a>
+    <div class="flex flex-col lg:flex-row lg:items-end justify-between gap-8 mb-14">
+      <div class="sr-l">
+        <span class="inline-flex items-center gap-2 text-brand text-[11px] font-semibold tracking-[.18em] uppercase mb-4">
+          <span class="w-5 h-px bg-brand"></span> Overlay Types
+        </span>
+        <h2 class="display text-[2.4rem] lg:text-[3rem] font-bold leading-[1.08] italic text-white">
+          We offer quality, <br><em class="text-brand not-italic" style="font-style:normal">for every occasion</em>
+        </h2>
       </div>
-
-      <!-- MONTHLY / YEARLY FEATURED -->
-      <div class="plan-card featured">
-        <div class="plan-badge">Most Popular</div>
-        <div class="plan-name" id="plan-name-featured">Monthly</div>
-        <div class="plan-price">
-          <span class="price-currency">KSH</span>
-          <span class="price-amount" id="price-featured">2,000</span>
-          <span class="price-period" id="period-featured">/month</span>
-        </div>
-        <div class="price-original" id="original-price" style="visibility:hidden;">KSH 24,000 / year</div>
-        <div class="plan-desc" id="desc-featured">
-          For active production teams streaming multiple events per month. Cancel anytime.
-        </div>
-        <ul class="plan-features">
-          <li><i class="fas fa-check"></i> All 3 overlay categories</li>
-          <li><i class="fas fa-check"></i> Real-time text control</li>
-          <li><i class="fas fa-check"></i> OBS / vMix Browser Source</li>
-          <li><i class="fas fa-check"></i> OCR text extraction</li>
-          <li><i class="fas fa-check"></i> Multiple operator accounts</li>
-          <li><i class="fas fa-check"></i> Google OAuth login</li>
-          <li><i class="fas fa-check"></i> Email support</li>
-        </ul>
-        <a href="#" class="plan-btn plan-btn-gold" id="btn-featured">Subscribe via M-Pesa</a>
-      </div>
-
-      <!-- YEARLY (always show as comparison) -->
-      <div class="plan-card" id="yearly-card">
-        <div class="plan-name">Annual Plan</div>
-        <div class="plan-price">
-          <span class="price-currency">KSH</span>
-          <span class="price-amount">20,000</span>
-          <span class="price-period">/year</span>
-        </div>
-        <div class="price-original">KSH 24,000 billed monthly</div>
-        <div class="plan-desc">
-          Best value for established studios. Pay once yearly and save 2 full months compared to monthly billing.
-        </div>
-        <ul class="plan-features">
-          <li><i class="fas fa-check"></i> Everything in Monthly</li>
-          <li><i class="fas fa-check"></i> Priority support</li>
-          <li><i class="fas fa-check"></i> Early access to new features</li>
-          <li><i class="fas fa-check"></i> Dedicated onboarding call</li>
-          <li><i class="fas fa-check"></i> Custom overlay templates</li>
-          <li><i class="fas fa-check"></i> Unlimited operator accounts</li>
-          <li><i class="fas fa-check"></i><strong style="color:var(--green);"> Save KSH 4,000/year</strong></li>
-        </ul>
-        <a href="#" class="plan-btn plan-btn-outline">Get Annual Plan</a>
-      </div>
-    </div>
-
-    <div class="savings-callout reveal">
-      <i class="fas fa-piggy-bank"></i>
-      <div class="savings-text">
-        <strong>Annual subscribers save KSH 4,000 every year</strong> — that's 2 months completely free compared to the monthly plan. Perfect for studios streaming more than 6 events per month.
-      </div>
-    </div>
-
-    <div class="mpesa-row reveal">
-      <div class="payment-badge">
-        <i class="fas fa-mobile-alt"></i>
-        <span class="mpesa-icon">M-PESA</span>
-        <span>STK Push — enter PIN, done</span>
-      </div>
-      <div class="payment-badge">
-        <i class="fas fa-lock"></i>
-        <span>Secure Safaricom gateway</span>
-      </div>
-      <div class="payment-badge">
-        <i class="fas fa-sync-alt"></i>
-        <span>Instant account activation</span>
-      </div>
-      <div class="payment-badge">
-        <i class="fas fa-undo-alt"></i>
-        <span>Cancel anytime</span>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- TESTIMONIALS -->
-<section id="testimonials">
-  <div class="section-inner">
-    <div class="section-label reveal">What Clients Say</div>
-    <h2 class="section-heading reveal">Trusted by production<br><em>teams across Kenya.</em></h2>
-    <div class="testimonials-grid reveal">
-      <div class="testimonial-card">
-        <div class="testimonial-stars">★★★★★</div>
-        <div class="testimonial-text">Before Zearom, we typed everything manually into a graphics tool during the service. Now we scan the programme in the car and the ticker is ready before we even set up the camera.</div>
-        <div class="testimonial-author">
-          <div class="author-avatar">SK</div>
-          <div>
-            <div class="author-name">Samuel Kiprotich</div>
-            <div class="author-role">Broadcast Technician, Nairobi</div>
-          </div>
-        </div>
-      </div>
-      <div class="testimonial-card">
-        <div class="testimonial-stars">★★★★★</div>
-        <div class="testimonial-text">Our wedding clients are always emotional when they see their names displayed so beautifully on the live stream. Zearom makes us look like a full broadcast studio at a fraction of the cost.</div>
-        <div class="testimonial-author">
-          <div class="author-avatar">AW</div>
-          <div>
-            <div class="author-name">Akinyi Wambua</div>
-            <div class="author-role">Wedding Videographer, Kisumu</div>
-          </div>
-        </div>
-      </div>
-      <div class="testimonial-card">
-        <div class="testimonial-stars">★★★★★</div>
-        <div class="testimonial-text">The M-Pesa payment is seamless — no Visa card, no dollar conversions. I renewed in under a minute from my phone between two shoots. Highly recommend for any Kenyan production house.</div>
-        <div class="testimonial-author">
-          <div class="author-avatar">DM</div>
-          <div>
-            <div class="author-name">Daniel Mwenda</div>
-            <div class="author-role">Studio Owner, Mombasa</div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- CTA -->
-<section id="cta">
-  <div class="cta-box reveal">
-    <div class="section-label" style="justify-content:center;margin-bottom:1.5rem;">Get Started Today</div>
-    <h2>Ready to broadcast<br><em>with confidence?</em></h2>
-    <p>Start your 7-day free trial today. No credit card, no commitment. Just professional overlays for your very next event.</p>
-    <div class="cta-btns">
-      <a href="#pricing" class="btn-primary">
-        <i class="fas fa-rocket"></i>
-        Start Free — 7 Days
-      </a>
-      <a href="mailto:admin@zearom.com" class="btn-secondary">
-        <i class="fas fa-envelope"></i>
-        Contact Us
+      <a href="#pricing" class="sr-r self-start lg:self-end inline-flex items-center gap-2 border border-white/15 text-white text-[13px] font-medium px-5 py-2.5 rounded-xl hover:bg-white/10 transition-colors">
+        Get Started <i class="fas fa-arrow-right text-brand text-xs"></i>
       </a>
     </div>
+
+    <!-- 2-col bento layout -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+
+      <!-- Large card: Funeral -->
+      <div class="lg:col-span-2 sr lift">
+        <div class="iz rounded-2xl overflow-hidden relative h-80 lg:h-96">
+          <img src="https://images.unsplash.com/photo-1504052434569-70ad5836ab65?w=1000&q=80"
+               alt="Funeral memorial" class="w-full h-full object-cover brightness-75">
+          <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent"></div>
+
+          <!-- overlay preview at bottom -->
+          <div class="absolute bottom-0 left-0 right-0 p-5">
+            <div class="bg-black/80 backdrop-blur-sm border-l-[3px] border-brand rounded-r-lg px-4 py-3 mb-3">
+              <p class="text-[9px] uppercase tracking-widest text-brand font-semibold mb-0.5">In Loving Memory</p>
+              <p class="text-white text-[15px] font-semibold display italic">Dr. James Mwangi Gitau · 1948–2024</p>
+              <p class="text-white/45 text-[10px] mt-0.5">Beloved Father, Grandfather &amp; Community Leader</p>
+            </div>
+            <div class="h-6 bg-brand/90 rounded flex items-center overflow-hidden">
+              <div class="bg-ink text-white text-[8px] font-bold uppercase tracking-widest px-2.5 h-full flex items-center shrink-0 rounded-l">Programme</div>
+              <p class="ticker-inner inline-block text-[9px] text-white ml-3">
+                Reading: John 11:25 · Tribute · Rev. Kamau · Song: Amazing Grace · Reading: John 11:25 · Tribute · Rev. Kamau · Song: Amazing Grace
+              </p>
+            </div>
+          </div>
+
+          <div class="absolute top-4 left-4 bg-white/10 backdrop-blur-sm border border-white/20 text-white text-[11px] font-semibold px-3 py-1.5 rounded-lg">
+            Funeral &amp; Memorial
+          </div>
+          <div class="absolute top-4 right-4 text-[10px] text-white/50 font-medium">01 / 04</div>
+        </div>
+      </div>
+
+      <!-- Small card: Wedding -->
+      <div class="sr lift">
+        <div class="iz rounded-2xl overflow-hidden relative h-80 lg:h-96">
+          <img src="https://images.unsplash.com/photo-1519741497674-611481863552?w=700&q=80"
+               alt="Wedding ceremony" class="w-full h-full object-cover brightness-70">
+          <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/10 to-transparent"></div>
+          <div class="absolute bottom-0 left-0 right-0 p-4">
+            <div class="bg-purple-950/80 backdrop-blur-sm border-l-[3px] border-purple-400 rounded-r-lg px-3 py-2.5 mb-2.5">
+              <p class="text-[8px] uppercase tracking-widest text-purple-300 font-semibold mb-0.5">Together Forever</p>
+              <p class="text-white text-[13px] font-semibold display italic">Samuel &amp; Grace · 2026</p>
+            </div>
+            <div class="h-5 bg-purple-600/80 rounded flex items-center overflow-hidden">
+              <p class="ticker-inner inline-block text-[8px] text-white ml-2">
+                Bride's Entrance · First Kiss · First Dance · Bouquet Toss · Bride's Entrance · First Kiss · First Dance
+              </p>
+            </div>
+          </div>
+          <div class="absolute top-4 left-4 bg-white/10 backdrop-blur-sm border border-white/20 text-white text-[11px] font-semibold px-3 py-1.5 rounded-lg">
+            Wedding Ceremony
+          </div>
+          <div class="absolute top-4 right-4 text-[10px] text-white/50 font-medium">02 / 04</div>
+        </div>
+      </div>
+
+      <!-- Small card: Church -->
+      <div class="sr lift">
+        <div class="iz rounded-2xl overflow-hidden relative h-64">
+          <img src="https://images.unsplash.com/photo-1438232992991-995b671a1b29?w=700&q=80"
+               alt="Church worship" class="w-full h-full object-cover brightness-60">
+          <div class="absolute inset-0 bg-gradient-to-t from-black/90 to-transparent"></div>
+          <div class="absolute bottom-0 left-0 right-0 p-4">
+            <div class="bg-black/70 backdrop-blur-sm border-l-[3px] border-brand rounded-r-lg px-3 py-2">
+              <p class="text-[8px] uppercase tracking-widest text-brand font-semibold mb-0.5">Now Speaking</p>
+              <p class="text-white text-[13px] font-semibold display italic">Rev. Peter Kamau</p>
+            </div>
+          </div>
+          <div class="absolute top-4 left-4 bg-white/10 backdrop-blur-sm border border-white/20 text-white text-[11px] font-semibold px-3 py-1.5 rounded-lg">
+            Church Service
+          </div>
+          <div class="absolute top-4 right-4 text-[10px] text-white/50 font-medium">03 / 04</div>
+        </div>
+      </div>
+
+      <!-- Large card: Awards -->
+      <div class="lg:col-span-2 sr lift">
+        <div class="iz rounded-2xl overflow-hidden relative h-64">
+          <img src="https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=1000&q=80"
+               alt="Awards gala" class="w-full h-full object-cover brightness-60">
+          <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/10 to-transparent"></div>
+          <div class="absolute bottom-0 left-0 right-0 p-4 flex items-end gap-3">
+            <div class="flex-1">
+              <div class="bg-yellow-950/80 backdrop-blur-sm border-l-[3px] border-yellow-400 rounded-r-lg px-3 py-2.5 mb-2.5">
+                <p class="text-[8px] uppercase tracking-widest text-yellow-300 font-semibold mb-0.5">Excellence Award</p>
+                <p class="text-white text-[14px] font-semibold display italic">Annual Business Gala 2026</p>
+              </div>
+              <div class="h-5 bg-yellow-600/70 rounded flex items-center overflow-hidden">
+                <p class="ticker-inner inline-block text-[8px] text-white ml-2">
+                  Best Innovation · Leadership Award · Community Impact · Best Innovation · Leadership Award · Community Impact
+                </p>
+              </div>
+            </div>
+          </div>
+          <div class="absolute top-4 left-4 bg-white/10 backdrop-blur-sm border border-white/20 text-white text-[11px] font-semibold px-3 py-1.5 rounded-lg">
+            Awards &amp; Galas
+          </div>
+          <div class="absolute top-4 right-4 text-[10px] text-white/50 font-medium">04 / 04</div>
+        </div>
+      </div>
+
+    </div>
   </div>
 </section>
 
-<!-- FOOTER -->
-<footer>
-  <div class="footer-logo">Zearom</div>
-  <div class="footer-links">
-    <a href="#features">Features</a>
-    <a href="#pricing">Pricing</a>
-    <a href="#occasions">Occasions</a>
-    <a href="mailto:admin@zearom.com">Support</a>
+
+<!-- ─── HOW IT WORKS ─────────────────────────────────── -->
+<section class="py-24 bg-white" id="how">
+  <div class="max-w-7xl mx-auto px-5 lg:px-10">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-24 items-center">
+
+      <!-- Image -->
+      <div class="relative sr-l order-2 lg:order-1">
+        <div class="iz rounded-2xl overflow-hidden aspect-[4/5] shadow-2xl shadow-gray-200">
+          <img
+            src="https://images.unsplash.com/photo-1576843776836-052f5da74e0f?w=800&q=80"
+            alt="Videographer at work"
+            class="w-full h-full object-cover"
+          />
+          <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+          <div class="absolute bottom-5 left-5 right-5">
+            <div class="bg-ink/85 backdrop-blur-sm border-l-[3px] border-brand rounded-r px-4 py-3">
+              <p class="text-[8px] uppercase tracking-widest text-brand font-semibold mb-0.5">Now Speaking</p>
+              <p class="text-white text-[14px] font-semibold display italic">Rev. Peter Kamau</p>
+              <p class="text-white/45 text-[10px] mt-0.5">Senior Pastor, Nairobi Baptist Church</p>
+            </div>
+          </div>
+        </div>
+        <!-- Floating KES card -->
+        <div class="absolute -bottom-5 -right-3 lg:-right-8 bg-white rounded-2xl shadow-xl border border-gray-100 px-5 py-4">
+          <p class="text-[10px] text-gray-400 uppercase tracking-wider mb-1">Monthly from</p>
+          <p class="display text-[1.7rem] font-bold text-ink italic">KES <span class="text-brand">700</span></p>
+          <p class="text-[10px] text-gray-400 flex items-center gap-1 mt-0.5"><i class="fas fa-mobile-alt text-brand text-xs"></i> via M-Pesa</p>
+        </div>
+      </div>
+
+      <!-- Steps -->
+      <div class="sr-r order-1 lg:order-2">
+        <span class="inline-flex items-center gap-2 text-brand text-[11px] font-semibold tracking-[.18em] uppercase mb-4">
+          <span class="w-5 h-px bg-brand"></span> How It Works
+        </span>
+        <h2 class="display text-[2.4rem] lg:text-[3rem] font-bold leading-[1.08] italic text-ink mb-10">
+          Trusted service,<br><span class="text-brand not-italic" style="font-style:normal">for your events</span>
+        </h2>
+
+        <div class="space-y-0">
+          <div class="flex gap-5 pb-7 border-b border-gray-100 group cursor-default">
+            <div class="shrink-0 w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center text-[11px] font-bold text-gray-400 group-hover:bg-brand group-hover:border-brand group-hover:text-white transition-all mt-0.5">1</div>
+            <div>
+              <h4 class="font-semibold text-ink text-[15px] mb-1">Open the Control Panel</h4>
+              <p class="text-gray-500 text-[13px] leading-relaxed">Log in from any device. Pick funeral, wedding or ceremony and you're ready in seconds.</p>
+              <a href="#" class="inline-flex items-center gap-1 text-brand text-[12px] font-semibold mt-2.5 hover:gap-2.5 transition-all">View Details <i class="fas fa-arrow-right text-[10px]"></i></a>
+            </div>
+          </div>
+          <div class="flex gap-5 py-7 border-b border-gray-100 group cursor-default">
+            <div class="shrink-0 w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center text-[11px] font-bold text-gray-400 group-hover:bg-brand group-hover:border-brand group-hover:text-white transition-all mt-0.5">2</div>
+            <div>
+              <h4 class="font-semibold text-ink text-[15px] mb-1">Import via OCR</h4>
+              <p class="text-gray-500 text-[13px] leading-relaxed">Photograph the printed programme. Names and text populate automatically — no typing.</p>
+              <a href="#" class="inline-flex items-center gap-1 text-brand text-[12px] font-semibold mt-2.5 hover:gap-2.5 transition-all">View Details <i class="fas fa-arrow-right text-[10px]"></i></a>
+            </div>
+          </div>
+          <div class="flex gap-5 py-7 border-b border-gray-100 group cursor-default">
+            <div class="shrink-0 w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center text-[11px] font-bold text-gray-400 group-hover:bg-brand group-hover:border-brand group-hover:text-white transition-all mt-0.5">3</div>
+            <div>
+              <h4 class="font-semibold text-ink text-[15px] mb-1">Add as OBS Browser Source</h4>
+              <p class="text-gray-500 text-[13px] leading-relaxed">Copy your display URL and paste it into OBS, vMix or any streaming software.</p>
+              <a href="#" class="inline-flex items-center gap-1 text-brand text-[12px] font-semibold mt-2.5 hover:gap-2.5 transition-all">View Details <i class="fas fa-arrow-right text-[10px]"></i></a>
+            </div>
+          </div>
+          <div class="flex gap-5 pt-7 group cursor-default">
+            <div class="shrink-0 w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center text-[11px] font-bold text-gray-400 group-hover:bg-brand group-hover:border-brand group-hover:text-white transition-all mt-0.5">4</div>
+            <div>
+              <h4 class="font-semibold text-ink text-[15px] mb-1">Control Live From Your Phone</h4>
+              <p class="text-gray-500 text-[13px] leading-relaxed">Toggle overlays, update names, and scroll the ticker in real time mid-ceremony.</p>
+              <a href="#" class="inline-flex items-center gap-1 text-brand text-[12px] font-semibold mt-2.5 hover:gap-2.5 transition-all">View Details <i class="fas fa-arrow-right text-[10px]"></i></a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
-  <div class="footer-copy">© 2026 Zearom. Made for Kenyan broadcasters.</div>
+</section>
+
+
+<!-- ─── TESTIMONIAL ───────────────────────────────────── -->
+<section class="py-24 bg-gray-50">
+  <div class="max-w-7xl mx-auto px-5 lg:px-10">
+    <div class="text-center mb-14 sr">
+      <h2 class="display text-[2.4rem] lg:text-[3rem] font-bold leading-tight italic text-ink">
+        See how we solve problems,<br><span class="text-brand not-italic" style="font-style:normal">right on target</span>
+      </h2>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-5 gap-5">
+
+      <!-- Testimonial -->
+      <div class="lg:col-span-2 sr-l bg-white rounded-2xl p-8 border border-gray-100 shadow-sm flex flex-col">
+        <div class="flex items-center gap-3 mb-6">
+          <div class="w-11 h-11 bg-brand rounded-xl flex items-center justify-center text-white font-bold text-sm shrink-0">PK</div>
+          <div>
+            <p class="font-semibold text-ink text-[14px]">Peter Kariuki</p>
+            <p class="text-gray-400 text-[12px]">Nairobi Memorial Studios</p>
+          </div>
+          <div class="ml-auto text-brand text-xs">★★★★★</div>
+        </div>
+        <blockquote class="text-gray-600 text-[14px] italic leading-relaxed border-l-2 border-brand pl-4 flex-1">
+          "Our funeral broadcasts now look like national television. Families are genuinely moved by how dignified and professional the service looks on screen. The OCR feature alone saves me 45 minutes per event."
+        </blockquote>
+        <div class="grid grid-cols-3 gap-4 mt-7 pt-6 border-t border-gray-100">
+          <div class="text-center">
+            <p class="font-bold text-ink text-lg">45<span class="text-brand text-sm">min</span></p>
+            <p class="text-[10px] text-gray-400 mt-0.5 uppercase tracking-wider">Saved</p>
+          </div>
+          <div class="text-center">
+            <p class="font-bold text-ink text-lg">5K<span class="text-brand text-sm">KES</span></p>
+            <p class="text-[10px] text-gray-400 mt-0.5 uppercase tracking-wider">Extra/event</p>
+          </div>
+          <div class="text-center">
+            <p class="font-bold text-ink text-lg">3+<span class="text-brand text-sm">yrs</span></p>
+            <p class="text-[10px] text-gray-400 mt-0.5 uppercase tracking-wider">Client</p>
+          </div>
+        </div>
+        <a href="#" class="mt-6 inline-flex items-center justify-center gap-2 bg-brand text-white font-semibold text-[13px] px-5 py-2.5 rounded-xl hover:bg-brand-dim transition-colors">
+          View more stories <i class="fas fa-arrow-right text-xs"></i>
+        </a>
+      </div>
+
+      <!-- Live preview image -->
+      <div class="lg:col-span-3 sr-r iz rounded-2xl overflow-hidden relative min-h-[400px]">
+        <img
+          src="https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?w=1000&q=80"
+          alt="Video production setup"
+          class="w-full h-full object-cover"
+        />
+        <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/10 to-transparent"></div>
+
+        <!-- Ticker -->
+        <div class="absolute bottom-0 left-0 right-0 h-9 bg-brand/90 flex items-center overflow-hidden">
+          <div class="bg-ink text-white text-[9px] font-bold uppercase tracking-widest px-3 h-full flex items-center shrink-0">Programme</div>
+          <div class="overflow-hidden flex-1">
+            <p class="ticker-inner inline-block text-[11px] text-white font-medium ml-3">
+              Reading: John 11:25–26 &nbsp;·&nbsp; Next: Family Tribute &nbsp;·&nbsp; Officiating: Rev. Kamau &nbsp;·&nbsp; Song: It Is Well With My Soul &nbsp;&nbsp;&nbsp; Reading: John 11:25–26 &nbsp;·&nbsp; Next: Family Tribute &nbsp;·&nbsp; Officiating: Rev. Kamau &nbsp;·&nbsp; Song: It Is Well With My Soul
+            </p>
+          </div>
+        </div>
+
+        <!-- Lower third -->
+        <div class="absolute bottom-10 left-4 right-4">
+          <div class="bg-ink/85 backdrop-blur-sm border-l-[3px] border-brand rounded-r px-4 py-3">
+            <p class="text-[8px] uppercase tracking-widest text-brand font-semibold mb-0.5">In Loving Memory</p>
+            <p class="text-white text-[14px] font-semibold display italic">Dr. James Mwangi Gitau · 1948–2024</p>
+          </div>
+        </div>
+
+        <!-- Top pills -->
+        <div class="absolute top-4 left-4 flex flex-wrap gap-2">
+          <span class="bg-black/30 backdrop-blur-sm text-white/70 text-[10px] px-2.5 py-1 rounded-full border border-white/15">Funeral</span>
+          <span class="bg-black/30 backdrop-blur-sm text-white/70 text-[10px] px-2.5 py-1 rounded-full border border-white/15">Wedding</span>
+          <span class="bg-black/30 backdrop-blur-sm text-white/70 text-[10px] px-2.5 py-1 rounded-full border border-white/15">Awards</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ─── PRICING ──────────────────────────────────────── -->
+<section class="py-24 bg-ink" id="pricing">
+  <div class="max-w-7xl mx-auto px-5 lg:px-10">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-14 items-center">
+
+      <div class="sr-l">
+        <span class="inline-flex items-center gap-2 text-brand text-[11px] font-semibold tracking-[.18em] uppercase mb-4">
+          <span class="w-5 h-px bg-brand"></span> Simple Pricing
+        </span>
+        <h2 class="display text-[2.4rem] lg:text-[3rem] font-bold leading-[1.08] italic text-white mb-6">
+          It's time to go<br>professional,<br><span class="text-brand not-italic" style="font-style:normal">with M-Pesa</span>
+        </h2>
+        <div class="space-y-3">
+          <div class="flex items-center gap-3 text-white/60 text-[14px]"><i class="fas fa-check-circle text-brand text-sm shrink-0"></i> 7-day free trial — no payment required</div>
+          <div class="flex items-center gap-3 text-white/60 text-[14px]"><i class="fas fa-check-circle text-brand text-sm shrink-0"></i> Lipa na M-Pesa STK Push · Instant activation</div>
+          <div class="flex items-center gap-3 text-white/60 text-[14px]"><i class="fas fa-check-circle text-brand text-sm shrink-0"></i> Cancel anytime, zero lock-in</div>
+          <div class="flex items-center gap-3 text-white/60 text-[14px]"><i class="fas fa-check-circle text-brand text-sm shrink-0"></i> Works with OBS, vMix &amp; Streamlabs</div>
+        </div>
+      </div>
+
+      <!-- Cards -->
+      <div class="sr-r grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <!-- Monthly -->
+        <div class="bg-white/5 border border-white/10 rounded-2xl p-7 hover:border-white/20 transition-colors">
+          <p class="text-white/40 text-[11px] font-semibold uppercase tracking-widest mb-4">Monthly</p>
+          <div class="mb-1">
+            <span class="text-white/50 text-sm font-semibold">KES </span>
+            <span class="display text-[3rem] font-bold text-white italic">700</span>
+          </div>
+          <p class="text-white/30 text-[11px] mb-6">per month via M-Pesa</p>
+          <ul class="space-y-2.5 mb-7">
+            <li class="flex items-center gap-2 text-white/60 text-[12px]"><i class="fas fa-check text-brand text-[10px] w-4 shrink-0"></i> All overlay types</li>
+            <li class="flex items-center gap-2 text-white/60 text-[12px]"><i class="fas fa-check text-brand text-[10px] w-4 shrink-0"></i> OCR extraction</li>
+            <li class="flex items-center gap-2 text-white/60 text-[12px]"><i class="fas fa-check text-brand text-[10px] w-4 shrink-0"></i> Unlimited broadcasts</li>
+            <li class="flex items-center gap-2 text-white/60 text-[12px]"><i class="fas fa-check text-brand text-[10px] w-4 shrink-0"></i> Mobile control panel</li>
+            <li class="flex items-center gap-2 text-white/25 text-[12px]"><i class="fas fa-minus text-white/15 text-[10px] w-4 shrink-0"></i> Priority support</li>
+          </ul>
+          <a href="#" class="block text-center border border-white/20 text-white font-semibold text-sm py-2.5 rounded-xl hover:bg-white/10 transition-colors">
+            Subscribe
+          </a>
+        </div>
+
+        <!-- Annual -->
+        <div class="bg-brand rounded-2xl p-7 relative shadow-2xl shadow-brand/25">
+          <span class="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-gold text-ink text-[9px] font-bold uppercase tracking-wider px-4 py-1.5 rounded-full whitespace-nowrap">Best Value · Save 17%</span>
+          <p class="text-white/80 text-[11px] font-semibold uppercase tracking-widest mb-4">Annual</p>
+          <div class="mb-1">
+            <span class="text-white/70 text-sm font-semibold">KES </span>
+            <span class="display text-[3rem] font-bold text-white italic">7K</span>
+          </div>
+          <p class="text-white/60 text-[11px] mb-6">per year · 2 months free</p>
+          <ul class="space-y-2.5 mb-7">
+            <li class="flex items-center gap-2 text-white text-[12px]"><i class="fas fa-check text-white text-[10px] w-4 shrink-0"></i> Everything in Monthly</li>
+            <li class="flex items-center gap-2 text-white text-[12px]"><i class="fas fa-check text-white text-[10px] w-4 shrink-0"></i> Priority support</li>
+            <li class="flex items-center gap-2 text-white text-[12px]"><i class="fas fa-check text-white text-[10px] w-4 shrink-0"></i> Team operator accounts</li>
+            <li class="flex items-center gap-2 text-white text-[12px]"><i class="fas fa-check text-white text-[10px] w-4 shrink-0"></i> Custom logo branding</li>
+            <li class="flex items-center gap-2 text-white text-[12px]"><i class="fas fa-check text-white text-[10px] w-4 shrink-0"></i> 2 months free savings</li>
+          </ul>
+          <a href="#" class="block text-center bg-white text-brand font-bold text-sm py-2.5 rounded-xl hover:bg-green-50 transition-colors">
+            Subscribe
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ─── FOOTER CTA ─────────────────────────────────── -->
+<section class="py-16 bg-gray-50 border-t border-gray-100 sr">
+  <div class="max-w-7xl mx-auto px-5 lg:px-10 grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+    <div>
+      <h2 class="display text-[2rem] lg:text-[2.4rem] font-bold leading-tight italic text-ink">
+        It's time to support your clients,<br>
+        <span class="text-brand not-italic" style="font-style:normal">with professional resources</span>
+      </h2>
+      <div class="flex flex-wrap gap-5 mt-3 text-[13px] text-gray-500">
+        <span class="flex items-center gap-1.5"><i class="fas fa-check text-brand text-xs"></i> Experienced for 3+ years</span>
+        <span class="flex items-center gap-1.5"><i class="fas fa-check text-brand text-xs"></i> Support for latest tech</span>
+      </div>
+    </div>
+    <div class="flex flex-wrap gap-3 lg:justify-end">
+      <a href="#pricing" class="inline-flex items-center gap-2 bg-brand text-white font-semibold text-[14px] px-7 py-3.5 rounded-xl hover:bg-brand-dim transition-all hover:-translate-y-0.5 shadow-lg shadow-brand/25">
+        Get In Touch <i class="fas fa-arrow-right text-xs"></i>
+      </a>
+      <a href="https://wa.me/254700000000" class="inline-flex items-center gap-2 border border-gray-200 text-ink font-medium text-[14px] px-7 py-3.5 rounded-xl hover:border-brand hover:text-brand transition-colors">
+        <i class="fab fa-whatsapp text-green-500"></i> WhatsApp Us
+      </a>
+    </div>
+  </div>
+</section>
+
+
+<!-- ─── FOOTER ────────────────────────────────────────── -->
+<footer class="bg-ink border-t border-white/5 pt-14 pb-8">
+  <div class="max-w-7xl mx-auto px-5 lg:px-10">
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-10 pb-10 border-b border-white/5 mb-8">
+      <div class="col-span-2 lg:col-span-1">
+        <a href="#" class="flex items-center gap-2.5 mb-4">
+          <div class="w-8 h-8 bg-brand rounded-xl flex items-center justify-center shrink-0"><i class="fas fa-broadcast-tower text-white text-[11px]"></i></div>
+          <span class="font-semibold text-[14px] text-white">Luminary<span class="text-brand"> Overlay</span></span>
+        </a>
+        <p class="text-white/30 text-[12px] leading-relaxed max-w-[240px] mb-5">Professional live stream overlays for events across Kenya 🇰🇪</p>
+        <div class="flex gap-2.5">
+          <a href="#" class="w-8 h-8 rounded-xl border border-white/10 flex items-center justify-center text-white/30 hover:text-brand hover:border-brand/50 transition-colors text-xs"><i class="fab fa-facebook-f"></i></a>
+          <a href="#" class="w-8 h-8 rounded-xl border border-white/10 flex items-center justify-center text-white/30 hover:text-brand hover:border-brand/50 transition-colors text-xs"><i class="fab fa-instagram"></i></a>
+          <a href="#" class="w-8 h-8 rounded-xl border border-white/10 flex items-center justify-center text-white/30 hover:text-brand hover:border-brand/50 transition-colors text-xs"><i class="fab fa-whatsapp"></i></a>
+          <a href="#" class="w-8 h-8 rounded-xl border border-white/10 flex items-center justify-center text-white/30 hover:text-brand hover:border-brand/50 transition-colors text-xs"><i class="fab fa-youtube"></i></a>
+        </div>
+      </div>
+      <div>
+        <h5 class="text-white/25 text-[10px] uppercase tracking-[.15em] font-semibold mb-4">Product</h5>
+        <ul class="space-y-3">
+          <li><a href="#" class="text-white/40 text-[12px] hover:text-brand transition-colors">Features</a></li>
+          <li><a href="#" class="text-white/40 text-[12px] hover:text-brand transition-colors">Overlay Types</a></li>
+          <li><a href="#" class="text-white/40 text-[12px] hover:text-brand transition-colors">Pricing</a></li>
+          <li><a href="#" class="text-white/40 text-[12px] hover:text-brand transition-colors">Free Trial</a></li>
+        </ul>
+      </div>
+      <div>
+        <h5 class="text-white/25 text-[10px] uppercase tracking-[.15em] font-semibold mb-4">Support</h5>
+        <ul class="space-y-3">
+          <li><a href="#" class="text-white/40 text-[12px] hover:text-brand transition-colors">Getting Started</a></li>
+          <li><a href="#" class="text-white/40 text-[12px] hover:text-brand transition-colors">OBS Integration</a></li>
+          <li><a href="#" class="text-white/40 text-[12px] hover:text-brand transition-colors">FAQs</a></li>
+          <li><a href="#" class="text-white/40 text-[12px] hover:text-brand transition-colors">WhatsApp</a></li>
+        </ul>
+      </div>
+      <div>
+        <h5 class="text-white/25 text-[10px] uppercase tracking-[.15em] font-semibold mb-4">Company</h5>
+        <ul class="space-y-3">
+          <li><a href="#" class="text-white/40 text-[12px] hover:text-brand transition-colors">About Us</a></li>
+          <li><a href="#" class="text-white/40 text-[12px] hover:text-brand transition-colors">Privacy Policy</a></li>
+          <li><a href="#" class="text-white/40 text-[12px] hover:text-brand transition-colors">Terms of Service</a></li>
+          <li><a href="#" class="text-white/40 text-[12px] hover:text-brand transition-colors">Contact</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+      <p class="text-white/20 text-[11px]">© 2026 Luminary Overlay. All rights reserved.</p>
+      <div class="flex gap-5">
+        <a href="#" class="text-white/20 text-[11px] hover:text-brand transition-colors">Terms</a>
+        <a href="#" class="text-white/20 text-[11px] hover:text-brand transition-colors">Privacy</a>
+      </div>
+    </div>
+  </div>
 </footer>
 
 <script>
-  // Scroll reveal
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach(e => {
-      if (e.isIntersecting) {
-        e.target.classList.add('visible');
-      }
+  const els = document.querySelectorAll('.sr, .sr-l, .sr-r');
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach((e, i) => {
+      if (e.isIntersecting) setTimeout(() => e.target.classList.add('on'), i * 80);
     });
-  }, { threshold: 0.1 });
-  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
-
-  // Billing toggle
-  let isYearly = false;
-  function toggleBilling() {
-    isYearly = !isYearly;
-    const pill = document.getElementById('toggle-pill');
-    const lm = document.getElementById('label-monthly');
-    const ly = document.getElementById('label-yearly');
-    const pf = document.getElementById('price-featured');
-    const perf = document.getElementById('period-featured');
-    const pn = document.getElementById('plan-name-featured');
-    const orig = document.getElementById('original-price');
-    const desc = document.getElementById('desc-featured');
-    const btn = document.getElementById('btn-featured');
-
-    if (isYearly) {
-      pill.classList.add('on');
-      lm.classList.remove('active'); ly.classList.add('active');
-      pf.textContent = '20,000';
-      perf.textContent = '/year';
-      pn.textContent = 'Annual';
-      orig.style.visibility = 'visible';
-      desc.textContent = 'Best value — pay once, save KSH 4,000 vs monthly billing. Ideal for studios streaming year-round.';
-      btn.textContent = 'Subscribe Yearly via M-Pesa';
-    } else {
-      pill.classList.remove('on');
-      lm.classList.add('active'); ly.classList.remove('active');
-      pf.textContent = '2,000';
-      perf.textContent = '/month';
-      pn.textContent = 'Monthly';
-      orig.style.visibility = 'hidden';
-      desc.textContent = 'For active production teams streaming multiple events per month. Cancel anytime.';
-      btn.textContent = 'Subscribe via M-Pesa';
-    }
-  }
+  }, { threshold: 0.07 });
+  els.forEach(el => obs.observe(el));
 </script>
 </body>
 </html>

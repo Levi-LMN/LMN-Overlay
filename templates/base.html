@@ -107,6 +107,18 @@
                                   {% endif %}">
                             <i class="fas fa-users mr-2 text-xs"></i>Users
                         </a>
+
+                        <a href="{{ url_for('backup.index') }}"
+                           class="inline-flex items-center px-3 py-2 my-3 rounded-md text-sm font-medium transition-colors
+                                  {% if request.endpoint and 'backup' in request.endpoint %}
+                                      bg-indigo-50 text-indigo-700
+                                  {% else %}
+                                      text-gray-500 hover:bg-gray-100 hover:text-gray-800
+                                  {% endif %}">
+                            <i class="fas fa-archive mr-2 text-xs"></i>
+                            <span class="hidden lg:inline">Backup</span>
+                            <span class="lg:hidden">Backup</span>
+                        </a>
                         {% endif %}
 
                         <a href="{{ url_for('licensing.subscription') }}"
@@ -183,18 +195,27 @@
                           {% if request.endpoint == 'main.control' %}bg-indigo-50 text-indigo-700{% else %}text-gray-600 hover:bg-gray-100{% endif %}">
                     <i class="fas fa-broadcast-tower w-5 text-center"></i>Stream Control
                 </a>
+
                 <a href="{{ url_for('ocr.index') }}" onclick="closeMobileSidebar()"
                    class="flex items-center gap-3 px-3 py-3 rounded-md text-sm font-medium transition-colors
                           {% if request.endpoint and 'ocr' in request.endpoint %}bg-indigo-50 text-indigo-700{% else %}text-gray-600 hover:bg-gray-100{% endif %}">
                     <i class="fas fa-file-alt w-5 text-center"></i>OCR Tools
                 </a>
+
                 {% if session.is_admin %}
                 <a href="{{ url_for('main.users') }}" onclick="closeMobileSidebar()"
                    class="flex items-center gap-3 px-3 py-3 rounded-md text-sm font-medium transition-colors
                           {% if request.endpoint == 'main.users' %}bg-indigo-50 text-indigo-700{% else %}text-gray-600 hover:bg-gray-100{% endif %}">
                     <i class="fas fa-users w-5 text-center"></i>Users
                 </a>
+
+                <a href="{{ url_for('backup.index') }}" onclick="closeMobileSidebar()"
+                   class="flex items-center gap-3 px-3 py-3 rounded-md text-sm font-medium transition-colors
+                          {% if request.endpoint and 'backup' in request.endpoint %}bg-indigo-50 text-indigo-700{% else %}text-gray-600 hover:bg-gray-100{% endif %}">
+                    <i class="fas fa-archive w-5 text-center"></i>Backup &amp; Restore
+                </a>
                 {% endif %}
+
                 <a href="{{ url_for('licensing.subscription') }}" onclick="closeMobileSidebar()"
                    class="flex items-center gap-3 px-3 py-3 rounded-md text-sm font-medium transition-colors
                           {% if request.endpoint == 'licensing.subscription' %}bg-indigo-50 text-indigo-700{% else %}text-gray-600 hover:bg-gray-100{% endif %}">

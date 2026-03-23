@@ -157,7 +157,11 @@
 {% endmacro %}
 
 {% block extra_css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
 <style>
+/* Cropper.js — shape preview */
+#adj-crop-preview { overflow:hidden; width:120px; height:120px; display:inline-block; }
+#adj-crop-preview img { max-width:none; }  /* Cropper.js sets width/height via transform */
 /* ── Core layout ─────────────────────────────────────── */
 .settings-section{background:white;border-radius:.5rem;padding:1.25rem;margin-bottom:1rem;box-shadow:0 1px 3px rgba(0,0,0,.08);border:1px solid #F3F4F6}
 @media(min-width:640px){.settings-section{padding:1.5rem}}
@@ -997,16 +1001,44 @@ input[type="range"]{accent-color:#4F46E5}
             <div class="settings-section" data-section-tab="assets">
                 <h3><i class="fas fa-images"></i>Category Image</h3>
                 {{ toggle_row('Show Category Image','show_cat_img_tog', settings.show_category_image, "toggleBoolean(this,'show_category_image')") }}
-                {% if settings.category_image %}<div class="mb-3"><img src="{{ url_for('static',filename=settings.category_image) }}" alt="Category" class="max-w-xs rounded"></div>{% endif %}
-                <div class="form-group"><label class="form-label">Upload Category Image</label><input type="file" accept="image/*" id="category_image_input" onchange="openImageCropper(this,'{{ category }}')" class="form-input"></div>
-                {% if settings.category_image %}<button onclick="removeFile('{{ category }}','image')" class="mb-4 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700">Remove Image</button>{% endif %}
+
+                {# ── Current image card ── #}
+                {% if settings.category_image %}
+                <div style="background:#f8f7ff;border:1.5px solid #e0e7ff;border-radius:.75rem;padding:1rem;margin-bottom:1rem;">
+                    <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:.75rem;">
+                        <div id="img-thumb-wrap" style="width:64px;height:64px;overflow:hidden;flex-shrink:0;border:2px solid #c7d2fe;
+                            border-radius:{{ '50%' if (settings.image_shape or 'circle')=='circle' else ('8px' if settings.image_shape=='rounded' else '0') }};">
+                            <img src="{{ url_for('static',filename=settings.category_image) }}" alt="Category"
+                                 style="width:100%;height:100%;object-fit:cover;
+                                 object-position:{{ settings.image_object_position or 'center center' }};
+                                 transform:scale({{ (settings.image_zoom or 100)/100 }});transform-origin:center;">
+                        </div>
+                        <div>
+                            <p style="font-size:.8rem;color:#6b7280;margin:0 0 .35rem;">Category image uploaded</p>
+                            <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
+                                <button onclick="openAdjustModal()" style="padding:.35rem .85rem;background:#4f46e5;color:#fff;border:none;border-radius:.4rem;font-size:.8rem;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:.35rem;">
+                                    <i class="fas fa-crop-alt"></i> Adjust &amp; Preview
+                                </button>
+                                <button onclick="removeFile('{{ category }}','image')" style="padding:.35rem .85rem;background:#fff;color:#dc2626;border:1.5px solid #fca5a5;border-radius:.4rem;font-size:.8rem;font-weight:600;cursor:pointer;">
+                                    <i class="fas fa-trash-alt"></i> Remove
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <div class="form-group"><label class="form-label">{{ 'Replace' if settings.category_image else 'Upload' }} Category Image</label>
+                    <input type="file" accept="image/*" id="category_image_input" onchange="openImageCropper(this,'{{ category }}')" class="form-input">
+                </div>
+
                 <hr class="my-4 border-gray-200">
                 <p class="text-sm font-semibold text-gray-600 mb-3 flex items-center gap-2"><i class="fas fa-sliders-h text-indigo-500"></i> Photo Container</p>
                 {{ range_slider('image_size','Size', settings.image_size or 128, 64, 300, 8, 'px', 'image_size') }}
                 <div class="grid-2">
                     <div class="form-group">
                         <label class="form-label">Shape</label>
-                        <select id="image_shape" class="form-input" onchange="updateSetting('image_shape',this.value)">
+                        <select id="image_shape" class="form-input" onchange="updateSetting('image_shape',this.value);syncAdjustPreview();">
                             <option value="circle"  {% if (settings.image_shape or 'circle') == 'circle' %}selected{% endif %}>⭕ Circle</option>
                             <option value="rounded" {% if settings.image_shape == 'rounded' %}selected{% endif %}>▢ Rounded Square</option>
                             <option value="square"  {% if settings.image_shape == 'square' %}selected{% endif %}>■ Square</option>
@@ -1025,13 +1057,17 @@ input[type="range"]{accent-color:#4F46E5}
                     </div>
                     <div class="form-group">
                         <label class="form-label">Image Fit</label>
-                        <select id="image_fit" class="form-input" onchange="updateSetting('image_fit',this.value)">
+                        <select id="image_fit" class="form-input" onchange="updateSetting('image_fit',this.value);syncAdjustPreview();">
                             <option value="cover"   {% if (settings.image_fit or 'cover') == 'cover' %}selected{% endif %}>Cover (crop to fill)</option>
                             <option value="contain" {% if settings.image_fit == 'contain' %}selected{% endif %}>Contain (fit inside)</option>
                             <option value="fill"    {% if settings.image_fit == 'fill' %}selected{% endif %}>Fill (stretch)</option>
                         </select>
                     </div>
-                    <div class="form-group"><label class="form-label">Border Width (px)</label><input type="number" min="0" max="20" id="image_border_width" class="form-input" value="{{ settings.image_border_width if settings.image_border_width is not none else 3 }}" onchange="updateSetting('image_border_width',this.value)"></div>
+                    <div class="form-group"><label class="form-label">Border Width (px)</label>
+                        <input type="number" min="0" max="20" id="image_border_width" class="form-input"
+                               value="{{ settings.image_border_width if settings.image_border_width is not none else 3 }}"
+                               onchange="updateSetting('image_border_width',this.value);syncAdjustPreview();">
+                    </div>
                 </div>
                 {{ color_pair('Border Color','image_border_color_picker','image_border_color', settings.image_border_color or '#FFFFFF','image_border_color') }}
             </div>
@@ -1043,33 +1079,105 @@ input[type="range"]{accent-color:#4F46E5}
     <div style="height:3rem"></div>
 </div>
 
-{# ── Image Crop Modal ── #}
-<div id="img-crop-modal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.7);align-items:center;justify-content:center;">
-    <div style="background:#fff;border-radius:1rem;padding:1.5rem;width:min(92vw,520px);box-shadow:0 25px 60px rgba(0,0,0,.4);">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
-            <h3 style="font-size:1.1rem;font-weight:700;color:#1f2937;margin:0;"><i class="fas fa-crop-alt" style="color:#4f46e5;margin-right:.5rem;"></i>Position &amp; Preview</h3>
-            <button onclick="closeImageCropper()" style="background:none;border:none;font-size:1.25rem;color:#6b7280;cursor:pointer;"><i class="fas fa-times"></i></button>
-        </div>
-        <p style="font-size:.8rem;color:#6b7280;margin-bottom:1rem;">Drag to reposition. Zoom slider to scale.</p>
-        <div style="display:flex;justify-content:center;margin-bottom:1.25rem;">
-            <div id="crop-container" style="width:160px;height:160px;border-radius:50%;overflow:hidden;border:3px solid rgba(255,255,255,.6);box-shadow:0 8px 25px rgba(0,0,0,.35);cursor:grab;position:relative;background:#1a1a1a;user-select:none;">
-                <img id="crop-img" src="" alt="" draggable="false" style="position:absolute;width:100%;height:100%;object-fit:none;cursor:grab;transform-origin:center center;">
-            </div>
-        </div>
-        <div style="display:flex;gap:.5rem;justify-content:center;margin-bottom:1rem;">
-            <button class="crop-shape-btn" data-shape="circle"  onclick="setCropShape('circle',this)"  style="padding:.35rem .9rem;border-radius:999px;border:2px solid #4f46e5;background:#ede9fe;color:#4f46e5;font-size:.8rem;font-weight:600;cursor:pointer;">⭕ Circle</button>
-            <button class="crop-shape-btn" data-shape="rounded" onclick="setCropShape('rounded',this)" style="padding:.35rem .9rem;border-radius:.5rem;border:2px solid #d1d5db;background:#fff;color:#374151;font-size:.8rem;font-weight:600;cursor:pointer;">▢ Rounded</button>
-            <button class="crop-shape-btn" data-shape="square"  onclick="setCropShape('square',this)"  style="padding:.35rem .9rem;border-radius:0;border:2px solid #d1d5db;background:#fff;color:#374151;font-size:.8rem;font-weight:600;cursor:pointer;">■ Square</button>
-        </div>
-        <div style="margin-bottom:1.25rem;">
-            <label style="font-size:.8rem;font-weight:600;color:#374151;display:block;margin-bottom:.35rem;">Zoom: <span id="crop-zoom-val">100%</span></label>
-            <input type="range" id="crop-zoom" min="50" max="300" step="5" value="100" style="width:100%;accent-color:#4f46e5;" oninput="updateCropZoom(this.value)">
-        </div>
-        <div style="display:flex;gap:.75rem;justify-content:flex-end;">
-            <button onclick="closeImageCropper()" style="padding:.5rem 1.25rem;border:1px solid #d1d5db;border-radius:.5rem;background:#fff;color:#374151;font-weight:600;cursor:pointer;">Cancel</button>
-            <button onclick="confirmImageCrop()" style="padding:.5rem 1.25rem;border:none;border-radius:.5rem;background:#4f46e5;color:#fff;font-weight:600;cursor:pointer;"><i class="fas fa-check mr-1"></i>Apply</button>
-        </div>
+
+{# ── Adjust & Preview Modal — Cropper.js ── #}
+<div id="adj-modal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.8);align-items:flex-start;justify-content:center;overflow-y:auto;padding:1.5rem 0;">
+  <div style="background:#fff;border-radius:1.25rem;width:min(96vw,860px);box-shadow:0 30px 80px rgba(0,0,0,.5);margin:auto;">
+
+    {# Header #}
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:1.1rem 1.5rem;border-bottom:1px solid #e5e7eb;">
+      <h3 style="margin:0;font-size:1.05rem;font-weight:700;color:#1f2937;display:flex;align-items:center;gap:.5rem;">
+        <i class="fas fa-crop-alt" style="color:#4f46e5;"></i> <span id="adj-modal-title">Crop &amp; Adjust Photo</span>
+      </h3>
+      <button onclick="closeAdjustModal()" style="background:none;border:none;font-size:1.2rem;color:#9ca3af;cursor:pointer;"><i class="fas fa-times"></i></button>
     </div>
+
+    {# Body — two columns #}
+    <div style="display:grid;grid-template-columns:1fr auto;gap:0;">
+
+      {# Left: Cropper.js canvas #}
+      <div style="padding:1.25rem;min-width:0;">
+        <p style="font-size:.72rem;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:.06em;margin:0 0 .6rem;">
+          <i class="fas fa-arrows-alt" style="margin-right:.3rem;color:#4f46e5;"></i>Drag to reframe &nbsp;·&nbsp;
+          <i class="fas fa-search-plus" style="margin-right:.3rem;color:#4f46e5;"></i>Scroll / pinch to zoom &nbsp;·&nbsp;
+          <i class="fas fa-expand-arrows-alt" style="margin-right:.3rem;color:#4f46e5;"></i>Drag edge to resize crop box
+        </p>
+        <div id="adj-crop-wrap" style="background:#111;border-radius:.6rem;overflow:hidden;max-height:360px;">
+          <img id="adj-crop-img" src="" alt="" style="display:block;max-width:100%;max-height:360px;opacity:0;">
+        </div>
+
+        {# Zoom slider (mirrors scroll wheel) #}
+        <div style="margin-top:.9rem;display:flex;align-items:center;gap:.75rem;">
+          <button onclick="adjZoomStep(-0.1)" style="width:30px;height:30px;border:1px solid #e5e7eb;border-radius:.4rem;background:#f9fafb;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;">−</button>
+          <input type="range" id="adj-zoom-slider" min="0" max="1" step="0.01" value="0"
+                 style="flex:1;accent-color:#4f46e5;" oninput="adjZoomSlider(this.value)">
+          <button onclick="adjZoomStep(0.1)"  style="width:30px;height:30px;border:1px solid #e5e7eb;border-radius:.4rem;background:#f9fafb;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;">+</button>
+          <span id="adj-zoom-label" style="font-size:.8rem;font-weight:700;color:#4f46e5;min-width:38px;text-align:right;">100%</span>
+        </div>
+
+        {# Rotate / Flip toolbar #}
+        <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.75rem;">
+          <button onclick="adjRotate(-90)" title="Rotate left"  style="padding:.4rem .9rem;border:1px solid #e5e7eb;border-radius:.4rem;background:#f9fafb;cursor:pointer;font-size:.8rem;display:flex;align-items:center;gap:.3rem;"><i class="fas fa-undo"></i> 90°</button>
+          <button onclick="adjRotate(90)"  title="Rotate right" style="padding:.4rem .9rem;border:1px solid #e5e7eb;border-radius:.4rem;background:#f9fafb;cursor:pointer;font-size:.8rem;display:flex;align-items:center;gap:.3rem;"><i class="fas fa-redo"></i> 90°</button>
+          <button onclick="adjFlip('x')"   title="Flip H"       style="padding:.4rem .9rem;border:1px solid #e5e7eb;border-radius:.4rem;background:#f9fafb;cursor:pointer;font-size:.8rem;display:flex;align-items:center;gap:.3rem;"><i class="fas fa-arrows-alt-h"></i> Flip H</button>
+          <button onclick="adjFlip('y')"   title="Flip V"       style="padding:.4rem .9rem;border:1px solid #e5e7eb;border-radius:.4rem;background:#f9fafb;cursor:pointer;font-size:.8rem;display:flex;align-items:center;gap:.3rem;"><i class="fas fa-arrows-alt-v"></i> Flip V</button>
+          <button onclick="adjReset()"      title="Reset"        style="padding:.4rem .9rem;border:1px solid #c7d2fe;border-radius:.4rem;background:#ede9fe;color:#4f46e5;cursor:pointer;font-size:.8rem;font-weight:600;"><i class="fas fa-undo-alt"></i> Reset</button>
+        </div>
+      </div>
+
+      {# Right: live preview panel #}
+      <div style="width:220px;padding:1.25rem;border-left:1px solid #f3f4f6;background:#fafafa;border-radius:0 1.25rem 0 0;display:flex;flex-direction:column;gap:1rem;">
+        <div>
+          <p style="font-size:.72rem;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:.06em;margin:0 0 .6rem;"><i class="fas fa-eye" style="color:#4f46e5;margin-right:.3rem;"></i>Crop Preview</p>
+          {# Cropper.js built-in live preview — class drives shape #}
+          <div style="display:flex;justify-content:center;">
+            <div id="adj-crop-preview" class="adj-preview-circle"
+                 style="width:120px;height:120px;border-radius:50%;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,.25);border:3px solid #c7d2fe;background:#111;">
+            </div>
+          </div>
+          {# Shape buttons #}
+          <div style="display:flex;gap:.3rem;margin-top:.75rem;justify-content:center;">
+            <button class="adj-shape-btn" data-shape="circle"  onclick="setAdjShape('circle',this)"  style="flex:1;padding:.35rem;border-radius:999px;border:2px solid #4f46e5;background:#ede9fe;color:#4f46e5;font-size:.7rem;font-weight:700;cursor:pointer;">⭕</button>
+            <button class="adj-shape-btn" data-shape="rounded" onclick="setAdjShape('rounded',this)" style="flex:1;padding:.35rem;border-radius:.4rem;border:2px solid #e5e7eb;background:#fff;color:#374151;font-size:.7rem;font-weight:700;cursor:pointer;">▢</button>
+            <button class="adj-shape-btn" data-shape="square"  onclick="setAdjShape('square',this)"  style="flex:1;padding:.35rem;border-radius:0;border:2px solid #e5e7eb;background:#fff;color:#374151;font-size:.7rem;font-weight:700;cursor:pointer;">■</button>
+          </div>
+        </div>
+
+        {# Display preview — simulated overlay #}
+        <div>
+          <p style="font-size:.72rem;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:.06em;margin:0 0 .5rem;"><i class="fas fa-tv" style="color:#4f46e5;margin-right:.3rem;"></i>Display Preview</p>
+          <div style="background:linear-gradient(135deg,#1a1a2e,#0f3460);border-radius:.5rem;overflow:visible;position:relative;min-height:90px;padding:.6rem .6rem .6rem 58px;">
+            <div id="adj-disp-imgwrap" style="position:absolute;left:-22px;top:50%;transform:translateY(-50%);">
+              <div id="adj-disp-preview" class="adj-preview-circle"
+                   style="width:44px;height:44px;overflow:hidden;border:2px solid rgba(255,255,255,.5);box-shadow:0 3px 10px rgba(0,0,0,.4);border-radius:50%;background:#111;">
+              </div>
+            </div>
+            <p id="adj-disp-main" style="margin:0 0 .15rem;color:#fff;font-weight:700;font-size:.72rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ settings.main_text or 'Main Text' }}</p>
+            <p id="adj-disp-sec"  style="margin:0;color:rgba(255,255,255,.65);font-size:.62rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ settings.secondary_text or 'Secondary Text' }}</p>
+          </div>
+          <p style="font-size:.65rem;color:#9ca3af;text-align:center;margin:.4rem 0 0;"><i class="fas fa-info-circle"></i> Matches display page</p>
+        </div>
+
+        {# Output size info #}
+        <div style="background:#f3f4f6;border-radius:.4rem;padding:.6rem;font-size:.7rem;color:#6b7280;text-align:center;">
+          <p style="margin:0 0 .15rem;font-weight:600;color:#374151;">Output</p>
+          <p style="margin:0;">Square crop → 400×400 px<br>Uploaded as new image</p>
+        </div>
+      </div>
+    </div>
+
+    {# Footer #}
+    <div style="padding:.9rem 1.5rem;border-top:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center;gap:.75rem;flex-wrap:wrap;">
+      <span id="adj-status" style="font-size:.8rem;color:#6b7280;"></span>
+      <div style="display:flex;gap:.6rem;">
+        <button onclick="closeAdjustModal()" style="padding:.5rem 1.25rem;border:1px solid #d1d5db;border-radius:.5rem;background:#fff;color:#374151;font-weight:600;cursor:pointer;">Cancel</button>
+        <button onclick="applyAdjust()" id="adj-apply-btn"
+                style="padding:.5rem 1.5rem;border:none;border-radius:.5rem;background:#4f46e5;color:#fff;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:.4rem;">
+          <i class="fas fa-check"></i> Apply &amp; Save
+        </button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -1246,49 +1354,244 @@ function removeFile(cat, type) {
     fetch(`/api/remove/${cat}/${type}`, { method: 'POST' }).then(r => r.json()).then(d => { if (d.success) { showToast('Removed', 'success'); location.reload(); } });
 }
 
-/* ── Image cropper ───────────────────────────────────── */
-let _cf = null, _cc = null, _cx = 0, _cy = 0, _cz = 1, _cd = false, _csx, _csy, _cox, _coy;
+/* ── Upload cropper — delegates to the shared Cropper.js modal ────── */
+// _uploadMode: true  → we have a local File object, upload on Apply
+//              false → adjust already-saved image (no new upload)
+let _uploadMode = false;
+let _uploadFile = null;
+
 function openImageCropper(input, cat) {
-    const file = input.files[0]; if (!file) return; _cf = file; _cc = cat;
+    const file = input.files[0];
+    if (!file) return;
+    _uploadMode = true;
+    _uploadFile = file;
+    // Reset the file input so the same file can be re-selected later
+    input.value = '';
+
+    // Read the file locally and open the shared adj-modal
     const reader = new FileReader();
     reader.onload = e => {
-        const img = document.getElementById('crop-img'); img.src = e.target.result;
-        img.onload = () => {
-            _cx = 0; _cy = 0; _cz = 1; document.getElementById('crop-zoom').value = 100; document.getElementById('crop-zoom-val').textContent = '100%';
-            const shape = document.getElementById('image_shape')?.value || 'circle';
-            setCropShape(shape, document.querySelector(`.crop-shape-btn[data-shape="${shape}"]`));
-            applyCropT(); document.getElementById('img-crop-modal').style.display = 'flex';
+        _loadCropperJS(() => {
+            const imgEl = document.getElementById('adj-crop-img');
+            if (_cropper) { _cropper.destroy(); _cropper = null; }
+            imgEl.style.opacity = '0';
+            imgEl.src = e.target.result;
+            imgEl.onload = () => {
+                imgEl.style.opacity = '1';
+                _adjScaleX = 1; _adjScaleY = 1;
+                _adjShape = document.getElementById('image_shape')?.value || _adjInitSh;
+                _cropper = new Cropper(imgEl, {
+                    aspectRatio: 1,
+                    viewMode: 1,
+                    dragMode: 'move',
+                    autoCropArea: 0.65,
+                    restore: false,
+                    guides: true,
+                    center: true,
+                    highlight: false,
+                    cropBoxMovable: true,
+                    cropBoxResizable: true,
+                    toggleDragModeOnDblClick: false,
+                    preview: '#adj-crop-preview, #adj-disp-preview',
+                    zoom(ev) {
+                        const slider = document.getElementById('adj-zoom-slider');
+                        if (slider) slider.value = Math.max(0, Math.min(1, (Math.log(ev.detail.ratio) / Math.log(10)) + 0.5));
+                        document.getElementById('adj-zoom-label').textContent = Math.round(ev.detail.ratio * 100) + '%';
+                    },
+                    ready() {
+                        document.getElementById('adj-status').textContent = 'Drag to reframe · Resize handles to zoom in on a region';
+                        _syncShapeUI();
+                    }
+                });
+            };
+        });
+    };
+    reader.readAsDataURL(file);
+
+    // Update modal title to reflect "new upload" context
+    document.getElementById('adj-modal-title').textContent = 'Crop & Upload Photo';
+    document.getElementById('adj-modal').style.display = 'flex';
+    document.getElementById('adj-status').textContent = 'Loading image…';
+}
+
+
+/* ── Adjust Modal — Cropper.js implementation ─────────── */
+const _adjImgSrc  = {{ ('/static/' + settings.category_image)|tojson if settings.category_image else 'null' }};
+const _adjInitSh  = '{{ settings.image_shape or "circle" }}';
+const _adjInitBW  = {{ settings.image_border_width if settings.image_border_width is not none else 3 }};
+const _adjInitBC  = '{{ settings.image_border_color or "#FFFFFF" }}';
+
+let _cropper = null;
+let _adjShape = _adjInitSh;
+let _adjScaleX = 1, _adjScaleY = 1;
+
+/* Load Cropper.js once, lazily */
+function _loadCropperJS(cb) {
+    if (window.Cropper) { cb(); return; }
+    const s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js';
+    s.onload = cb;
+    document.head.appendChild(s);
+}
+
+function openAdjustModal() {
+    if (!_adjImgSrc) return;
+    _uploadMode = false; _uploadFile = null;
+    document.getElementById('adj-modal-title').textContent = 'Crop & Adjust Photo';
+    _adjShape = document.getElementById('image_shape')?.value || _adjInitSh;
+    document.getElementById('adj-modal').style.display = 'flex';
+    document.getElementById('adj-status').textContent = 'Loading…';
+
+    _loadCropperJS(() => {
+        const imgEl = document.getElementById('adj-crop-img');
+        imgEl.style.opacity = '0';
+
+        // Destroy previous instance
+        if (_cropper) { _cropper.destroy(); _cropper = null; }
+
+        imgEl.src = _adjImgSrc + '?_=' + Date.now(); // bust cache
+
+        imgEl.onload = () => {
+            imgEl.style.opacity = '1';
+            _adjScaleX = 1; _adjScaleY = 1;
+
+            _cropper = new Cropper(imgEl, {
+                aspectRatio: 1,          // always square crop → works for circle/rounded/square
+                viewMode: 1,             // crop box stays inside canvas
+                dragMode: 'move',        // dragging moves the image, not the crop box
+                autoCropArea: 0.65,      // start with 65% of canvas selected
+                restore: false,
+                guides: true,
+                center: true,
+                highlight: false,
+                cropBoxMovable: true,
+                cropBoxResizable: true,
+                toggleDragModeOnDblClick: false,
+                preview: '#adj-crop-preview, #adj-disp-preview',
+                zoom(e) {
+                    // Sync zoom slider
+                    const ratio = e.detail.ratio;
+                    const slider = document.getElementById('adj-zoom-slider');
+                    if (slider) {
+                        // Map ratio to slider 0–1 (ratio 0.1→1 maps to 0, ratio 3→1 maps to 1)
+                        slider.value = Math.max(0, Math.min(1, (Math.log(ratio) / Math.log(10)) + 0.5));
+                    }
+                    const pct = Math.round(ratio * 100);
+                    document.getElementById('adj-zoom-label').textContent = pct + '%';
+                },
+                ready() {
+                    document.getElementById('adj-status').textContent = 'Drag to reframe · Resize corner handles to zoom in on a region';
+                    _syncShapeUI();
+                }
+            });
         };
-    }; reader.readAsDataURL(file);
+        imgEl.onerror = () => {
+            document.getElementById('adj-status').textContent = 'Failed to load image.';
+        };
+    });
 }
-function closeImageCropper() { document.getElementById('img-crop-modal').style.display = 'none'; const inp = document.getElementById('category_image_input'); if (inp) inp.value = ''; }
-function setCropShape(s, btn) {
-    document.getElementById('crop-container').style.borderRadius = s === 'circle' ? '50%' : s === 'rounded' ? '16px' : '0';
-    document.querySelectorAll('.crop-shape-btn').forEach(b => { b.style.border = '2px solid #d1d5db'; b.style.background = '#fff'; b.style.color = '#374151'; });
-    if (btn) { btn.style.border = '2px solid #4f46e5'; btn.style.background = '#ede9fe'; btn.style.color = '#4f46e5'; }
+
+function closeAdjustModal() {
+    document.getElementById('adj-modal').style.display = 'none';
+    if (_cropper) { _cropper.destroy(); _cropper = null; }
 }
-function updateCropZoom(v) { _cz = v / 100; document.getElementById('crop-zoom-val').textContent = v + '%'; applyCropT(); }
-function applyCropT() { document.getElementById('crop-img').style.transform = `translate(${_cx}px,${_cy}px) scale(${_cz})`; }
-(function () {
-    const ci = document.getElementById('crop-img');
-    ci.addEventListener('mousedown', e => { _cd = true; _csx = e.clientX; _csy = e.clientY; _cox = _cx; _coy = _cy; ci.style.cursor = 'grabbing'; e.preventDefault(); });
-    document.addEventListener('mousemove', e => { if (!_cd) return; _cx = _cox + (e.clientX - _csx); _cy = _coy + (e.clientY - _csy); applyCropT(); });
-    document.addEventListener('mouseup', () => { _cd = false; ci.style.cursor = 'grab'; });
-    ci.addEventListener('touchstart', e => { const t = e.touches[0]; _cd = true; _csx = t.clientX; _csy = t.clientY; _cox = _cx; _coy = _cy; e.preventDefault(); }, { passive: false });
-    document.addEventListener('touchmove', e => { if (!_cd) return; const t = e.touches[0]; _cx = _cox + (t.clientX - _csx); _cy = _coy + (t.clientY - _csy); applyCropT(); }, { passive: false });
-    document.addEventListener('touchend', () => { _cd = false; });
-})();
-function confirmImageCrop() {
-    if (!_cf) return;
-    const con = document.getElementById('crop-container'); const cw = con.offsetWidth, ch = con.offsetHeight;
-    const cl = v => Math.max(0, Math.min(100, v));
-    const op = `${cl(Math.round(50 - (_cx / cw) * 100))}% ${cl(Math.round(50 - (_cy / ch) * 100))}%`;
-    const ab = document.querySelector('.crop-shape-btn[style*="#4f46e5"]'); const shape = ab ? ab.dataset.shape : null;
-    const fd = new FormData(); fd.append('file', _cf);
-    fetch(`/api/upload/${_cc}/image`, { method: 'POST', body: fd }).then(r => r.json()).then(d => {
-        if (d.success) { updateSetting('image_object_position', op); updateSetting('image_zoom', Math.round(_cz * 100)); if (shape) updateSetting('image_shape', shape); showToast('Image uploaded', 'success'); closeImageCropper(); setTimeout(() => location.reload(), 800); }
-    }).catch(() => showToast('Upload failed', 'error'));
+
+function adjZoomStep(delta) {
+    if (_cropper) _cropper.zoom(delta);
 }
+
+function adjZoomSlider(v) {
+    if (!_cropper) return;
+    // v 0–1 → map to zoom ratio
+    const ratio = Math.pow(10, parseFloat(v) - 0.5);
+    _cropper.zoomTo(ratio);
+}
+
+function adjRotate(deg) {
+    if (_cropper) _cropper.rotate(deg);
+}
+
+function adjFlip(axis) {
+    if (!_cropper) return;
+    if (axis === 'x') { _adjScaleX *= -1; _cropper.scaleX(_adjScaleX); }
+    else              { _adjScaleY *= -1; _cropper.scaleY(_adjScaleY); }
+}
+
+function adjReset() {
+    if (_cropper) { _cropper.reset(); _adjScaleX = 1; _adjScaleY = 1; }
+    document.getElementById('adj-zoom-slider').value = 0;
+    document.getElementById('adj-zoom-label').textContent = '100%';
+}
+
+function setAdjShape(s, btn) {
+    _adjShape = s;
+    _syncShapeUI();
+}
+
+function _syncShapeUI() {
+    // Shape buttons highlight
+    document.querySelectorAll('.adj-shape-btn').forEach(b => {
+        const on = b.dataset.shape === _adjShape;
+        b.style.border     = on ? '2px solid #4f46e5' : '2px solid #e5e7eb';
+        b.style.background = on ? '#ede9fe' : '#fff';
+        b.style.color      = on ? '#4f46e5' : '#374151';
+    });
+    // Preview border-radius
+    const br = _adjShape === 'circle' ? '50%' : _adjShape === 'rounded' ? '12px' : '0';
+    ['adj-crop-preview','adj-disp-preview'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.borderRadius = br;
+    });
+    // Also update the Cropper.js view box shape to match (cosmetic hint only)
+    const vb = document.querySelector('.cropper-view-box');
+    if (vb) vb.style.borderRadius = br;
+    const face = document.querySelector('.cropper-face');
+    if (face) face.style.borderRadius = br;
+}
+
+function applyAdjust() {
+    if (!_cropper) return;
+    const btn = document.getElementById('adj-apply-btn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving…';
+    document.getElementById('adj-status').textContent = 'Cropping and uploading…';
+
+    // Export the cropped area at 400×400 px
+    const outputSize = 400;
+    const canvas = _cropper.getCroppedCanvas({ width: outputSize, height: outputSize, imageSmoothingQuality: 'high' });
+
+    canvas.toBlob(blob => {
+        if (!blob) {
+            showToast('Failed to export crop', 'error');
+            btn.disabled = false; btn.innerHTML = '<i class="fas fa-check"></i> Apply & Save';
+            return;
+        }
+        const fd = new FormData();
+        fd.append('file', blob, 'cropped_image.jpg');
+
+        // Upload the cropped blob, then save shape setting
+        fetch(`/api/upload/${category}/image`, { method: 'POST', body: fd })
+        .then(r => r.json())
+        .then(d => {
+            if (!d.success) throw new Error(d.error || 'Upload failed');
+            const shapeFd = new FormData(); shapeFd.append('image_shape', _adjShape);
+            return fetch(`/api/settings/${category}`, { method: 'POST', body: shapeFd })
+                .then(r => r.json()).then(() => d);
+        })
+        .then(() => {
+            showToast(_uploadMode ? 'Photo uploaded and cropped!' : 'Image adjustments saved!', 'success');
+            _uploadMode = false; _uploadFile = null;
+            closeAdjustModal();
+            setTimeout(() => location.reload(), 600);
+        })
+        .catch(err => {
+            showToast('Save failed: ' + err.message, 'error');
+            document.getElementById('adj-status').textContent = '';
+            btn.disabled = false; btn.innerHTML = '<i class="fas fa-check"></i> Apply & Save';
+        });
+    }, 'image/jpeg', 0.92);
+}
+
 
 /* ── Toast ───────────────────────────────────────────── */
 function showToast(msg, type) {

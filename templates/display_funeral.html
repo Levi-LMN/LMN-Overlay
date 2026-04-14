@@ -50,11 +50,11 @@ body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;position:relative}
 }
 
 /* ─── Text content ───────────────────────────────────────────────────────── */
-#txt{flex:1;display:flex;flex-direction:column;gap:10px;min-width:0}
+#txt{flex:1;display:flex;flex-direction:column;gap:10px;min-width:0;position:relative;z-index:60}
 #main-txt,#sec-wrap,#co-name{word-wrap:break-word;overflow-wrap:break-word}
 /* Wrapper div for secondary text — holds fixed dimensions during rotation */
-#sec-wrap{position:relative;display:block;text-align:left}
-#sec-txt{display:block;text-align:left}
+#sec-wrap{position:relative;display:block}
+#sec-txt{display:block}
 
 /* ─── Clip shell — clips clock+ticker to the overlay's border-radius ─────── */
 /* #ov stays overflow:visible so the category image can overhang outside it.  */
@@ -497,16 +497,10 @@ function styleTextEl(el, o) {
     el.style.padding         = o.pad  || '8px 12px';
     el.style.borderRadius    = '6px';
     el.style.display         = 'inline-block';
-    el.style.maxWidth        = '100%';
-    el.style.textAlign       = 'left';
-    el.style.boxSizing       = 'border-box';
   } else {
     el.style.backgroundColor = 'transparent';
     el.style.padding         = '0';
     el.style.display         = 'block';
-    el.style.maxWidth        = '';
-    el.style.textAlign       = 'left';
-    el.style.boxSizing       = '';
   }
 }
 
@@ -662,7 +656,7 @@ function applyPositioning(s) {
 
   const sz   = s.image_size || 128;
   const half = Math.round(sz / 2);
-  const gap  = 4;
+  const gap  = 20;
   const ipos = s.image_position || 'left';
 
   /* Full reset of image wrapper position */

@@ -68,6 +68,10 @@ _EXPORTABLE_FIELDS = [
     'live_indicator_animation', 'live_indicator_vertical_position',
     'live_indicator_horizontal_position',
 
+    # Live label & location — per-part colours
+    'live_label_color', 'live_label_bg_color', 'live_label_bg_opacity',
+    'live_location_color', 'live_location_bg_color', 'live_location_bg_opacity',
+
     # Colors — main text
     'main_text_color', 'main_text_bg_color', 'main_text_bg_opacity',
 

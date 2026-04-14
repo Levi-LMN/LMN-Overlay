@@ -50,7 +50,7 @@ body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;position:relative}
 }
 
 /* ─── Text content ───────────────────────────────────────────────────────── */
-#txt{flex:1;display:flex;flex-direction:column;gap:10px;min-width:0;position:relative;z-index:60}
+#txt{flex:1;display:flex;flex-direction:column;gap:10px;min-width:0}
 #main-txt,#sec-wrap,#co-name{word-wrap:break-word;overflow-wrap:break-word}
 /* Wrapper div for secondary text — holds fixed dimensions during rotation */
 #sec-wrap{position:relative;display:block}
@@ -567,7 +567,6 @@ function applyStyling(s) {
     lh:    secLineHeight,
     bg:    s.secondary_text_bg_color,
     bgOp:  s.secondary_text_bg_opacity,
-    pad:   '10px 15px',
   });
 
   /* Lock secondary wrapper dimensions so overlay never reflowing during rotation */
@@ -656,7 +655,7 @@ function applyPositioning(s) {
 
   const sz   = s.image_size || 128;
   const half = Math.round(sz / 2);
-  const gap  = 20;
+  const gap  = 4;
   const ipos = s.image_position || 'left';
 
   /* Full reset of image wrapper position */

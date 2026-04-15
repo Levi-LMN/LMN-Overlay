@@ -342,47 +342,152 @@ class OverlaySettings(db.Model):
     @staticmethod
     def get_defaults(category='funeral'):
         """Return a flat dict of sensible defaults for each built-in category.
-        Used by the reset endpoint and by app.py on first-run initialisation."""
+        Used by the reset endpoint and by app.py on first-run initialisation.
+        Every column on OverlaySettings (except id, category, created_at,
+        updated_at, and the file-path fields company_logo / category_image)
+        must appear here so that a full reset actually resets everything."""
 
-        _shared_logo_pos = {
-            'logo_vertical_position': 'top',
-            'logo_horizontal_position': 'right',
-            'logo_custom_top': None,
-            'logo_custom_bottom': None,
-            'logo_custom_left': None,
-            'logo_custom_right': None,
+        # ── Shared blocks (same across all categories unless overridden) ──────
+
+        _shared_content = {
+            'secondary_text':          '',
+            'ticker_text':             '',
+            'company_name':            '',
+            'secondary_phrases':       '[]',
+            'show_category_image':     True,
+            'show_company_logo':       True,
+            'show_ticker':             True,
         }
 
-        _shared_image = {
-            'image_size': 128,
-            'image_shape': 'circle',
-            'image_border_width': 3,
-            'image_position': 'left',
-            'image_fit': 'cover',
-            'image_object_position': 'center center',
-            'image_zoom': 100,
+        _shared_secondary_rotation = {
+            'secondary_rotation_enabled':   False,
+            'secondary_display_duration':   3.0,
+            'secondary_transition_type':    'fade',
+            'secondary_transition_duration': 0.5,
+        }
+
+        _shared_position = {
+            'vertical_position':    'bottom',
+            'horizontal_position':  'left',
+            'custom_top':           0,
+            'custom_bottom':        0,
+            'custom_left':          0,
+            'custom_right':         0,
+            'container_width':      'auto',
+            'custom_width':         800,
+            'container_max_width':  1200,
+            'container_min_width':  600,
+            'container_height':     'auto',
+            'custom_height':        200,
+            'container_padding':    25,
+        }
+
+        _shared_text_scale = {
+            'text_scale_mode':        'responsive',
+            'text_line_height':       1.2,
+            'text_max_lines':         2,
+            'enable_text_truncation': True,
+        }
+
+        _shared_layout = {
+            'layout_style':             'default',
+            'show_decorative_elements': True,
+            'opacity':                  0.9,
+            'border_radius':            10,
         }
 
         _shared_fonts = {
-            'main_font_family': None,
-            'secondary_font_family': None,
-            'ticker_font_family': None,
+            'font_family':              'Arial, sans-serif',
+            'main_font_family':         None,
+            'secondary_font_family':    None,
+            'ticker_font_family':       None,
             'company_name_font_family': None,
-            'company_name_italic': True,
+            'company_name_italic':      True,
+            'ticker_speed':             50,
+            'main_font_size':           32,
+            'secondary_font_size':      24,
+            'ticker_font_size':         18,
+            'company_name_font_size':   20,
+            'footer_font_size':         14,
+        }
+
+        _shared_logo_pos = {
+            'logo_vertical_position':   'top',
+            'logo_horizontal_position': 'right',
+            'logo_custom_top':          None,
+            'logo_custom_bottom':       None,
+            'logo_custom_left':         None,
+            'logo_custom_right':        None,
+        }
+
+        _shared_logo_appearance = {
+            'logo_size':           80,
+            'logo_opacity':        1.0,
+            'logo_border_radius':  0,
+            'logo_shadow':         False,
+        }
+
+        _shared_image = {
+            'image_size':            128,
+            'image_shape':           'circle',
+            'image_border_width':    3,
+            'image_border_color':    '#FFFFFF',
+            'image_position':        'left',
+            'image_fit':             'cover',
+            'image_object_position': 'center center',
+            'image_zoom':            100,
+        }
+
+        _shared_entrance_anim = {
+            'entrance_animation':   'slide-left',
+            'entrance_duration':    1.0,
+            'entrance_delay':       0.0,
+            'text_animation':       'none',
+            'text_animation_speed': 1.0,
+            'image_animation':      'none',
+            'image_animation_delay': 0.0,
+            'logo_animation':       'fade-in',
+            'logo_animation_delay': 0.0,
+            'ticker_entrance':      'slide-left',
+            'ticker_entrance_delay': 0.5,
         }
 
         _shared_display_anim = {
-            'logo_display_animation_enabled': False,
-            'logo_display_animation_duration': 3.0,
+            'logo_display_animation':           'none',
+            'logo_display_animation_enabled':   False,
+            'logo_display_animation_duration':  3.0,
             'logo_display_animation_frequency': 5.0,
-            'image_display_animation_enabled': False,
+            'image_display_animation':          'none',
+            'image_display_animation_enabled':  False,
             'image_display_animation_duration': 3.0,
             'image_display_animation_frequency': 5.0,
         }
 
-        # ── New feature defaults (same for all categories — off by default) ─
-        _shared_new_features = {
-            # Sectioned background
+        _shared_text_anim = {
+            'main_text_animation':          None,
+            'secondary_text_animation':     None,
+            'company_name_animation':       None,
+            'text_animation_repeat_interval': 0.0,
+        }
+
+        _shared_cycle = {
+            'overlay_cycle_enabled':     False,
+            'overlay_visible_duration':  10.0,
+            'overlay_hidden_duration':   5.0,
+            'cycle_entry_animation':     'fade',
+            'cycle_exit_animation':      'fade',
+            'cycle_transition_duration': 0.6,
+        }
+
+        _shared_stagger = {
+            'stagger_enabled':       False,
+            'stagger_order':         'main,secondary,company',
+            'stagger_delay':         0.3,
+            'stagger_element_exit':  'fade',
+            'stagger_element_entry': 'fade',
+        }
+
+        _shared_sectioned_bg = {
             'overlay_bg_sections_enabled': False,
             'overlay_bg_top_color':        '#222222',
             'overlay_bg_top_opacity':      0.95,
@@ -390,163 +495,176 @@ class OverlaySettings(db.Model):
             'overlay_bg_bottom_color':     '#222222',
             'overlay_bg_bottom_opacity':   0.95,
             'overlay_bg_bottom_height':    25,
-            # Day & Time Bar
-            'show_clock':          False,
-            'clock_format':        '24h',
-            'clock_show_time':     True,    # renamed from clock_show_seconds
-            'clock_font_size':     13,      # sized to fit the bottom strip
-            'clock_font_family':   None,
-            'clock_color':         '#FFFFFF',
-            'clock_bg_color':      '#000000',
-            'clock_bg_opacity':    0.0,     # transparent by default; use opacity
-            'clock_animation':     'none',
-            'clock_position':      'bottom',
-            # Ticker (inside overlay strip)
-            'ticker_font_size':    13,      # match clock strip height by default
-            # Live indicator
-            'show_live_indicator':               False,
-            'live_label':                        'LIVE',
-            'live_location':                     '',
-            'live_indicator_color':              '#FFFFFF',
-            'live_indicator_bg_color':           '#CC0000',
-            'live_indicator_bg_opacity':         0.9,
-            'live_indicator_font_size':          16,
-            'live_indicator_font_family':        None,
-            'live_indicator_animation':          'pulse',
-            'live_indicator_vertical_position':  'top',
-            'live_indicator_horizontal_position':'left',
         }
 
-        defaults = {
+        _shared_clock = {
+            'show_clock':        False,
+            'clock_format':      '24h',
+            'clock_show_time':   True,
+            'clock_font_size':   13,
+            'clock_font_family': None,
+            'clock_color':       '#FFFFFF',
+            'clock_bg_color':    '#000000',
+            'clock_bg_opacity':  0.0,
+            'clock_animation':   'none',
+            'clock_position':    'bottom',
+        }
+
+        _shared_live = {
+            'show_live_indicator':                False,
+            'live_label':                         'LIVE',
+            'live_location':                      '',
+            'live_indicator_color':               '#FFFFFF',
+            'live_indicator_bg_color':            '#CC0000',
+            'live_indicator_bg_opacity':          0.9,
+            'live_indicator_font_size':           16,
+            'live_indicator_font_family':         None,
+            'live_indicator_animation':           'pulse',
+            'live_indicator_vertical_position':   'top',
+            'live_indicator_horizontal_position': 'left',
+            # per-part colours
+            'live_label_color':         '#FFFFFF',
+            'live_label_bg_color':      '#CC0000',
+            'live_label_bg_opacity':    0.9,
+            'live_location_color':      '#FFFFFF',
+            'live_location_bg_color':   '#000000',
+            'live_location_bg_opacity': 0.0,
+        }
+
+        _shared_legacy = {
+            'bg_color':   '#000000',
+            'text_color': '#FFFFFF',
+        }
+
+        # Merge all shared blocks into a single base that every category starts from
+        _base = {
+            **_shared_content,
+            **_shared_secondary_rotation,
+            **_shared_position,
+            **_shared_text_scale,
+            **_shared_layout,
+            **_shared_fonts,
+            **_shared_logo_pos,
+            **_shared_logo_appearance,
+            **_shared_image,
+            **_shared_entrance_anim,
+            **_shared_display_anim,
+            **_shared_text_anim,
+            **_shared_cycle,
+            **_shared_stagger,
+            **_shared_sectioned_bg,
+            **_shared_clock,
+            **_shared_live,
+            **_shared_legacy,
+            'is_visible': False,
+        }
+
+        # ── Per-category overrides ────────────────────────────────────────────
+        _category_overrides = {
             'funeral': {
+                'main_text':              'In Loving Memory',
+                'secondary_phrases':      '["Forever in Our Hearts", "Celebrating a Life Well Lived"]',
                 # Colors
-                'overlay_bg_color': '#000000',
-                'overlay_bg_opacity': 0.9,
-                'main_text_color': '#FFFFFF',
-                'main_text_bg_color': '#000000',
-                'main_text_bg_opacity': 1.0,
-                'secondary_text_color': '#FFD700',
-                'secondary_text_bg_color': '#000000',
+                'overlay_bg_color':       '#000000',
+                'overlay_bg_opacity':     0.9,
+                'main_text_color':        '#FFFFFF',
+                'main_text_bg_color':     '#000000',
+                'main_text_bg_opacity':   1.0,
+                'secondary_text_color':   '#FFD700',
+                'secondary_text_bg_color':  '#000000',
                 'secondary_text_bg_opacity': 1.0,
-                'ticker_text_color': '#FFFFFF',
-                'ticker_bg_color': '#1a1a1a',
-                'ticker_bg_opacity': 0.8,
-                'company_name_color': '#FFD700',
-                'company_name_bg_color': '#000000',
+                'ticker_text_color':      '#FFFFFF',
+                'ticker_bg_color':        '#1a1a1a',
+                'ticker_bg_opacity':      0.8,
+                'company_name_color':     '#FFD700',
+                'company_name_bg_color':  '#000000',
                 'company_name_bg_opacity': 1.0,
-                'footer_text_color': '#CCCCCC',
-                'footer_bg_color': '#1a1a1a',
-                'footer_bg_opacity': 0.7,
-                'accent_color': '#FFD700',
-                'border_color': '#FFD700',
-                'border_width': 0,
+                'footer_text_color':      '#CCCCCC',
+                'footer_bg_color':        '#1a1a1a',
+                'footer_bg_opacity':      0.7,
+                'accent_color':           '#FFD700',
+                'border_color':           '#FFD700',
+                'border_width':           0,
                 # Logo
-                'logo_animation': 'scale-in',
-                'logo_opacity': 1.0,
-                'logo_border_radius': 0,
-                'logo_shadow': False,
+                'logo_animation':         'scale-in',
                 'logo_display_animation': 'pulse',
                 # Image
-                'image_border_color': '#FFFFFF',
                 'image_display_animation': 'zoom-slow',
-                # Ticker
-                'show_ticker': True,
-                **_shared_logo_pos,
-                **_shared_image,
-                **_shared_fonts,
-                **_shared_display_anim,
-                **_shared_new_features,
             },
             'wedding': {
+                'main_text':              'Together Forever',
+                'secondary_phrases':      '["Celebrating Love & Unity", "Two Hearts Become One"]',
                 # Colors
-                'overlay_bg_color': '#FFFFFF',
-                'overlay_bg_opacity': 0.95,
-                'main_text_color': '#D4AF37',
-                'main_text_bg_color': '#000000',
-                'main_text_bg_opacity': 1.0,
-                'secondary_text_color': '#8B7355',
-                'secondary_text_bg_color': '#000000',
+                'overlay_bg_color':       '#FFFFFF',
+                'overlay_bg_opacity':     0.95,
+                'main_text_color':        '#D4AF37',
+                'main_text_bg_color':     '#000000',
+                'main_text_bg_opacity':   1.0,
+                'secondary_text_color':   '#8B7355',
+                'secondary_text_bg_color':  '#000000',
                 'secondary_text_bg_opacity': 1.0,
-                'ticker_text_color': '#333333',
-                'ticker_bg_color': '#F5F5DC',
-                'ticker_bg_opacity': 0.9,
-                'company_name_color': '#D4AF37',
-                'company_name_bg_color': '#000000',
+                'ticker_text_color':      '#333333',
+                'ticker_bg_color':        '#F5F5DC',
+                'ticker_bg_opacity':      0.9,
+                'company_name_color':     '#D4AF37',
+                'company_name_bg_color':  '#000000',
                 'company_name_bg_opacity': 1.0,
-                'footer_text_color': '#666666',
-                'footer_bg_color': '#F5F5DC',
-                'footer_bg_opacity': 0.8,
-                'accent_color': '#D4AF37',
-                'border_color': '#D4AF37',
-                'border_width': 2,
+                'footer_text_color':      '#666666',
+                'footer_bg_color':        '#F5F5DC',
+                'footer_bg_opacity':      0.8,
+                'accent_color':           '#D4AF37',
+                'border_color':           '#D4AF37',
+                'border_width':           2,
                 # Logo
-                'logo_animation': 'fade-in',
-                'logo_opacity': 1.0,
-                'logo_border_radius': 50,
-                'logo_shadow': True,
+                'logo_animation':         'fade-in',
+                'logo_border_radius':     50,
+                'logo_shadow':            True,
                 'logo_display_animation': 'float',
                 # Image
-                'image_border_color': '#D4AF37',
-                'image_position': 'right',
+                'image_border_color':     '#D4AF37',
+                'image_position':         'right',
                 'image_display_animation': 'pan',
-                # Ticker
-                'show_ticker': True,
-                **_shared_logo_pos,
-                **{**_shared_image, 'image_position': 'right'},
-                **_shared_fonts,
-                **_shared_display_anim,
-                **_shared_new_features,
             },
             'ceremony': {
+                'main_text':              'Special Ceremony',
+                'secondary_phrases':      '["A Moment to Remember", "Celebrating Excellence"]',
                 # Colors
-                'overlay_bg_color': '#1a237e',
-                'overlay_bg_opacity': 0.9,
-                'main_text_color': '#FFFFFF',
-                'main_text_bg_color': '#000000',
-                'main_text_bg_opacity': 1.0,
-                'secondary_text_color': '#FFD700',
-                'secondary_text_bg_color': '#000000',
+                'overlay_bg_color':       '#1a237e',
+                'overlay_bg_opacity':     0.9,
+                'main_text_color':        '#FFFFFF',
+                'main_text_bg_color':     '#000000',
+                'main_text_bg_opacity':   1.0,
+                'secondary_text_color':   '#FFD700',
+                'secondary_text_bg_color':  '#000000',
                 'secondary_text_bg_opacity': 1.0,
-                'ticker_text_color': '#FFFFFF',
-                'ticker_bg_color': '#0d47a1',
-                'ticker_bg_opacity': 0.8,
-                'company_name_color': '#FFD700',
-                'company_name_bg_color': '#000000',
+                'ticker_text_color':      '#FFFFFF',
+                'ticker_bg_color':        '#0d47a1',
+                'ticker_bg_opacity':      0.8,
+                'company_name_color':     '#FFD700',
+                'company_name_bg_color':  '#000000',
                 'company_name_bg_opacity': 1.0,
-                'footer_text_color': '#DDDDDD',
-                'footer_bg_color': '#0d47a1',
-                'footer_bg_opacity': 0.7,
-                'accent_color': '#FFD700',
-                'border_color': '#FFD700',
-                'border_width': 1,
+                'footer_text_color':      '#DDDDDD',
+                'footer_bg_color':        '#0d47a1',
+                'footer_bg_opacity':      0.7,
+                'accent_color':           '#FFD700',
+                'border_color':           '#FFD700',
+                'border_width':           1,
                 # Logo
-                'logo_animation': 'rotate-in',
-                'logo_opacity': 1.0,
-                'logo_border_radius': 10,
-                'logo_shadow': False,
+                'logo_animation':         'rotate-in',
+                'logo_border_radius':     10,
                 'logo_display_animation': 'rotate-slow',
                 # Image
-                'image_size': 120,
-                'image_border_color': '#FFD700',
-                'image_shape': 'rounded',
-                'image_border_width': 2,
-                'image_position': 'top',
+                'image_size':             120,
+                'image_border_color':     '#FFD700',
+                'image_shape':            'rounded',
+                'image_border_width':     2,
+                'image_position':         'top',
                 'image_display_animation': 'zoom-slow',
-                # Ticker
-                'show_ticker': True,
-                **_shared_logo_pos,
-                **{**_shared_image,
-                   'image_size': 120,
-                   'image_shape': 'rounded',
-                   'image_border_width': 2,
-                   'image_position': 'top'},
-                **_shared_fonts,
-                **_shared_display_anim,
-                **_shared_new_features,
             },
         }
 
-        return defaults.get(category, defaults['funeral'])
+        overrides = _category_overrides.get(category, _category_overrides['funeral'])
+        return {**_base, **overrides}
 
 
 class OCRSession(db.Model):

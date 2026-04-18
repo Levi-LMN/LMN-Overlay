@@ -668,12 +668,24 @@ function applyPositioning(s) {
   imgWrapEl.style.transform = 'none';
 
   if (s.show_category_image && s.category_image) {
-    if      (ipos === 'left')      { imgWrapEl.style.left   = -half+'px'; imgWrapEl.style.top    = '50%'; imgWrapEl.style.transform = 'translateY(-50%)'; txtEl.style.paddingLeft   = (pad+half+gap)+'px'; }
-    else if (ipos === 'right')     { imgWrapEl.style.right  = -half+'px'; imgWrapEl.style.top    = '50%'; imgWrapEl.style.transform = 'translateY(-50%)'; txtEl.style.paddingRight  = (pad+half+gap)+'px'; }
-    else if (ipos === 'top')       { imgWrapEl.style.top    = -half+'px'; imgWrapEl.style.left   = '50%'; imgWrapEl.style.transform = 'translateX(-50%)'; txtEl.style.paddingTop    = (pad+half+gap)+'px'; }
-    else if (ipos === 'bottom')    { imgWrapEl.style.bottom = -half+'px'; imgWrapEl.style.left   = '50%'; imgWrapEl.style.transform = 'translateX(-50%)'; txtEl.style.paddingBottom = (pad+half+gap)+'px'; }
-    else if (ipos === 'top-left')  { imgWrapEl.style.top    = -half+'px'; imgWrapEl.style.left   = -half+'px'; txtEl.style.paddingTop  = (pad+half+gap)+'px'; txtEl.style.paddingLeft   = (pad+half+gap)+'px'; }
-    else if (ipos === 'top-right') { imgWrapEl.style.top    = -half+'px'; imgWrapEl.style.right  = -half+'px'; txtEl.style.paddingTop  = (pad+half+gap)+'px'; txtEl.style.paddingRight  = (pad+half+gap)+'px'; }
+    // Pre-calculate bottom-strip height (clock + ticker) from settings — same formula as syncStripHeight.
+    // Used to shift left/right images upward so they don't overlap the clock/ticker strip.
+    const _clockOn  = s.show_clock;
+    // Ticker is flowing text — image overlapping it is fine. Only the static clock
+    // block needs the image shifted up to avoid being physically covered.
+    const _stripFs  = parseFloat(s.clock_font_size || 13);
+    const _stripH   = _clockOn ? Math.round(_stripFs * 2.4) : 0;
+    // Shift image centre up by half the clock strip height; stays at 50% when clock is off
+    const _stripOff = _stripH > 0 ? Math.round(_stripH / 2) : 0;
+
+    if      (ipos === 'left')      { imgWrapEl.style.left   = -half+'px'; imgWrapEl.style.top    = _stripOff > 0 ? `calc(50% - ${_stripOff}px)` : '50%'; imgWrapEl.style.transform = 'translateY(-50%)'; txtEl.style.paddingLeft   = (pad+half+gap)+'px'; }
+    else if (ipos === 'right')     { imgWrapEl.style.right  = -half+'px'; imgWrapEl.style.top    = _stripOff > 0 ? `calc(50% - ${_stripOff}px)` : '50%'; imgWrapEl.style.transform = 'translateY(-50%)'; txtEl.style.paddingRight  = (pad+half+gap)+'px'; }
+    // For top/bottom/corner positions: use only pad+gap (not pad+half+gap) so the overlay
+    // background doesn't grow an empty zone — the image simply hugs / overlaps the edge.
+    else if (ipos === 'top')       { imgWrapEl.style.top    = -half+'px'; imgWrapEl.style.left   = '50%'; imgWrapEl.style.transform = 'translateX(-50%)'; txtEl.style.paddingTop    = (pad+gap)+'px'; }
+    else if (ipos === 'bottom')    { imgWrapEl.style.bottom = -half+'px'; imgWrapEl.style.left   = '50%'; imgWrapEl.style.transform = 'translateX(-50%)'; txtEl.style.paddingBottom = (pad+gap)+'px'; }
+    else if (ipos === 'top-left')  { imgWrapEl.style.top    = -half+'px'; imgWrapEl.style.left   = -half+'px'; txtEl.style.paddingTop  = (pad+gap)+'px'; txtEl.style.paddingLeft   = (pad+half+gap)+'px'; }
+    else if (ipos === 'top-right') { imgWrapEl.style.top    = -half+'px'; imgWrapEl.style.right  = -half+'px'; txtEl.style.paddingTop  = (pad+gap)+'px'; txtEl.style.paddingRight  = (pad+half+gap)+'px'; }
   }
 
   /* ── Image appearance ────────────────────────────────────────────────── */

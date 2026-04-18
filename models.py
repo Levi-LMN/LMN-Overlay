@@ -107,6 +107,8 @@ class OverlaySettings(db.Model):
     show_category_image = db.Column(db.Boolean, default=True)
     show_company_logo = db.Column(db.Boolean, default=True)
     show_ticker = db.Column(db.Boolean, default=True)
+    show_secondary_text = db.Column(db.Boolean, default=True)
+    show_company_name = db.Column(db.Boolean, default=True)
 
     # ── Secondary Text Rotation ────────────────────────────────────────────
     secondary_rotation_enabled = db.Column(db.Boolean, default=False)

@@ -153,6 +153,8 @@ def manage_settings(category):
             ('enable_text_truncation', 'enable_text_truncation'),
             ('logo_shadow', 'logo_shadow'),
             ('show_ticker', 'show_ticker'),
+            ('show_secondary_text', 'show_secondary_text'),
+            ('show_company_name', 'show_company_name'),
             ('logo_display_animation_enabled', 'logo_display_animation_enabled'),
             ('image_display_animation_enabled', 'image_display_animation_enabled'),
             ('company_name_italic', 'company_name_italic'),
@@ -339,6 +341,8 @@ def settings_to_dict(settings):
         'show_category_image': settings.show_category_image,
         'show_company_logo': settings.show_company_logo,
         'show_ticker': settings.show_ticker,
+        'show_secondary_text': settings.show_secondary_text if settings.show_secondary_text is not None else True,
+        'show_company_name': settings.show_company_name if settings.show_company_name is not None else True,
 
         # Granular Color Controls
         'overlay_bg_color': settings.overlay_bg_color,

@@ -376,89 +376,97 @@ input[type="range"]{accent-color:#4F46E5}
 
             <div class="settings-section" data-section-tab="content">
                 <h3><i class="fas fa-text-height"></i>Secondary Text</h3>
-                <p class="text-xs text-indigo-500 mb-3 flex items-center gap-1"><i class="fas fa-magic"></i> Animation for this text is set in the <button onclick="switchTab('animations',document.querySelector('[data-tab=animations]'))" class="underline font-semibold hover:text-indigo-700">Animations tab</button>.</p>
-                <div class="form-group">
-                    <label class="form-label">Text Content</label>
-                    <input type="text" id="secondary_text" class="form-input" value="{{ settings.secondary_text or '' }}" onchange="updateSetting('secondary_text',this.value)">
-                </div>
-                <div class="grid-2">
+                {{ toggle_row('Show Secondary Text','show_secondary_text_tog', settings.show_secondary_text is not false, "toggleShowSecondaryText(this)") }}
+                <div id="secondary_text_controls" style="display:{% if settings.show_secondary_text is not false %}block{% else %}none{% endif %};">
+                    <p class="text-xs text-indigo-500 mb-3 flex items-center gap-1"><i class="fas fa-magic"></i> Animation for this text is set in the <button onclick="switchTab('animations',document.querySelector('[data-tab=animations]'))" class="underline font-semibold hover:text-indigo-700">Animations tab</button>.</p>
                     <div class="form-group">
-                        <label class="form-label">Font Size (px)</label>
-                        <input type="number" id="secondary_font_size" class="form-input" value="{{ settings.secondary_font_size or 24 }}" onchange="updateSetting('secondary_font_size',this.value)">
+                        <label class="form-label">Text Content</label>
+                        <input type="text" id="secondary_text" class="form-input" value="{{ settings.secondary_text or '' }}" onchange="updateSetting('secondary_text',this.value)">
                     </div>
-                    <div class="form-group per-section-font" id="secondary_font_family_group" style="display:{% if settings.main_font_family or settings.secondary_font_family or settings.ticker_font_family or settings.company_name_font_family %}block{% else %}none{% endif %};">
-                        <label class="form-label">Font Family</label>
-                        {{ font_select('secondary_font_family', settings.secondary_font_family, 'secondary_font_family') }}
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label class="form-label flex items-center justify-between">
-                        <span>Enable Rotation</span>
-                        <div class="toggle-checkbox {% if settings.secondary_rotation_enabled %}checked{% endif %}" id="secondary_rotation_toggle" onclick="toggleSecondaryRotation(this)"></div>
-                    </label>
-                </div>
-                <div id="rotation_controls" style="display:{% if settings.secondary_rotation_enabled %}block{% else %}none{% endif %};">
                     <div class="grid-2">
-                        {{ range_slider('secondary_display_duration','Display Duration', settings.secondary_display_duration or 3.0, 0.5, 15, 0.5, 's', 'secondary_display_duration') }}
-                        {{ range_slider('secondary_transition_duration','Transition Duration', settings.secondary_transition_duration or 0.5, 0.1, 3, 0.1, 's', 'secondary_transition_duration') }}
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Transition Type</label>
-                        <select id="secondary_transition_type" class="form-input" onchange="updateSetting('secondary_transition_type',this.value)">
-                            <option value="fade"  {% if settings.secondary_transition_type == 'fade' or not settings.secondary_transition_type %}selected{% endif %}>🌅 Fade</option>
-                            <option value="slide" {% if settings.secondary_transition_type == 'slide' %}selected{% endif %}>➡️ Slide</option>
-                            <option value="none"  {% if settings.secondary_transition_type == 'none' %}selected{% endif %}>None</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Rotating Phrases</label>
-                        <p class="text-xs text-gray-500 mb-2">Add multiple phrases to rotate through</p>
-                        <div class="flex gap-2 mb-3">
-                            <input type="text" id="new_phrase_input" class="form-input" placeholder="Enter a new phrase…" onkeypress="if(event.key==='Enter') addPhrase()">
-                            <button onclick="addPhrase()" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 whitespace-nowrap"><i class="fas fa-plus mr-1"></i>Add</button>
+                        <div class="form-group">
+                            <label class="form-label">Font Size (px)</label>
+                            <input type="number" id="secondary_font_size" class="form-input" value="{{ settings.secondary_font_size or 24 }}" onchange="updateSetting('secondary_font_size',this.value)">
                         </div>
-                        <div id="phrases_list" class="space-y-2"></div>
+                        <div class="form-group per-section-font" id="secondary_font_family_group" style="display:{% if settings.main_font_family or settings.secondary_font_family or settings.ticker_font_family or settings.company_name_font_family %}block{% else %}none{% endif %};">
+                            <label class="form-label">Font Family</label>
+                            {{ font_select('secondary_font_family', settings.secondary_font_family, 'secondary_font_family') }}
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label flex items-center justify-between">
+                            <span>Enable Rotation</span>
+                            <div class="toggle-checkbox {% if settings.secondary_rotation_enabled %}checked{% endif %}" id="secondary_rotation_toggle" onclick="toggleSecondaryRotation(this)"></div>
+                        </label>
+                    </div>
+                    <div id="rotation_controls" style="display:{% if settings.secondary_rotation_enabled %}block{% else %}none{% endif %};">
+                        <div class="grid-2">
+                            {{ range_slider('secondary_display_duration','Display Duration', settings.secondary_display_duration or 3.0, 0.5, 15, 0.5, 's', 'secondary_display_duration') }}
+                            {{ range_slider('secondary_transition_duration','Transition Duration', settings.secondary_transition_duration or 0.5, 0.1, 3, 0.1, 's', 'secondary_transition_duration') }}
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Transition Type</label>
+                            <select id="secondary_transition_type" class="form-input" onchange="updateSetting('secondary_transition_type',this.value)">
+                                <option value="fade"  {% if settings.secondary_transition_type == 'fade' or not settings.secondary_transition_type %}selected{% endif %}>🌅 Fade</option>
+                                <option value="slide" {% if settings.secondary_transition_type == 'slide' %}selected{% endif %}>➡️ Slide</option>
+                                <option value="none"  {% if settings.secondary_transition_type == 'none' %}selected{% endif %}>None</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Rotating Phrases</label>
+                            <p class="text-xs text-gray-500 mb-2">Add multiple phrases to rotate through</p>
+                            <div class="flex gap-2 mb-3">
+                                <input type="text" id="new_phrase_input" class="form-input" placeholder="Enter a new phrase…" onkeypress="if(event.key==='Enter') addPhrase()">
+                                <button onclick="addPhrase()" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 whitespace-nowrap"><i class="fas fa-plus mr-1"></i>Add</button>
+                            </div>
+                            <div id="phrases_list" class="space-y-2"></div>
+                        </div>
                     </div>
                 </div>
             </div>
 
             <div class="settings-section" data-section-tab="content">
                 <h3><i class="fas fa-scroll"></i>Ticker</h3>
-                {{ toggle_row('Show Ticker','show_ticker_tog', settings.show_ticker, "toggleBoolean(this,'show_ticker')") }}
-                <div class="form-group">
-                    <label class="form-label">Ticker Text</label>
-                    <textarea id="ticker_text" class="form-input" rows="3" onchange="updateSetting('ticker_text',this.value)">{{ settings.ticker_text or '' }}</textarea>
-                </div>
-                <div class="grid-2">
+                {{ toggle_row('Show Ticker','show_ticker_tog', settings.show_ticker, "toggleShowTicker(this)") }}
+                <div id="ticker_controls" style="display:{% if settings.show_ticker %}block{% else %}none{% endif %};">
                     <div class="form-group">
-                        <label class="form-label">Font Size (px)</label>
-                        <input type="number" id="ticker_font_size" class="form-input" value="{{ settings.ticker_font_size or 18 }}" onchange="updateSetting('ticker_font_size',this.value)">
+                        <label class="form-label">Ticker Text</label>
+                        <textarea id="ticker_text" class="form-input" rows="3" onchange="updateSetting('ticker_text',this.value)">{{ settings.ticker_text or '' }}</textarea>
                     </div>
-                    <div class="form-group per-section-font" id="ticker_font_family_group" style="display:{% if settings.main_font_family or settings.secondary_font_family or settings.ticker_font_family or settings.company_name_font_family %}block{% else %}none{% endif %};">
-                        <label class="form-label">Font Family</label>
-                        {{ font_select('ticker_font_family', settings.ticker_font_family, 'ticker_font_family') }}
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label class="form-label">Font Size (px)</label>
+                            <input type="number" id="ticker_font_size" class="form-input" value="{{ settings.ticker_font_size or 18 }}" onchange="updateSetting('ticker_font_size',this.value)">
+                        </div>
+                        <div class="form-group per-section-font" id="ticker_font_family_group" style="display:{% if settings.main_font_family or settings.secondary_font_family or settings.ticker_font_family or settings.company_name_font_family %}block{% else %}none{% endif %};">
+                            <label class="form-label">Font Family</label>
+                            {{ font_select('ticker_font_family', settings.ticker_font_family, 'ticker_font_family') }}
+                        </div>
                     </div>
+                    {{ range_slider('ticker_speed','Scroll Speed (1–100)', settings.ticker_speed or 50, 10, 100, 1, '', 'ticker_speed') }}
                 </div>
-                {{ range_slider('ticker_speed','Scroll Speed (1–100)', settings.ticker_speed or 50, 10, 100, 1, '', 'ticker_speed') }}
             </div>
 
             <div class="settings-section" data-section-tab="content">
                 <h3><i class="fas fa-building"></i>Company Name</h3>
-                <div class="form-group">
-                    <label class="form-label">Company Name</label>
-                    <input type="text" id="company_name" class="form-input" value="{{ settings.company_name or '' }}" onchange="updateSetting('company_name',this.value)">
-                </div>
-                <div class="grid-2">
+                {{ toggle_row('Show Company Name','show_company_name_tog', settings.show_company_name is not false, "toggleShowCompanyName(this)") }}
+                <div id="company_name_controls" style="display:{% if settings.show_company_name is not false %}block{% else %}none{% endif %};">
                     <div class="form-group">
-                        <label class="form-label">Font Size (px)</label>
-                        <input type="number" id="company_name_font_size" class="form-input" value="{{ settings.company_name_font_size or 18 }}" onchange="updateSetting('company_name_font_size',this.value)">
+                        <label class="form-label">Company Name</label>
+                        <input type="text" id="company_name" class="form-input" value="{{ settings.company_name or '' }}" onchange="updateSetting('company_name',this.value)">
                     </div>
-                    <div class="form-group per-section-font" id="company_name_font_family_group" style="display:{% if settings.main_font_family or settings.secondary_font_family or settings.ticker_font_family or settings.company_name_font_family %}block{% else %}none{% endif %};">
-                        <label class="form-label">Font Family</label>
-                        {{ font_select('company_name_font_family', settings.company_name_font_family, 'company_name_font_family') }}
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label class="form-label">Font Size (px)</label>
+                            <input type="number" id="company_name_font_size" class="form-input" value="{{ settings.company_name_font_size or 18 }}" onchange="updateSetting('company_name_font_size',this.value)">
+                        </div>
+                        <div class="form-group per-section-font" id="company_name_font_family_group" style="display:{% if settings.main_font_family or settings.secondary_font_family or settings.ticker_font_family or settings.company_name_font_family %}block{% else %}none{% endif %};">
+                            <label class="form-label">Font Family</label>
+                            {{ font_select('company_name_font_family', settings.company_name_font_family, 'company_name_font_family') }}
+                        </div>
                     </div>
+                    {{ toggle_row('Italic Style','company_name_italic_tog', settings.company_name_italic is not false, "toggleBoolean(this,'company_name_italic')") }}
                 </div>
-                {{ toggle_row('Italic Style','company_name_italic_tog', settings.company_name_italic is not false, "toggleBoolean(this,'company_name_italic')") }}
             </div>
 
         </div>{# /content #}
@@ -656,17 +664,21 @@ input[type="range"]{accent-color:#4F46E5}
                 <h3><i class="fas fa-sync"></i>Display Animations (Continuous)</h3>
                 <div class="grid-2">
                     <div>
-                        {{ toggle_row('Enable Logo Display Animation','logo_disp_anim_tog', settings.logo_display_animation_enabled, "toggleBoolean(this,'logo_display_animation_enabled')") }}
-                        <div class="form-group">
-                            <label class="form-label">Logo Animation</label>
-                            <select id="logo_display_animation" class="form-input" onchange="updateSetting('logo_display_animation',this.value)">{{ display_anim_options(settings.logo_display_animation) }}</select>
+                        {{ toggle_row('Enable Logo Display Animation','logo_disp_anim_tog', settings.logo_display_animation_enabled, "toggleLogoDispAnim(this)") }}
+                        <div id="logo_disp_anim_controls" style="display:{% if settings.logo_display_animation_enabled %}block{% else %}none{% endif %};">
+                            <div class="form-group">
+                                <label class="form-label">Logo Animation</label>
+                                <select id="logo_display_animation" class="form-input" onchange="updateSetting('logo_display_animation',this.value)">{{ display_anim_options(settings.logo_display_animation) }}</select>
+                            </div>
                         </div>
                     </div>
                     <div>
-                        {{ toggle_row('Enable Image Display Animation','img_disp_anim_tog', settings.image_display_animation_enabled, "toggleBoolean(this,'image_display_animation_enabled')") }}
-                        <div class="form-group">
-                            <label class="form-label">Image Animation</label>
-                            <select id="image_display_animation" class="form-input" onchange="updateSetting('image_display_animation',this.value)">{{ display_anim_options(settings.image_display_animation, include_pan=True) }}</select>
+                        {{ toggle_row('Enable Image Display Animation','img_disp_anim_tog', settings.image_display_animation_enabled, "toggleImgDispAnim(this)") }}
+                        <div id="img_disp_anim_controls" style="display:{% if settings.image_display_animation_enabled %}block{% else %}none{% endif %};">
+                            <div class="form-group">
+                                <label class="form-label">Image Animation</label>
+                                <select id="image_display_animation" class="form-input" onchange="updateSetting('image_display_animation',this.value)">{{ display_anim_options(settings.image_display_animation, include_pan=True) }}</select>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -675,48 +687,52 @@ input[type="range"]{accent-color:#4F46E5}
             <div class="settings-section" data-section-tab="animations">
                 <h3><i class="fas fa-clock"></i>Overlay Auto-Cycle</h3>
                 <p class="text-sm text-gray-500 mb-3">Automatically show and hide the overlay on a repeating timer.</p>
-                {{ toggle_row('Enable Auto-Cycle','overlay_cycle_tog', settings.overlay_cycle_enabled, "toggleBoolean(this,'overlay_cycle_enabled')") }}
-                <div class="grid-2">
-                    {{ range_slider('overlay_visible_duration','Visible Duration', settings.overlay_visible_duration or 10, 1, 300, 1, 's', 'overlay_visible_duration', hint='How long the overlay stays on screen') }}
-                    {{ range_slider('overlay_hidden_duration','Hidden Duration', settings.overlay_hidden_duration or 5, 1, 300, 1, 's', 'overlay_hidden_duration', hint='How long it disappears between appearances') }}
-                </div>
-                <p class="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2 mt-1">Entry &amp; Exit Animations</p>
-                <div class="grid-2">
-                    <div class="form-group">
-                        <label class="form-label">🟢 Entry Animation</label>
-                        <select id="cycle_entry_animation" class="form-input" onchange="updateSetting('cycle_entry_animation',this.value)">{{ cycle_anim_options(settings.cycle_entry_animation) }}</select>
+                {{ toggle_row('Enable Auto-Cycle','overlay_cycle_tog', settings.overlay_cycle_enabled, "toggleOverlayCycle(this)") }}
+                <div id="overlay_cycle_controls" style="display:{% if settings.overlay_cycle_enabled %}block{% else %}none{% endif %};">
+                    <div class="grid-2">
+                        {{ range_slider('overlay_visible_duration','Visible Duration', settings.overlay_visible_duration or 10, 1, 300, 1, 's', 'overlay_visible_duration', hint='How long the overlay stays on screen') }}
+                        {{ range_slider('overlay_hidden_duration','Hidden Duration', settings.overlay_hidden_duration or 5, 1, 300, 1, 's', 'overlay_hidden_duration', hint='How long it disappears between appearances') }}
                     </div>
-                    <div class="form-group">
-                        <label class="form-label">🔴 Exit Animation</label>
-                        <select id="cycle_exit_animation" class="form-input" onchange="updateSetting('cycle_exit_animation',this.value)">{{ cycle_anim_options(settings.cycle_exit_animation) }}</select>
+                    <p class="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2 mt-1">Entry &amp; Exit Animations</p>
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label class="form-label">🟢 Entry Animation</label>
+                            <select id="cycle_entry_animation" class="form-input" onchange="updateSetting('cycle_entry_animation',this.value)">{{ cycle_anim_options(settings.cycle_entry_animation) }}</select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">🔴 Exit Animation</label>
+                            <select id="cycle_exit_animation" class="form-input" onchange="updateSetting('cycle_exit_animation',this.value)">{{ cycle_anim_options(settings.cycle_exit_animation) }}</select>
+                        </div>
                     </div>
+                    {{ range_slider('cycle_transition_duration','Transition Duration', settings.cycle_transition_duration or 0.6, 0.2, 2.0, 0.1, 's', 'cycle_transition_duration') }}
                 </div>
-                {{ range_slider('cycle_transition_duration','Transition Duration', settings.cycle_transition_duration or 0.6, 0.2, 2.0, 0.1, 's', 'cycle_transition_duration') }}
             </div>
 
             <div class="settings-section" data-section-tab="animations">
                 <h3><i class="fas fa-layer-group"></i>Element Stagger (Lower-Third Style)</h3>
                 <p class="text-xs text-gray-500 mb-3">Each text element enters and exits one by one — professional broadcast lower-third style.</p>
-                {{ toggle_row('Enable Element Stagger','stagger_tog', settings.stagger_enabled, "toggleBoolean(this,'stagger_enabled')") }}
-                <div class="grid-2">
-                    <div class="form-group">
-                        <label class="form-label">Exit Element Style</label>
-                        <select id="stagger_element_exit" class="form-input" onchange="updateSetting('stagger_element_exit',this.value)">{{ stagger_anim_options(settings.stagger_element_exit) }}</select>
+                {{ toggle_row('Enable Element Stagger','stagger_tog', settings.stagger_enabled, "toggleStagger(this)") }}
+                <div id="stagger_controls" style="display:{% if settings.stagger_enabled %}block{% else %}none{% endif %};">
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label class="form-label">Exit Element Style</label>
+                            <select id="stagger_element_exit" class="form-input" onchange="updateSetting('stagger_element_exit',this.value)">{{ stagger_anim_options(settings.stagger_element_exit) }}</select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Entry Element Style</label>
+                            <select id="stagger_element_entry" class="form-input" onchange="updateSetting('stagger_element_entry',this.value)">{{ stagger_anim_options(settings.stagger_element_entry) }}</select>
+                        </div>
                     </div>
+                    {{ range_slider('stagger_delay','Stagger Delay', settings.stagger_delay or 0.3, 0.1, 1.5, 0.1, 's', 'stagger_delay') }}
                     <div class="form-group">
-                        <label class="form-label">Entry Element Style</label>
-                        <select id="stagger_element_entry" class="form-input" onchange="updateSetting('stagger_element_entry',this.value)">{{ stagger_anim_options(settings.stagger_element_entry) }}</select>
+                        <label class="form-label">Exit Order <span class="text-xs font-normal text-gray-400">(drag to reorder; entry is reversed)</span></label>
+                        <ul id="stagger_order_list" class="stagger-order-list" data-value="{{ settings.stagger_order or 'main,secondary,company' }}"></ul>
+                        <input type="hidden" id="stagger_order" value="{{ settings.stagger_order or 'main,secondary,company' }}">
                     </div>
-                </div>
-                {{ range_slider('stagger_delay','Stagger Delay', settings.stagger_delay or 0.3, 0.1, 1.5, 0.1, 's', 'stagger_delay') }}
-                <div class="form-group">
-                    <label class="form-label">Exit Order <span class="text-xs font-normal text-gray-400">(drag to reorder; entry is reversed)</span></label>
-                    <ul id="stagger_order_list" class="stagger-order-list" data-value="{{ settings.stagger_order or 'main,secondary,company' }}"></ul>
-                    <input type="hidden" id="stagger_order" value="{{ settings.stagger_order or 'main,secondary,company' }}">
-                </div>
-                <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-700 mt-2">
-                    <i class="fas fa-info-circle mr-1"></i>
-                    Cycle only runs when the overlay is <strong>set to visible</strong> from the control panel. Stagger runs <em>inside</em> the visible phase.
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-700 mt-2">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        Cycle only runs when the overlay is <strong>set to visible</strong> from the control panel. Stagger runs <em>inside</em> the visible phase.
+                    </div>
                 </div>
             </div>
 
@@ -947,129 +963,132 @@ input[type="range"]{accent-color:#4F46E5}
 
             <div class="settings-section" data-section-tab="assets">
                 <h3><i class="fas fa-image"></i>Company Logo</h3>
-                {{ toggle_row('Show Logo','show_logo_tog', settings.show_company_logo, "toggleBoolean(this,'show_company_logo')") }}
-                {% if settings.company_logo %}<div class="mb-3"><img src="{{ url_for('static',filename=settings.company_logo) }}" alt="Logo" class="max-w-xs rounded"></div>{% endif %}
-                <div class="form-group"><label class="form-label">Upload Logo</label><input type="file" accept="image/*" onchange="uploadFile(this,'{{ category }}','logo')" class="form-input"></div>
-                {% if settings.company_logo %}<button onclick="removeFile('{{ category }}','logo')" class="mb-4 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700">Remove Logo</button>{% endif %}
-                <div class="grid-2 mt-2">
-                    <div class="form-group"><label class="form-label">Logo Size (px)</label><input type="number" id="logo_size" class="form-input" value="{{ settings.logo_size or 80 }}" onchange="updateSetting('logo_size',this.value)"></div>
-                    <div class="form-group"><label class="form-label">Border Radius (px)</label><input type="number" id="logo_border_radius" class="form-input" value="{{ settings.logo_border_radius or 0 }}" onchange="updateSetting('logo_border_radius',this.value)"></div>
-                </div>
-                {{ range_slider('logo_opacity','Logo Opacity', settings.logo_opacity or 1, 0, 1, 0.05, '', 'logo_opacity') }}
-                {{ toggle_row('Logo Shadow','logo_shadow_tog', settings.logo_shadow, "toggleBoolean(this,'logo_shadow')") }}
-                <div class="grid-2 mt-2">
-                    <div class="form-group">
-                        <label class="form-label">Vertical Position</label>
-                        <select id="logo_vertical_position" class="form-input" onchange="updateSetting('logo_vertical_position',this.value); toggleLogoCustomPos()">
-                            <option value="top"    {% if (settings.logo_vertical_position or 'top') == 'top' %}selected{% endif %}>Top</option>
-                            <option value="middle" {% if settings.logo_vertical_position == 'middle' %}selected{% endif %}>Middle</option>
-                            <option value="bottom" {% if settings.logo_vertical_position == 'bottom' %}selected{% endif %}>Bottom</option>
-                            <option value="custom" {% if settings.logo_vertical_position == 'custom' %}selected{% endif %}>Custom</option>
-                        </select>
+                {{ toggle_row('Show Logo','show_logo_tog', settings.show_company_logo, "toggleShowLogo(this)") }}
+                <div id="logo_controls" style="display:{% if settings.show_company_logo %}block{% else %}none{% endif %};">
+                    {% if settings.company_logo %}<div class="mb-3"><img src="{{ url_for('static',filename=settings.company_logo) }}" alt="Logo" class="max-w-xs rounded"></div>{% endif %}
+                    <div class="form-group"><label class="form-label">Upload Logo</label><input type="file" accept="image/*" onchange="uploadFile(this,'{{ category }}','logo')" class="form-input"></div>
+                    {% if settings.company_logo %}<button onclick="removeFile('{{ category }}','logo')" class="mb-4 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700">Remove Logo</button>{% endif %}
+                    <div class="grid-2 mt-2">
+                        <div class="form-group"><label class="form-label">Logo Size (px)</label><input type="number" id="logo_size" class="form-input" value="{{ settings.logo_size or 80 }}" onchange="updateSetting('logo_size',this.value)"></div>
+                        <div class="form-group"><label class="form-label">Border Radius (px)</label><input type="number" id="logo_border_radius" class="form-input" value="{{ settings.logo_border_radius or 0 }}" onchange="updateSetting('logo_border_radius',this.value)"></div>
                     </div>
-                    <div class="form-group">
-                        <label class="form-label">Horizontal Position</label>
-                        <select id="logo_horizontal_position" class="form-input" onchange="updateSetting('logo_horizontal_position',this.value); toggleLogoCustomPos()">
-                            <option value="left"   {% if settings.logo_horizontal_position == 'left' %}selected{% endif %}>Left</option>
-                            <option value="center" {% if settings.logo_horizontal_position == 'center' %}selected{% endif %}>Center</option>
-                            <option value="right"  {% if (settings.logo_horizontal_position or 'right') == 'right' %}selected{% endif %}>Right</option>
-                            <option value="custom" {% if settings.logo_horizontal_position == 'custom' %}selected{% endif %}>Custom</option>
-                        </select>
+                    {{ range_slider('logo_opacity','Logo Opacity', settings.logo_opacity or 1, 0, 1, 0.05, '', 'logo_opacity') }}
+                    {{ toggle_row('Logo Shadow','logo_shadow_tog', settings.logo_shadow, "toggleBoolean(this,'logo_shadow')") }}
+                    <div class="grid-2 mt-2">
+                        <div class="form-group">
+                            <label class="form-label">Vertical Position</label>
+                            <select id="logo_vertical_position" class="form-input" onchange="updateSetting('logo_vertical_position',this.value); toggleLogoCustomPos()">
+                                <option value="top"    {% if (settings.logo_vertical_position or 'top') == 'top' %}selected{% endif %}>Top</option>
+                                <option value="middle" {% if settings.logo_vertical_position == 'middle' %}selected{% endif %}>Middle</option>
+                                <option value="bottom" {% if settings.logo_vertical_position == 'bottom' %}selected{% endif %}>Bottom</option>
+                                <option value="custom" {% if settings.logo_vertical_position == 'custom' %}selected{% endif %}>Custom</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Horizontal Position</label>
+                            <select id="logo_horizontal_position" class="form-input" onchange="updateSetting('logo_horizontal_position',this.value); toggleLogoCustomPos()">
+                                <option value="left"   {% if settings.logo_horizontal_position == 'left' %}selected{% endif %}>Left</option>
+                                <option value="center" {% if settings.logo_horizontal_position == 'center' %}selected{% endif %}>Center</option>
+                                <option value="right"  {% if (settings.logo_horizontal_position or 'right') == 'right' %}selected{% endif %}>Right</option>
+                                <option value="custom" {% if settings.logo_horizontal_position == 'custom' %}selected{% endif %}>Custom</option>
+                            </select>
+                        </div>
                     </div>
-                </div>
-                <div id="logo-custom-pos" class="grid-2" style="display:{% if settings.logo_vertical_position == 'custom' or settings.logo_horizontal_position == 'custom' %}grid{% else %}none{% endif %};">
-                    <div class="form-group"><label class="form-label">Custom Top (px)</label><input type="number" id="logo_custom_top" class="form-input" value="{{ settings.logo_custom_top or '' }}" placeholder="e.g. 20" onchange="updateSetting('logo_custom_top',this.value)"></div>
-                    <div class="form-group"><label class="form-label">Custom Bottom (px)</label><input type="number" id="logo_custom_bottom" class="form-input" value="{{ settings.logo_custom_bottom or '' }}" placeholder="e.g. 20" onchange="updateSetting('logo_custom_bottom',this.value)"></div>
-                    <div class="form-group"><label class="form-label">Custom Left (px)</label><input type="number" id="logo_custom_left" class="form-input" value="{{ settings.logo_custom_left or '' }}" placeholder="e.g. 20" onchange="updateSetting('logo_custom_left',this.value)"></div>
-                    <div class="form-group"><label class="form-label">Custom Right (px)</label><input type="number" id="logo_custom_right" class="form-input" value="{{ settings.logo_custom_right or '' }}" placeholder="e.g. 20" onchange="updateSetting('logo_custom_right',this.value)"></div>
-                </div>
-                <div class="mt-3">
-                    <label class="form-label text-xs text-indigo-600 mb-1">Quick-pick position</label>
-                    <div id="logo-pos-grid" class="grid gap-1" style="grid-template-columns:repeat(3,1fr);max-width:160px">
-                        {% set verts=['top','middle','bottom'] %}{% set horizs=['left','center','right'] %}
-                        {% for v in verts %}{% for h in horizs %}
-                        <button type="button" data-v="{{ v }}" data-h="{{ h }}" onclick="setLogoQuickPos('{{ v }}','{{ h }}')"
-                                class="logo-pos-btn h-10 rounded border-2 transition-all text-xs font-medium {% if (settings.logo_vertical_position or 'top') == v and (settings.logo_horizontal_position or 'right') == h %}border-indigo-500 bg-indigo-500 text-white{% else %}border-gray-200 bg-white text-gray-400 hover:border-indigo-300{% endif %}"
-                                title="{{ v|capitalize }} {{ h|capitalize }}">
-                            <i class="fas fa-dot-circle text-xs"></i>
-                        </button>
-                        {% endfor %}{% endfor %}
+                    <div id="logo-custom-pos" class="grid-2" style="display:{% if settings.logo_vertical_position == 'custom' or settings.logo_horizontal_position == 'custom' %}grid{% else %}none{% endif %};">
+                        <div class="form-group"><label class="form-label">Custom Top (px)</label><input type="number" id="logo_custom_top" class="form-input" value="{{ settings.logo_custom_top or '' }}" placeholder="e.g. 20" onchange="updateSetting('logo_custom_top',this.value)"></div>
+                        <div class="form-group"><label class="form-label">Custom Bottom (px)</label><input type="number" id="logo_custom_bottom" class="form-input" value="{{ settings.logo_custom_bottom or '' }}" placeholder="e.g. 20" onchange="updateSetting('logo_custom_bottom',this.value)"></div>
+                        <div class="form-group"><label class="form-label">Custom Left (px)</label><input type="number" id="logo_custom_left" class="form-input" value="{{ settings.logo_custom_left or '' }}" placeholder="e.g. 20" onchange="updateSetting('logo_custom_left',this.value)"></div>
+                        <div class="form-group"><label class="form-label">Custom Right (px)</label><input type="number" id="logo_custom_right" class="form-input" value="{{ settings.logo_custom_right or '' }}" placeholder="e.g. 20" onchange="updateSetting('logo_custom_right',this.value)"></div>
+                    </div>
+                    <div class="mt-3">
+                        <label class="form-label text-xs text-indigo-600 mb-1">Quick-pick position</label>
+                        <div id="logo-pos-grid" class="grid gap-1" style="grid-template-columns:repeat(3,1fr);max-width:160px">
+                            {% set verts=['top','middle','bottom'] %}{% set horizs=['left','center','right'] %}
+                            {% for v in verts %}{% for h in horizs %}
+                            <button type="button" data-v="{{ v }}" data-h="{{ h }}" onclick="setLogoQuickPos('{{ v }}','{{ h }}')"
+                                    class="logo-pos-btn h-10 rounded border-2 transition-all text-xs font-medium {% if (settings.logo_vertical_position or 'top') == v and (settings.logo_horizontal_position or 'right') == h %}border-indigo-500 bg-indigo-500 text-white{% else %}border-gray-200 bg-white text-gray-400 hover:border-indigo-300{% endif %}"
+                                    title="{{ v|capitalize }} {{ h|capitalize }}">
+                                <i class="fas fa-dot-circle text-xs"></i>
+                            </button>
+                            {% endfor %}{% endfor %}
+                        </div>
                     </div>
                 </div>
             </div>
 
             <div class="settings-section" data-section-tab="assets">
                 <h3><i class="fas fa-images"></i>Category Image</h3>
-                {{ toggle_row('Show Category Image','show_cat_img_tog', settings.show_category_image, "toggleBoolean(this,'show_category_image')") }}
-
-                {# ── Current image card ── #}
-                {% if settings.category_image %}
-                <div style="background:#f8f7ff;border:1.5px solid #e0e7ff;border-radius:.75rem;padding:1rem;margin-bottom:1rem;">
-                    <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:.75rem;">
-                        <div id="img-thumb-wrap" style="width:64px;height:64px;overflow:hidden;flex-shrink:0;border:2px solid #c7d2fe;
-                            border-radius:{{ '50%' if (settings.image_shape or 'circle')=='circle' else ('8px' if settings.image_shape=='rounded' else '0') }};">
-                            <img src="{{ url_for('static',filename=settings.category_image) }}" alt="Category"
-                                 style="width:100%;height:100%;object-fit:cover;
-                                 object-position:{{ settings.image_object_position or 'center center' }};
-                                 transform:scale({{ (settings.image_zoom or 100)/100 }});transform-origin:center;">
-                        </div>
-                        <div>
-                            <p style="font-size:.8rem;color:#6b7280;margin:0 0 .35rem;">Category image uploaded</p>
-                            <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
-                                <button onclick="openAdjustModal()" style="padding:.35rem .85rem;background:#4f46e5;color:#fff;border:none;border-radius:.4rem;font-size:.8rem;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:.35rem;">
-                                    <i class="fas fa-crop-alt"></i> Adjust &amp; Preview
-                                </button>
-                                <button onclick="removeFile('{{ category }}','image')" style="padding:.35rem .85rem;background:#fff;color:#dc2626;border:1.5px solid #fca5a5;border-radius:.4rem;font-size:.8rem;font-weight:600;cursor:pointer;">
-                                    <i class="fas fa-trash-alt"></i> Remove
-                                </button>
+                {{ toggle_row('Show Category Image','show_cat_img_tog', settings.show_category_image, "toggleShowCategoryImage(this)") }}
+                <div id="category_image_controls" style="display:{% if settings.show_category_image %}block{% else %}none{% endif %};">
+                    {# ── Current image card ── #}
+                    {% if settings.category_image %}
+                    <div style="background:#f8f7ff;border:1.5px solid #e0e7ff;border-radius:.75rem;padding:1rem;margin-bottom:1rem;">
+                        <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:.75rem;">
+                            <div id="img-thumb-wrap" style="width:64px;height:64px;overflow:hidden;flex-shrink:0;border:2px solid #c7d2fe;
+                                border-radius:{{ '50%' if (settings.image_shape or 'circle')=='circle' else ('8px' if settings.image_shape=='rounded' else '0') }};">
+                                <img src="{{ url_for('static',filename=settings.category_image) }}" alt="Category"
+                                     style="width:100%;height:100%;object-fit:cover;
+                                     object-position:{{ settings.image_object_position or 'center center' }};
+                                     transform:scale({{ (settings.image_zoom or 100)/100 }});transform-origin:center;">
+                            </div>
+                            <div>
+                                <p style="font-size:.8rem;color:#6b7280;margin:0 0 .35rem;">Category image uploaded</p>
+                                <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
+                                    <button onclick="openAdjustModal()" style="padding:.35rem .85rem;background:#4f46e5;color:#fff;border:none;border-radius:.4rem;font-size:.8rem;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:.35rem;">
+                                        <i class="fas fa-crop-alt"></i> Adjust &amp; Preview
+                                    </button>
+                                    <button onclick="removeFile('{{ category }}','image')" style="padding:.35rem .85rem;background:#fff;color:#dc2626;border:1.5px solid #fca5a5;border-radius:.4rem;font-size:.8rem;font-weight:600;cursor:pointer;">
+                                        <i class="fas fa-trash-alt"></i> Remove
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-                {% endif %}
+                    {% endif %}
 
-                <div class="form-group"><label class="form-label">{{ 'Replace' if settings.category_image else 'Upload' }} Category Image</label>
-                    <input type="file" accept="image/*" id="category_image_input" onchange="openImageCropper(this,'{{ category }}')" class="form-input">
-                </div>
+                    <div class="form-group"><label class="form-label">{{ 'Replace' if settings.category_image else 'Upload' }} Category Image</label>
+                        <input type="file" accept="image/*" id="category_image_input" onchange="openImageCropper(this,'{{ category }}')" class="form-input">
+                    </div>
 
-                <hr class="my-4 border-gray-200">
-                <p class="text-sm font-semibold text-gray-600 mb-3 flex items-center gap-2"><i class="fas fa-sliders-h text-indigo-500"></i> Photo Container</p>
-                {{ range_slider('image_size','Size', settings.image_size or 128, 64, 300, 8, 'px', 'image_size') }}
-                <div class="grid-2">
-                    <div class="form-group">
-                        <label class="form-label">Shape</label>
-                        <select id="image_shape" class="form-input" onchange="updateSetting('image_shape',this.value);syncAdjustPreview();">
-                            <option value="circle"  {% if (settings.image_shape or 'circle') == 'circle' %}selected{% endif %}>⭕ Circle</option>
-                            <option value="rounded" {% if settings.image_shape == 'rounded' %}selected{% endif %}>▢ Rounded Square</option>
-                            <option value="square"  {% if settings.image_shape == 'square' %}selected{% endif %}>■ Square</option>
-                        </select>
+                    <hr class="my-4 border-gray-200">
+                    <p class="text-sm font-semibold text-gray-600 mb-3 flex items-center gap-2"><i class="fas fa-sliders-h text-indigo-500"></i> Photo Container</p>
+                    {{ range_slider('image_size','Size', settings.image_size or 128, 64, 300, 8, 'px', 'image_size') }}
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label class="form-label">Shape</label>
+                            <select id="image_shape" class="form-input" onchange="updateSetting('image_shape',this.value);syncAdjustPreview();">
+                                <option value="circle"  {% if (settings.image_shape or 'circle') == 'circle' %}selected{% endif %}>⭕ Circle</option>
+                                <option value="rounded" {% if settings.image_shape == 'rounded' %}selected{% endif %}>▢ Rounded Square</option>
+                                <option value="square"  {% if settings.image_shape == 'square' %}selected{% endif %}>■ Square</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Position</label>
+                            <select id="image_position" class="form-input" onchange="updateSetting('image_position',this.value)">
+                                <option value="left"      {% if (settings.image_position or 'left') == 'left' %}selected{% endif %}>← Left</option>
+                                <option value="right"     {% if settings.image_position == 'right' %}selected{% endif %}>→ Right</option>
+                                <option value="top"       {% if settings.image_position == 'top' %}selected{% endif %}>↑ Top</option>
+                                <option value="top-left"  {% if settings.image_position == 'top-left' %}selected{% endif %}>↖ Top Left</option>
+                                <option value="top-right" {% if settings.image_position == 'top-right' %}selected{% endif %}>↗ Top Right</option>
+                                <option value="bottom"    {% if settings.image_position == 'bottom' %}selected{% endif %}>↓ Bottom</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Image Fit</label>
+                            <select id="image_fit" class="form-input" onchange="updateSetting('image_fit',this.value);syncAdjustPreview();">
+                                <option value="cover"   {% if (settings.image_fit or 'cover') == 'cover' %}selected{% endif %}>Cover (crop to fill)</option>
+                                <option value="contain" {% if settings.image_fit == 'contain' %}selected{% endif %}>Contain (fit inside)</option>
+                                <option value="fill"    {% if settings.image_fit == 'fill' %}selected{% endif %}>Fill (stretch)</option>
+                            </select>
+                        </div>
+                        <div class="form-group"><label class="form-label">Border Width (px)</label>
+                            <input type="number" min="0" max="20" id="image_border_width" class="form-input"
+                                   value="{{ settings.image_border_width if settings.image_border_width is not none else 3 }}"
+                                   onchange="updateSetting('image_border_width',this.value);syncAdjustPreview();">
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label class="form-label">Position</label>
-                        <select id="image_position" class="form-input" onchange="updateSetting('image_position',this.value)">
-                            <option value="left"      {% if (settings.image_position or 'left') == 'left' %}selected{% endif %}>← Left</option>
-                            <option value="right"     {% if settings.image_position == 'right' %}selected{% endif %}>→ Right</option>
-                            <option value="top"       {% if settings.image_position == 'top' %}selected{% endif %}>↑ Top</option>
-                            <option value="top-left"  {% if settings.image_position == 'top-left' %}selected{% endif %}>↖ Top Left</option>
-                            <option value="top-right" {% if settings.image_position == 'top-right' %}selected{% endif %}>↗ Top Right</option>
-                            <option value="bottom"    {% if settings.image_position == 'bottom' %}selected{% endif %}>↓ Bottom</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Image Fit</label>
-                        <select id="image_fit" class="form-input" onchange="updateSetting('image_fit',this.value);syncAdjustPreview();">
-                            <option value="cover"   {% if (settings.image_fit or 'cover') == 'cover' %}selected{% endif %}>Cover (crop to fill)</option>
-                            <option value="contain" {% if settings.image_fit == 'contain' %}selected{% endif %}>Contain (fit inside)</option>
-                            <option value="fill"    {% if settings.image_fit == 'fill' %}selected{% endif %}>Fill (stretch)</option>
-                        </select>
-                    </div>
-                    <div class="form-group"><label class="form-label">Border Width (px)</label>
-                        <input type="number" min="0" max="20" id="image_border_width" class="form-input"
-                               value="{{ settings.image_border_width if settings.image_border_width is not none else 3 }}"
-                               onchange="updateSetting('image_border_width',this.value);syncAdjustPreview();">
-                    </div>
+                    {{ color_pair('Border Color','image_border_color_picker','image_border_color', settings.image_border_color or '#FFFFFF','image_border_color') }}
                 </div>
-                {{ color_pair('Border Color','image_border_color_picker','image_border_color', settings.image_border_color or '#FFFFFF','image_border_color') }}
             </div>
 
         </div>{# /assets #}
@@ -1251,6 +1270,15 @@ function toggleSectionsBg(el)        { _togglePanel(el, 'overlay_bg_sections_ena
 function toggleClock(el)             { _togglePanel(el, 'show_clock', 'clock-settings-panel'); }
 function toggleLiveIndicator(el)     { _togglePanel(el, 'show_live_indicator', 'live-indicator-settings-panel'); }
 function toggleSecondaryRotation(el) { _togglePanel(el, 'secondary_rotation_enabled', 'rotation_controls'); }
+function toggleShowSecondaryText(el) { _togglePanel(el, 'show_secondary_text', 'secondary_text_controls'); }
+function toggleShowCompanyName(el)   { _togglePanel(el, 'show_company_name',   'company_name_controls'); }
+function toggleShowTicker(el)        { _togglePanel(el, 'show_ticker',          'ticker_controls'); }
+function toggleLogoDispAnim(el)      { _togglePanel(el, 'logo_display_animation_enabled', 'logo_disp_anim_controls'); }
+function toggleImgDispAnim(el)       { _togglePanel(el, 'image_display_animation_enabled', 'img_disp_anim_controls'); }
+function toggleOverlayCycle(el)      { _togglePanel(el, 'overlay_cycle_enabled', 'overlay_cycle_controls'); }
+function toggleStagger(el)           { _togglePanel(el, 'stagger_enabled',       'stagger_controls'); }
+function toggleShowLogo(el)          { _togglePanel(el, 'show_company_logo',     'logo_controls'); }
+function toggleShowCategoryImage(el) { _togglePanel(el, 'show_category_image',   'category_image_controls'); }
 
 function resetToDefaults() {
     if (!confirm('Reset all settings to defaults?')) return;

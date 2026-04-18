@@ -595,6 +595,10 @@ function applyStyling(s) {
   coEl.style.opacity    = '0.85';
   coEl.style.fontStyle  = (s.company_name_italic !== false) ? 'italic' : 'normal';
 
+  /* Show / hide secondary text and company name (collapses space when off) */
+  secWrapEl.style.display = (s.show_secondary_text === false) ? 'none' : '';
+  coEl.style.display      = (s.show_company_name   === false) ? 'none' : '';
+
   /* Ticker */
   const tkFontSize = s.ticker_font_size || 13;
   tickerWrapEl.style.backgroundColor = toRgba(s.ticker_bg_color || '#1a1a1a', s.ticker_bg_opacity != null ? s.ticker_bg_opacity : 0.8);

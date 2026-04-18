@@ -32,6 +32,7 @@ _EXPORTABLE_FIELDS = [
     'category', 'main_text', 'secondary_text', 'secondary_phrases',
     'ticker_text', 'company_name', 'company_logo', 'category_image',
     'show_category_image', 'show_company_logo', 'show_ticker',
+    'show_secondary_text', 'show_company_name',
 
     # Secondary text rotation
     'secondary_rotation_enabled', 'secondary_display_duration',

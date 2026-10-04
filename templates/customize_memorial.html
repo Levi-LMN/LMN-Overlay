@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+
+{% block title %}Customize {{ design_name }} - {{ company_name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .memorial-shell{max-width:980px;margin:0 auto;padding:0 1rem}
+    .memorial-header{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;margin-bottom:1.25rem}
+    .memorial-actions{display:flex;gap:.5rem;flex-wrap:wrap;justify-content:flex-end}
+    .action-btn{display:inline-flex;align-items:center;justify-content:center;gap:.45rem;padding:.58rem .9rem;border:1px solid transparent;border-radius:6px;font-size:.82rem;font-weight:700;text-decoration:none;white-space:nowrap;transition:background .2s,border-color .2s,box-shadow .2s,transform .2s;cursor:pointer}
+    .action-btn:hover{transform:translateY(-1px);box-shadow:0 5px 14px rgba(15,23,42,.12)}
+    .action-btn.secondary{border-color:#a7f3d0;background:#ecfdf5;color:#047857}.action-btn.secondary:hover{background:#d1fae5;border-color:#6ee7b7}
+    .action-btn.primary{border-color:#047857;background:#047857;color:#fff}.action-btn.primary:hover{background:#065f46;border-color:#065f46}
+    .action-btn.reset{border-color:#fecaca;background:#fff;color:#b91c1c}.action-btn.reset:hover{background:#fef2f2;border-color:#fca5a5}
+    .memorial-section{background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:1.15rem;margin-bottom:1rem}
+    .memorial-section h2{display:flex;align-items:center;gap:.55rem;margin:0 0 1rem;padding-bottom:.7rem;border-bottom:1px solid #e5e7eb;color:#111827;font-size:1rem;font-weight:700}
+    .field-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem}
+    .field{min-width:0}
+    .field.wide{grid-column:1/-1}
+    .field label{display:block;margin-bottom:.35rem;color:#374151;font-size:.8rem;font-weight:600}
+    .field input[type=text],.field input[type=number],.field textarea,.field select{width:100%;padding:.58rem .7rem;border:1px solid #d1d5db;border-radius:6px;background:#fff;color:#111827}
+    .field input:focus,.field textarea:focus,.field select:focus{outline:2px solid #a7f3d0;border-color:#059669}
+    .toggle-row{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:.55rem 0}
+    .switch{position:relative;width:48px;height:26px;border:0;border-radius:999px;background:#cbd5e1;cursor:pointer;transition:.2s}
+    .switch::after{content:'';position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+    .switch.on{background:#059669}.switch.on::after{left:25px}
+    .color-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.75rem}
+    .color-field{display:flex;align-items:center;gap:.55rem;border:1px solid #e5e7eb;border-radius:6px;padding:.55rem}
+    .color-field input{width:38px;height:32px;border:0;padding:0;background:transparent}
+    .color-field span{font-size:.78rem;font-weight:600;color:#374151}
+    .range-line{display:grid;grid-template-columns:1fr 64px;gap:.75rem;align-items:center}
+    .range-line input[type=range]{width:100%;accent-color:#059669}
+    .phrase{display:grid;grid-template-columns:24px 1fr auto;gap:.5rem;align-items:center;margin-top:.5rem}
+    .phrase input{width:100%;padding:.48rem .6rem;border:1px solid #d1d5db;border-radius:6px}
+    .icon-btn{width:34px;height:34px;border:1px solid #fecaca;border-radius:6px;background:#fff;color:#dc2626}
+    .portrait-row{display:flex;align-items:center;gap:1rem;flex-wrap:wrap}
+    .portrait-row img{width:86px;height:86px;border-radius:50%;object-fit:cover;border:3px solid #e5e7eb}
+    .save-state{min-height:1.2rem;color:#047857;font-size:.75rem;font-weight:600}
+    .logo-current{display:flex;align-items:center;gap:.85rem;padding:.7rem;border:1px solid #d1fae5;border-radius:6px;background:#f0fdf4}
+    .logo-current img{width:120px;height:54px;object-fit:contain;object-position:left center}
+    .logo-status{color:#047857;font-size:.75rem;font-weight:700}
+    .file-input-hidden{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
+    @media(max-width:700px){.memorial-header{display:block}.memorial-actions{justify-content:flex-start;margin-top:1rem}.field-grid,.color-row{grid-template-columns:1fr}.field.wide{grid-column:auto}}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="memorial-shell">
+    <header class="memorial-header">
+        <div class="flex items-start gap-3">
+            <a href="{{ url_for('main.control') }}" class="mt-1 text-gray-400 hover:text-emerald-700" title="Back to Control Panel"><i class="fas fa-arrow-left"></i></a>
+            <div><p class="text-xs font-semibold uppercase text-emerald-700">Fixed memorial design</p><h1 class="text-2xl font-bold text-gray-900">{{ design_name }}</h1><p class="text-sm text-gray-500 mt-1">Only controls supported by this design are shown.</p></div>
+        </div>
+        <div class="memorial-actions">
+            <button class="action-btn reset" onclick="resetStyle()"><i class="fas fa-undo"></i> Reset Style</button>
+            <a href="{{ url_for('main.funeral_designs') }}" class="action-btn secondary"><i class="fas fa-th-large"></i> Change Design</a>
+            <a href="{{ url_for('main.display', category='funeral') }}" target="_blank" class="action-btn primary"><i class="fas fa-external-link-alt"></i> Preview</a>
+        </div>
+    </header>
+
+    <div id="save-state" class="save-state" aria-live="polite"></div>
+
+    <section class="memorial-section">
+        <h2><i class="fas fa-power-off text-emerald-700"></i> Broadcast</h2>
+        <div class="toggle-row"><div><p class="font-semibold text-sm">Show overlay</p><p class="text-xs text-gray-500">Controls this browser source in OBS.</p></div><button class="switch {% if settings.is_visible %}on{% endif %}" data-key="is_visible" aria-label="Show overlay" onclick="toggleSetting(this)"></button></div>
+        <div class="toggle-row"><div><p class="font-semibold text-sm">Auto-cycle</p><p class="text-xs text-gray-500">Repeatedly show and hide the complete overlay.</p></div><button class="switch {% if settings.overlay_cycle_enabled %}on{% endif %}" data-key="overlay_cycle_enabled" aria-label="Enable auto-cycle" onclick="toggleSetting(this);document.getElementById('cycle-fields').hidden=!this.classList.contains('on')"></button></div>
+        <div id="cycle-fields" class="field-grid mt-3" {% if not settings.overlay_cycle_enabled %}hidden{% endif %}>
+            <div class="field"><label>Visible duration (seconds)</label><input type="number" min="1" max="900" value="{{ settings.overlay_visible_duration or 10 }}" onchange="saveSetting('overlay_visible_duration',this.value)"></div>
+            <div class="field"><label>Hidden duration (seconds)</label><input type="number" min="1" max="900" value="{{ settings.overlay_hidden_duration or 900 }}" onchange="saveSetting('overlay_hidden_duration',this.value)"></div>
+        </div>
+    </section>
+
+    <section class="memorial-section">
+        <h2><i class="fas fa-align-left text-emerald-700"></i> Memorial Content</h2>
+        <div class="field-grid">
+            <div class="field wide"><label>Main memorial line</label><input type="text" value="{{ settings.main_text or '' }}" onchange="saveSetting('main_text',this.value)"></div>
+            <div class="field wide"><label>Top caption</label><input type="text" value="{{ settings.secondary_text or '' }}" placeholder="For example: Celebrating a Life Well Lived" onchange="saveSetting('secondary_text',this.value)"><p class="text-xs text-gray-500 mt-1">The small uppercase line above the memorial name.</p></div>
+            {% if supports_company_name %}<div class="field wide"><label>Years / small signature</label><input type="text" value="{{ settings.company_name or '' }}" onchange="saveSetting('company_name',this.value)"></div>{% endif %}
+        </div>
+        <div class="toggle-row mt-3"><div><p class="font-semibold text-sm">Show rotating remembrance lines</p></div><button class="switch {% if settings.show_secondary_text is not false %}on{% endif %}" data-key="show_secondary_text" data-panel="phrase-settings" onclick="toggleSetting(this)"></button></div>
+        <div id="phrase-settings" class="mt-2" {% if settings.show_secondary_text is false %}hidden{% endif %}><label class="block text-xs font-semibold text-gray-700">Rotating lines</label><div id="phrases"></div><div class="flex gap-2 mt-2"><input id="new-phrase" class="flex-1 px-3 py-2 border border-gray-300 rounded-md" placeholder="Add a remembrance line"><button class="action-btn secondary" onclick="addPhrase()"><i class="fas fa-plus"></i> Add</button></div></div>
+    </section>
+
+    <section class="memorial-section">
+        <h2><i class="fas fa-broadcast-tower text-emerald-700"></i> On-screen Extras</h2>
+        <div class="toggle-row"><div><p class="font-semibold text-sm">Show date and time</p></div><button class="switch {% if settings.show_clock %}on{% endif %}" data-key="show_clock" onclick="toggleSetting(this)"></button></div>
+        <div class="toggle-row"><div><p class="font-semibold text-sm">Show company logo</p></div><button class="switch {% if settings.show_company_logo %}on{% endif %}" data-key="show_company_logo" data-panel="logo-settings" onclick="toggleSetting(this)"></button></div>
+        <div id="logo-settings" {% if not settings.show_company_logo %}hidden{% endif %}>
+        {% if settings.company_logo %}<div class="logo-current mt-2"><img src="{{ url_for('static',filename=settings.company_logo) }}" alt="Current company logo"><div class="min-w-0"><p class="font-semibold text-sm text-gray-900">Current logo</p><p class="logo-status"><i class="fas fa-check-circle"></i> Uploaded and ready</p></div></div>{% endif %}
+        <div class="field-grid mt-2">
+            <div class="field"><label>{{ 'Replace logo' if settings.company_logo else 'Upload logo' }}</label><input id="logo-file" class="file-input-hidden" type="file" accept="image/*" onchange="uploadLogo(this)"><div class="flex gap-2 flex-wrap"><label for="logo-file" class="action-btn secondary"><i class="fas fa-upload"></i> {{ 'Choose replacement' if settings.company_logo else 'Choose logo' }}</label>{% if settings.company_logo %}<button type="button" class="action-btn reset" onclick="removeLogo()"><i class="fas fa-trash"></i> Remove</button>{% endif %}</div></div>
+            <div class="field"><label>Logo corner</label><select onchange="saveSetting('logo_horizontal_position',this.value)"><option value="left" {% if settings.logo_horizontal_position == 'left' %}selected{% endif %}>Top left</option><option value="right" {% if settings.logo_horizontal_position != 'left' %}selected{% endif %}>Top right</option></select></div>
+            <div class="field"><label>Logo animation</label><select onchange="saveSetting('logo_animation',this.value)">
+                {% for value,label in [('none','None'),('fade-in','Fade in'),('scale-in','Scale in'),('zoom-in','Zoom in'),('slide-in-left','Slide in from left'),('slide-in-right','Slide in from right'),('rotate-in','Slow horizontal spin')] %}<option value="{{ value }}" {% if (settings.logo_animation or 'fade-in') == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
+            </select></div>
+        </div>
+        </div>
+        <div class="toggle-row mt-4"><div><p class="font-semibold text-sm">Show LIVE and location badge</p></div><button class="switch {% if settings.show_live_indicator %}on{% endif %}" data-key="show_live_indicator" data-panel="live-settings" onclick="toggleSetting(this)"></button></div>
+        <div id="live-settings" {% if not settings.show_live_indicator %}hidden{% endif %}>
+        <div class="field-grid mt-2">
+            <div class="field"><label>Location</label><input type="text" value="{{ settings.live_location or '' }}" placeholder="For example: Nairobi, Kenya" onchange="saveSetting('live_location',this.value)"></div>
+            <div class="field"><label>Badge corner</label><select onchange="saveSetting('live_indicator_horizontal_position',this.value)"><option value="left" {% if settings.live_indicator_horizontal_position != 'right' %}selected{% endif %}>Top left</option><option value="right" {% if settings.live_indicator_horizontal_position == 'right' %}selected{% endif %}>Top right</option></select></div>
+            <div class="field"><label>Badge animation</label><select onchange="saveSetting('live_indicator_animation',this.value)">
+                {% for value,label in [('none','None'),('pulse','Pulse'),('glow','Glow'),('float','Float'),('bounce','Bounce')] %}<option value="{{ value }}" {% if (settings.live_indicator_animation or 'pulse') == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
+            </select></div>
+        </div>
+        </div>
+    </section>
+
+    <section class="memorial-section">
+        <h2><i class="fas fa-scroll text-emerald-700"></i> Ticker</h2>
+        <div class="toggle-row"><div><p class="font-semibold text-sm">Show ticker</p></div><button class="switch {% if settings.show_ticker %}on{% endif %}" data-key="show_ticker" data-panel="ticker-settings" onclick="toggleSetting(this)"></button></div>
+        <div id="ticker-settings" {% if not settings.show_ticker %}hidden{% endif %}>
+        <div class="field mt-2"><label>Ticker text</label><textarea rows="3" onchange="saveSetting('ticker_text',this.value)">{{ settings.ticker_text or '' }}</textarea></div>
+        <div class="field mt-4"><label>Ticker speed: <span id="ticker-speed-value">{{ settings.ticker_speed or 50 }}</span></label><div class="range-line"><input type="range" min="1" max="100" value="{{ settings.ticker_speed or 50 }}" oninput="document.getElementById('ticker-speed-value').textContent=this.value" onchange="saveSetting('ticker_speed',this.value)"><input type="number" min="1" max="100" value="{{ settings.ticker_speed or 50 }}" onchange="saveSetting('ticker_speed',this.value);location.reload()"></div><p class="text-xs text-gray-500 mt-1">1 is slowest; 100 is fastest.</p></div>
+        </div>
+    </section>
+
+    <section class="memorial-section">
+        <h2><i class="fas fa-palette text-emerald-700"></i> Design Colours</h2>
+        <div class="color-row">
+            {% for label, key, value in [
+                ('Panel','overlay_bg_color',settings.overlay_bg_color or '#171A18'),
+                ('Ticker panel','ticker_bg_color',settings.ticker_bg_color or '#111111'),
+                ('Accent','accent_color',settings.accent_color or '#D8B875'),
+                ('Main text','main_text_color',settings.main_text_color or '#FFFFFF'),
+                ('Supporting text','secondary_text_color',settings.secondary_text_color or '#D8B875'),
+                ('Ticker text','ticker_text_color',settings.ticker_text_color or '#FFFFFF')
+            ] %}<label class="color-field"><input type="color" value="{{ value }}" onchange="saveSetting('{{ key }}',this.value)"><span>{{ label }}</span></label>{% endfor %}
+        </div>
+    </section>
+
+    <section class="memorial-section">
+        <h2><i class="fas fa-portrait text-emerald-700"></i> Portrait</h2>
+        <div class="toggle-row"><div><p class="font-semibold text-sm">Show portrait</p></div><button class="switch {% if settings.show_category_image %}on{% endif %}" data-key="show_category_image" data-panel="portrait-settings" onclick="toggleSetting(this)"></button></div>
+        <div id="portrait-settings" {% if not settings.show_category_image %}hidden{% endif %}>
+        {% if settings.category_image %}<div class="logo-current mt-2"><img src="{{ url_for('static', filename=settings.category_image) }}" alt="Current portrait" style="object-fit:cover"><div class="min-w-0"><p class="font-semibold text-sm text-gray-900">Current portrait</p><p class="logo-status"><i class="fas fa-check-circle"></i> Uploaded and ready</p></div></div>{% endif %}
+        <div class="portrait-row mt-3">
+            <div class="field flex-1"><label>{{ 'Replace portrait' if settings.category_image else 'Upload portrait' }}</label><input id="portrait-file" class="file-input-hidden" type="file" accept="image/*" onchange="uploadPortrait(this)"><div class="flex gap-2 flex-wrap"><label for="portrait-file" class="action-btn secondary"><i class="fas fa-upload"></i> {{ 'Choose replacement' if settings.category_image else 'Choose portrait' }}</label>{% if settings.category_image %}<button type="button" class="action-btn reset" onclick="removePortrait()"><i class="fas fa-trash"></i> Remove</button>{% endif %}</div></div>
+            <div class="field min-w-[190px]"><label>Face position</label><select onchange="saveSetting('image_object_position',this.value)">
+                {% for value,label in [('center center','Centre'),('center top','Upper centre'),('left center','Left'),('right center','Right'),('center 35%','Slightly higher')] %}<option value="{{ value }}" {% if (settings.image_object_position or 'center center') == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
+            </select></div>
+        </div>
+        </div>
+    </section>
+</div>
+
+<script>
+let phrases = [];
+function status(message, error=false){const el=document.getElementById('save-state');el.textContent=message;el.style.color=error?'#b91c1c':'#047857';clearTimeout(status.timer);status.timer=setTimeout(()=>el.textContent='',2200)}
+async function saveSetting(key,value){const form=new FormData();form.append(key,value);try{const response=await fetch('/api/settings/funeral',{method:'POST',body:form});if(!response.ok)throw new Error();status('Saved')}catch(e){status('Could not save',true)}}
+async function toggleSetting(button){button.classList.toggle('on');const enabled=button.classList.contains('on');if(button.dataset.panel){const panel=document.getElementById(button.dataset.panel);if(panel)panel.hidden=!enabled}if(button.dataset.key==='is_visible'){try{const response=await fetch('/api/visibility/funeral',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({visible:enabled})});if(!response.ok)throw new Error();status(enabled?'Overlay is live':'Overlay is hidden')}catch(e){button.classList.toggle('on');status('Could not change visibility',true)}return}saveSetting(button.dataset.key,enabled?'true':'false')}
+async function loadPhrases(){const response=await fetch('/api/secondary-phrases/funeral');phrases=(await response.json()).phrases||[];renderPhrases()}
+function renderPhrases(){const root=document.getElementById('phrases');root.innerHTML=phrases.length?phrases.map((p,i)=>`<div class="phrase"><span class="text-xs text-gray-400">${i+1}</span><input value="${escapeHtml(p)}" onchange="updatePhrase(${i},this.value)"><button class="icon-btn" title="Remove" onclick="removePhrase(${i})"><i class="fas fa-trash"></i></button></div>`).join(''):'<p class="text-sm text-gray-400 mt-2">No rotating lines yet.</p>'}
+function escapeHtml(value){const el=document.createElement('div');el.textContent=value;return el.innerHTML}
+function addPhrase(){const input=document.getElementById('new-phrase');const value=input.value.trim();if(!value)return;phrases.push(value);input.value='';savePhrases()}
+function updatePhrase(index,value){phrases[index]=value.trim();savePhrases()}
+function removePhrase(index){phrases.splice(index,1);savePhrases()}
+async function savePhrases(){const response=await fetch('/api/secondary-phrases/funeral',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phrases})});if(response.ok){renderPhrases();status('Rotating lines saved')}else status('Could not save lines',true)}
+async function uploadPortrait(input){if(!input.files[0])return;const form=new FormData();form.append('file',input.files[0]);const response=await fetch('/api/upload/funeral/image',{method:'POST',body:form});if(response.ok){await saveSetting('show_category_image','true');location.reload()}else status('Portrait upload failed',true)}
+async function removePortrait(){if(!confirm('Remove the uploaded portrait?'))return;const response=await fetch('/api/remove-image/funeral',{method:'POST'});if(response.ok)location.reload();else status('Portrait could not be removed',true)}
+async function uploadLogo(input){if(!input.files[0])return;const form=new FormData();form.append('file',input.files[0]);const response=await fetch('/api/upload/funeral/logo',{method:'POST',body:form});if(response.ok){await saveSetting('show_company_logo','true');location.reload()}else status('Logo upload failed',true)}
+async function removeLogo(){if(!confirm('Remove the uploaded company logo?'))return;const response=await fetch('/api/remove-logo/funeral',{method:'POST'});if(response.ok)location.reload();else status('Logo could not be removed',true)}
+async function resetStyle(){if(!confirm('Reset colours, ticker speed, visibility options and auto-cycle timing to the recommended memorial style? Your text, portrait and selected design will be kept.'))return;const response=await fetch('/api/settings/funeral/reset-memorial-style',{method:'POST'});if(response.ok)location.reload();else status('Could not reset the style',true)}
+loadPhrases();
+</script>
+{% endblock %}

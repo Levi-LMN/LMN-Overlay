@@ -330,6 +330,7 @@ body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;position:relative}
 'use strict';
 
 const CAT = new URLSearchParams(location.search).get('category') || 'funeral';
+const PREVIEW_MODE = {{ preview_mode|default(false)|tojson }};
 
 /* ── DOM refs ─────────────────────────────────────────────────────────────── */
 const ovEl         = document.getElementById('ov');
@@ -552,7 +553,6 @@ function applyStyling(s) {
     lh:    s.text_line_height    || 1.2,
     pad:   '10px 15px',
   });
-
   /* Secondary text */
   const secFontSize   = s.secondary_font_size      || 28;
   const secFontFamily = s.secondary_font_family    || gf;
@@ -610,6 +610,15 @@ function applyStyling(s) {
 /* ════════════════════════════════════════════════════════════════════════════
    POSITIONING
 ════════════════════════════════════════════════════════════════════════════ */
+function getCategoryImageMetrics(s) {
+  const size        = s.image_size || 128;
+  const borderWidth = Math.max(0, parseFloat(s.image_border_width != null ? s.image_border_width : 3) || 0);
+  const zoom        = Math.max(0.1, parseFloat(s.image_zoom || 100) / 100);
+  const visibleHalf = Math.ceil(((size + (borderWidth * 2)) * zoom) / 2);
+  const gap         = Math.max(8, Math.min(18, Math.round(size * 0.08)));
+  return { size, half: Math.round(size / 2), reserve: visibleHalf + gap };
+}
+
 function applyPositioning(s) {
   const pad = s.container_padding != null ? s.container_padding : 25;
   const vp  = s.vertical_position   || 'bottom';
@@ -657,9 +666,7 @@ function applyPositioning(s) {
   txtEl.style.paddingLeft   = pad + 'px';
   txtEl.style.paddingRight  = pad + 'px';
 
-  const sz   = s.image_size || 128;
-  const half = Math.round(sz / 2);
-  const gap  = 4;
+  const { size: sz, half, reserve } = getCategoryImageMetrics(s);
   const ipos = s.image_position || 'left';
 
   /* Full reset of image wrapper position */
@@ -668,24 +675,12 @@ function applyPositioning(s) {
   imgWrapEl.style.transform = 'none';
 
   if (s.show_category_image && s.category_image) {
-    // Pre-calculate bottom-strip height (clock + ticker) from settings — same formula as syncStripHeight.
-    // Used to shift left/right images upward so they don't overlap the clock/ticker strip.
-    const _clockOn  = s.show_clock;
-    // Ticker is flowing text — image overlapping it is fine. Only the static clock
-    // block needs the image shifted up to avoid being physically covered.
-    const _stripFs  = parseFloat(s.clock_font_size || 13);
-    const _stripH   = _clockOn ? Math.round(_stripFs * 2.4) : 0;
-    // Shift image centre up by half the clock strip height; stays at 50% when clock is off
-    const _stripOff = _stripH > 0 ? Math.round(_stripH / 2) : 0;
-
-    if      (ipos === 'left')      { imgWrapEl.style.left   = -half+'px'; imgWrapEl.style.top    = _stripOff > 0 ? `calc(50% - ${_stripOff}px)` : '50%'; imgWrapEl.style.transform = 'translateY(-50%)'; txtEl.style.paddingLeft   = (pad+half+gap)+'px'; }
-    else if (ipos === 'right')     { imgWrapEl.style.right  = -half+'px'; imgWrapEl.style.top    = _stripOff > 0 ? `calc(50% - ${_stripOff}px)` : '50%'; imgWrapEl.style.transform = 'translateY(-50%)'; txtEl.style.paddingRight  = (pad+half+gap)+'px'; }
-    // For top/bottom/corner positions: use only pad+gap (not pad+half+gap) so the overlay
-    // background doesn't grow an empty zone — the image simply hugs / overlaps the edge.
-    else if (ipos === 'top')       { imgWrapEl.style.top    = -half+'px'; imgWrapEl.style.left   = '50%'; imgWrapEl.style.transform = 'translateX(-50%)'; txtEl.style.paddingTop    = (pad+gap)+'px'; }
-    else if (ipos === 'bottom')    { imgWrapEl.style.bottom = -half+'px'; imgWrapEl.style.left   = '50%'; imgWrapEl.style.transform = 'translateX(-50%)'; txtEl.style.paddingBottom = (pad+gap)+'px'; }
-    else if (ipos === 'top-left')  { imgWrapEl.style.top    = -half+'px'; imgWrapEl.style.left   = -half+'px'; txtEl.style.paddingTop  = (pad+gap)+'px'; txtEl.style.paddingLeft   = (pad+half+gap)+'px'; }
-    else if (ipos === 'top-right') { imgWrapEl.style.top    = -half+'px'; imgWrapEl.style.right  = -half+'px'; txtEl.style.paddingTop  = (pad+gap)+'px'; txtEl.style.paddingRight  = (pad+half+gap)+'px'; }
+    if      (ipos === 'left')      { imgWrapEl.style.left   = -half+'px'; imgWrapEl.style.top    = '50%'; imgWrapEl.style.transform = 'translateY(-50%)'; txtEl.style.paddingLeft   = reserve+'px'; }
+    else if (ipos === 'right')     { imgWrapEl.style.right  = -half+'px'; imgWrapEl.style.top    = '50%'; imgWrapEl.style.transform = 'translateY(-50%)'; txtEl.style.paddingRight  = reserve+'px'; }
+    else if (ipos === 'top')       { imgWrapEl.style.top    = -half+'px'; imgWrapEl.style.left   = '50%'; imgWrapEl.style.transform = 'translateX(-50%)'; txtEl.style.paddingTop    = reserve+'px'; }
+    else if (ipos === 'bottom')    { imgWrapEl.style.bottom = -half+'px'; imgWrapEl.style.left   = '50%'; imgWrapEl.style.transform = 'translateX(-50%)'; txtEl.style.paddingBottom = reserve+'px'; }
+    else if (ipos === 'top-left')  { imgWrapEl.style.top    = -half+'px'; imgWrapEl.style.left   = -half+'px'; txtEl.style.paddingTop  = reserve+'px'; txtEl.style.paddingLeft   = reserve+'px'; }
+    else if (ipos === 'top-right') { imgWrapEl.style.top    = -half+'px'; imgWrapEl.style.right  = -half+'px'; txtEl.style.paddingTop  = reserve+'px'; txtEl.style.paddingRight  = reserve+'px'; }
   }
 
   /* ── Image appearance ────────────────────────────────────────────────── */
@@ -1139,8 +1134,13 @@ function stopTicker() { if (tickerRAF) { cancelAnimationFrame(tickerRAF); ticker
 function stopCycle() {
   cycleOn = false;
   clearTimeout(cycleTimer); cycleTimer = null;
-  ovEl.classList.remove('no-tr');
+  ovEl.classList.remove('no-tr', 'cycle-hidden');
   ovEl.style.animation = ovEl.style.clipPath = ovEl.style.transformOrigin = '';
+  ovEl.style.visibility = '';
+  ovEl.style.opacity = ovEl.dataset.targetOpacity || '';
+  [mainEl, secEl, coEl].forEach(el => {
+    el.style.opacity = el.style.transform = el.style.filter = el.style.animation = '';
+  });
 }
 
 function startCycle(s) {
@@ -1339,7 +1339,11 @@ function applyClock(s) {
   // Push text right enough to clear the border-radius curve.
   // When radius is large the curve eats deeply into the strip horizontally.
   // Use r * 0.6 as a reliable inset (covers even very large radii), min 20px.
-  const leftPad = Math.max(20, Math.ceil(r * 0.6) + 8);
+  const cornerPad = Math.max(20, Math.ceil(r * 0.6) + 8);
+  const imageCoversClock = s.show_category_image && s.category_image &&
+    (s.image_position || 'left') === 'left';
+  const imagePad = imageCoversClock ? getCategoryImageMetrics(s).reserve : 0;
+  const leftPad = Math.max(cornerPad, imagePad);
   clockEl.style.paddingLeft = leftPad + 'px';
 
   if (pos === 'bottom') {
@@ -1451,6 +1455,13 @@ async function poll() {
     const data = await res.json();
     if (data.settings) {
       const ns = data.settings;
+      const selectedVariant = !ns.layout_style || ['default', 'legacy'].includes(ns.layout_style)
+        ? 'legacy'
+        : ns.layout_style;
+      if (!PREVIEW_MODE && selectedVariant !== 'legacy') {
+        location.reload();
+        return;
+      }
       if (JSON.stringify(ns) !== JSON.stringify(cur)) {
         cur = ns;
         applySettings(ns);

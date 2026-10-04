@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>In Memoriam — Lower Third (Cameo)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;0,700;1,600;1,700&family=Jost:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    /* deep forest + ivory + sage, with a muted clay for the clock */
+    --forest-a:  #14382f;
+    --forest-b:  #07161a;
+    --ivory:     #f3efe4;
+    --ivory-dim: rgba(243,239,228,0.66);
+    --sage:      #9db8a5;
+    --sage-dk:   #5f7d6b;
+    --line:      rgba(243,239,228,0.20);
+    --ink:       #1d2f29;
+    --clay:      #8a4b3d;
+
+    --pl: 96px;                       /* panel start (cameo overlap) */
+
+    /* responsive: --s scales on small screens, --bar-w is the panel length */
+    --s: 1;
+    --gutter: 56px;
+    --bar-w: clamp(520px,
+                   min(calc(58vw / var(--s) - var(--pl) - 16px),
+                       calc((100vw - 2 * var(--gutter)) / var(--s) - var(--pl) - 16px)),
+                   780px);
+  }
+  @media (max-width: 900px){ :root{ --s:0.72; --gutter:24px; } }
+  @media (max-width: 600px){ :root{ --s:0.5;  --gutter:16px; } }
+
+  *{ box-sizing:border-box; }
+
+  html,body{
+    margin:0; padding:0; width:100%; height:100%;
+    background:transparent;           /* true overlay */
+    overflow:hidden;
+    font-family:"Jost", sans-serif;
+  }
+  .stage{ position:relative; width:100%; height:100vh; }
+
+  .lt{
+    position:absolute;
+    left:var(--gutter);
+    bottom:64px;
+    width:calc(var(--pl) + var(--bar-w) + 16px);
+    height:202px;
+    transform:scale(var(--s));
+    transform-origin:bottom left;
+  }
+
+  /* ================= ivory ribbon strap (ticker + clock) ================= */
+  .ribbon-fx{
+    position:absolute;
+    left:112px; top:158px;
+    width:calc(var(--pl) + var(--bar-w) + 16px - 112px);
+    height:36px;
+    z-index:2;
+    filter:drop-shadow(0 8px 10px rgba(0,0,0,0.4));
+  }
+  .ribbon-reveal{
+    position:absolute; inset:0;
+    animation:unroll .9s cubic-bezier(.19,.9,.22,1) .7s both;
+  }
+  .ribbon{
+    position:absolute; inset:0;
+    display:flex; align-items:center;
+    padding-left:62px;
+    background:linear-gradient(180deg, #f6f2e8, #ddd8c7);
+    /* swallowtail end */
+    clip-path:polygon(0 0, 100% 0, calc(100% - 14px) 50%, 100% 100%, 0 100%);
+  }
+  .ticker-wrap{
+    flex:1; min-width:0; height:100%;
+    overflow:hidden;
+    display:flex; align-items:center;
+    -webkit-mask-image:linear-gradient(90deg, transparent 0, #000 22px, #000 calc(100% - 48px), transparent 100%);
+            mask-image:linear-gradient(90deg, transparent 0, #000 22px, #000 calc(100% - 48px), transparent 100%);
+  }
+  .ticker-track{
+    display:flex; align-items:center;
+    width:max-content;
+    white-space:nowrap;
+    animation:tickerScroll linear infinite;
+  }
+  .ticker-track span{
+    font-weight:500;
+    font-size:11px;
+    letter-spacing:0.8px;
+    text-transform:uppercase;
+    color:rgba(29,47,41,0.82);
+    padding-right:28px;
+  }
+  .ticker-track span::after{
+    content:"";
+    display:inline-block;
+    width:4px; height:4px;
+    margin-left:28px;
+    background:var(--sage-dk);
+    transform:rotate(45deg);
+    vertical-align:middle;
+  }
+  @keyframes tickerScroll{
+    from{ transform:translateX(0); }
+    to{ transform:translateX(calc(-1 * var(--shift, 50%))); }
+  }
+  .clock{
+    flex:none;
+    display:flex; align-items:center; gap:8px;
+    padding:0 34px 0 6px;              /* clear of the swallowtail notch */
+  }
+  .clock .dot{
+    width:6px; height:6px; border-radius:50%;
+    background:var(--clay);
+    animation:pulseDot 2.6s ease-in-out infinite;
+  }
+  @keyframes pulseDot{ 0%,100%{ opacity:.3; } 50%{ opacity:1; } }
+  .clock span{
+    font-weight:600;
+    font-size:11.5px;
+    letter-spacing:1px;
+    text-transform:uppercase;
+    color:var(--clay);
+    white-space:nowrap;
+  }
+
+  /* ================= main panel ================= */
+  .panel-fx{
+    position:absolute;
+    left:var(--pl); top:14px;
+    width:var(--bar-w); height:150px;
+    z-index:3;
+    filter:drop-shadow(0 16px 22px rgba(0,0,0,0.5));
+  }
+  .reveal{
+    position:absolute; inset:0;
+    animation:wipe 1s cubic-bezier(.19,.9,.22,1) .12s both;
+  }
+  .panel{
+    position:absolute; inset:0;
+    container-type:inline-size;
+    border-radius:8px;
+    overflow:hidden;
+    background:
+      radial-gradient(120% 140% at 0% 0%, rgba(157,184,165,0.16), transparent 55%),
+      linear-gradient(115deg, var(--forest-a), var(--forest-b) 85%);
+  }
+  /* fine inset frame line */
+  .panel::before{
+    content:"";
+    position:absolute; inset:7px;
+    border:1px solid var(--line);
+    border-radius:3px;
+    pointer-events:none;
+  }
+  /* large faint year watermark */
+  .wm{
+    position:absolute;
+    right:24px; bottom:-14px;
+    font-family:"Cormorant Garamond", serif;
+    font-weight:700;
+    font-size:92px;
+    line-height:1;
+    letter-spacing:2px;
+    color:var(--ivory);
+    opacity:0.055;
+    white-space:nowrap;
+    pointer-events:none;
+  }
+
+  .content{
+    position:relative;
+    height:100%;
+    padding:20px 30px 0 84px;          /* left space clears the cameo overlap */
+  }
+  .kicker{
+    display:flex; align-items:center; gap:10px;
+    font-weight:600;
+    font-size:11px;
+    letter-spacing:3.2px;
+    text-transform:uppercase;
+    color:var(--sage);
+    animation:fadeUp .8s ease .5s both;
+  }
+  .kicker::before{
+    content:"";
+    width:5px; height:5px;
+    background:var(--sage);
+    transform:rotate(45deg);
+    flex:none;
+  }
+  .name{
+    margin-top:5px;
+    font-family:"Cormorant Garamond", serif;
+    font-weight:700;
+    font-size:44px;
+    line-height:1.02;
+    letter-spacing:0.4px;
+    color:var(--ivory);
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    animation:fadeUp .8s ease .62s both;
+  }
+  @container (max-width: 640px){ .name{ font-size:37px; } }
+
+  .rule{
+    margin-top:9px;
+    height:1px;
+    background:linear-gradient(90deg, var(--sage), rgba(157,184,165,0) 88%);
+    animation:grow 1s cubic-bezier(.19,.9,.22,1) .8s both;
+    transform-origin:left;
+  }
+
+  /* the single rotating slot */
+  .slot{
+    position:relative;
+    height:50px;
+    margin-top:2px;
+  }
+  .slide{
+    position:absolute; inset:0;
+    padding-right:90px;
+    display:flex; flex-direction:column; justify-content:center; gap:2px;
+    opacity:0;
+    transform:translateY(6px);
+    transition:opacity .6s ease, transform .6s ease;
+    pointer-events:none;
+  }
+  .slide.is-active{ opacity:1; transform:translateY(0); }
+  .line-a{
+    font-family:"Cormorant Garamond", serif;
+    font-style:italic;
+    font-weight:600;
+    font-size:21px;
+    line-height:1.15;
+    color:var(--ivory);
+  }
+  .slide.info .line-a{
+    font-family:"Jost", sans-serif;
+    font-style:normal;
+    font-weight:500;
+    font-size:14.5px;
+    line-height:1.25;
+    letter-spacing:0.2px;
+    color:var(--ivory-dim);
+  }
+  .line-b{
+    font-weight:600;
+    font-size:10.5px;
+    letter-spacing:2.2px;
+    text-transform:uppercase;
+    color:var(--sage);
+  }
+  .dots{
+    position:absolute;
+    right:0; top:50%;
+    transform:translateY(-50%);
+    display:flex; align-items:center; gap:6px;
+  }
+  .dots i{
+    display:block;
+    width:5px; height:5px;
+    border-radius:3px;
+    background:rgba(243,239,228,0.25);
+    transition:width .45s ease, background .45s ease;
+  }
+  .dots i.on{ width:20px; background:var(--sage); }
+
+  /* ================= oval cameo with laurel ================= */
+  .cameo{
+    position:absolute;
+    left:0; top:4px;
+    width:148px; height:190px;
+    z-index:6;
+    animation:pop .9s cubic-bezier(.19,.9,.22,1) both;
+  }
+  .outline{
+    position:absolute; inset:-8px;
+    border:1px solid rgba(243,239,228,0.42);
+    border-radius:50%;
+  }
+  .wreath{
+    position:absolute;
+    left:-22px; top:-22px;
+    width:192px; height:234px;
+    overflow:visible;
+    pointer-events:none;
+    filter:drop-shadow(0 4px 6px rgba(0,0,0,0.35));
+  }
+  .ring{
+    position:absolute; inset:0;
+    border-radius:50%;
+    padding:3px;
+    background:linear-gradient(155deg, #fbf8ef, #cfc9b6 45%, #8f9c92 80%, #cfc9b6);
+    box-shadow:0 18px 30px rgba(0,0,0,0.5);
+  }
+  .ring .in{
+    width:100%; height:100%;
+    border-radius:50%;
+    padding:5px;
+    background:var(--forest-b);
+  }
+  .ring img{
+    display:block;
+    width:100%; height:100%;
+    object-fit:cover;
+    border-radius:50%;
+    filter:saturate(0.85) contrast(1.04);
+    box-shadow:inset 0 0 20px rgba(0,0,0,0.45);
+  }
+
+  /* ================= motion ================= */
+  @keyframes pop{
+    from{ opacity:0; transform:scale(.9); }
+    to{   opacity:1; transform:scale(1); }
+  }
+  @keyframes wipe{
+    from{ clip-path:inset(0 100% 0 0); }
+    to{   clip-path:inset(0 0 0 0); }
+  }
+  @keyframes unroll{
+    from{ clip-path:inset(0 0 100% 0); }
+    to{   clip-path:inset(0 0 0 0); }
+  }
+  @keyframes fadeUp{
+    from{ opacity:0; transform:translateY(8px); }
+    to{   opacity:1; transform:translateY(0); }
+  }
+  @keyframes grow{
+    from{ transform:scaleX(0); }
+    to{   transform:scaleX(1); }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .cameo, .reveal, .ribbon-reveal, .kicker, .name, .rule{ animation:none; }
+    .slide, .dots i{ transition:none; }
+    .ticker-track{ animation:none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="stage">
+  <div class="lt" style="visibility:hidden;opacity:0">
+
+    <!-- ribbon strap (ticker + date/time), tucked under the panel -->
+    <div class="ribbon-fx">
+      <div class="ribbon-reveal">
+        <div class="ribbon">
+          <div class="ticker-wrap"><div class="ticker-track" id="tickerTrack"></div></div>
+          <div class="clock">
+            <span class="dot"></span>
+            <span id="timeLabel">-- --  ·  --:--</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- main panel -->
+    <div class="panel-fx">
+      <div class="reveal">
+        <div class="panel">
+          <div class="wm" id="watermark">1941 &ndash; 2026</div>
+          <div class="content">
+            <div class="kicker" id="kickerLabel">In Loving Memory</div>
+            <div class="name" id="subjectName">Margaret Eleanor Hayes</div>
+            <div class="rule"></div>
+            <div class="slot">
+              <div id="slideStage"><!-- slides injected by script --></div>
+              <div class="dots" id="dots"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- oval cameo with laurel -->
+    <div class="cameo">
+      <div class="outline"></div>
+      <svg class="wreath" id="wreath" viewBox="0 0 192 234" xmlns="http://www.w3.org/2000/svg"></svg>
+      <div class="ring">
+        <div class="in">
+          <img id="portrait" src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=360&h=460&fit=crop" alt="Portrait">
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  /* =========================================================
+     DATA MODEL — identical shape to the other designs, so one
+     backend payload can drive any of them.
+     ========================================================= */
+  const memorial = {
+    subject: {
+      label: "In Loving Memory",
+      name: "Margaret Eleanor Hayes",
+      photo_url: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=360&h=460&fit=crop"
+    },
+    meta: {
+      relation: "Beloved mother, grandmother, and friend",
+      birth_date: "March 4, 1941",
+      death_date: "September 9, 2026"
+    },
+    tributes: [
+      { text: "She kept the family together, one Sunday supper at a time." }
+    ],
+    service_details: [
+      { order: 1, text: "Service begins at 11:00 AM in the Fellowship Hall" },
+      { order: 2, text: "Reception follows immediately after in the garden courtyard" },
+      { order: 3, text: "In lieu of flowers, gifts may be made to St. Jude's Hospice in her memory" }
+    ],
+    ticker_messages: [
+      { order: 1, text: "Margaret Eleanor Hayes \u2014 March 4, 1941 to September 9, 2026" },
+      { order: 2, text: "Service begins at 11:00 AM in the Fellowship Hall" },
+      { order: 3, text: "Reception follows in the garden courtyard" },
+      { order: 4, text: "Gifts may be made to St. Jude's Hospice in her memory" }
+    ]
+  };
+
+  // ---- identity ----
+  document.getElementById('kickerLabel').textContent = memorial.subject.label;
+  document.getElementById('subjectName').textContent = memorial.subject.name;
+  document.getElementById('portrait').src = memorial.subject.photo_url;
+  const yearOf = d => (String(d).match(/\d{4}/) || [''])[0];
+  document.getElementById('watermark').textContent =
+    yearOf(memorial.meta.birth_date) + ' \u2013 ' + yearOf(memorial.meta.death_date);
+
+  // ---- laurel wreath: leaves generated along the cameo's ellipse ----
+  (function drawWreath(){
+    const svg = document.getElementById('wreath');
+    const NS = 'http://www.w3.org/2000/svg';
+    const cx = 96, cy = 117, rx = 86, ry = 108;   // slightly larger than the cameo
+    const LEAF = '#9db8a5', STEM = '#7f9c8a';
+
+    function branch(startDeg, endDeg, mirror){
+      const g = document.createElementNS(NS, 'g');
+      if (mirror) g.setAttribute('transform', 'translate(' + (2 * cx) + ',0) scale(-1,1)');
+
+      // stem
+      const steps = 40;
+      let d = '';
+      for (let i = 0; i <= steps; i++){
+        const th = (startDeg + (endDeg - startDeg) * i / steps) * Math.PI / 180;
+        d += (i ? 'L' : 'M') + (cx + rx * Math.cos(th)).toFixed(1) + ' ' + (cy + ry * Math.sin(th)).toFixed(1);
+      }
+      const stem = document.createElementNS(NS, 'path');
+      stem.setAttribute('d', d);
+      stem.setAttribute('fill', 'none');
+      stem.setAttribute('stroke', STEM);
+      stem.setAttribute('stroke-width', '1.1');
+      stem.setAttribute('stroke-linecap', 'round');
+      g.appendChild(stem);
+
+      // leaves, paired either side of the stem, shrinking toward the tip
+      const N = 11;
+      for (let i = 0; i < N; i++){
+        const t = i / (N - 1);
+        const deg = startDeg + (endDeg - startDeg) * (0.04 + 0.92 * t);
+        const th = deg * Math.PI / 180;
+        const px = cx + rx * Math.cos(th);
+        const py = cy + ry * Math.sin(th);
+        const dir = (endDeg > startDeg ? 1 : -1);
+        const tang = Math.atan2(ry * Math.cos(th) * dir, -rx * Math.sin(th) * dir) * 180 / Math.PI;
+        const size = 1 - 0.38 * t;
+        [-38, 38].forEach(off => {
+          const leaf = document.createElementNS(NS, 'ellipse');
+          leaf.setAttribute('cx', 8 * size);
+          leaf.setAttribute('cy', 0);
+          leaf.setAttribute('rx', 8.5 * size);
+          leaf.setAttribute('ry', 3.1 * size);
+          leaf.setAttribute('fill', LEAF);
+          leaf.setAttribute('opacity', (0.92 - 0.25 * t).toFixed(2));
+          leaf.setAttribute('transform',
+            'translate(' + px.toFixed(1) + ',' + py.toFixed(1) + ') rotate(' + (tang + off).toFixed(1) + ')');
+          g.appendChild(leaf);
+        });
+      }
+      svg.appendChild(g);
+    }
+
+    branch(98, 212, false);   // left branch: bottom -> up the left side
+    branch(98, 212, true);    // right branch: mirrored
+  })();
+
+  // ---- rotating slides + progress dots ----
+  const SLIDE_MS = 5200;
+  const slides = [
+    {
+      type: 'meta',
+      lineA: memorial.meta.relation,
+      lineB: memorial.meta.birth_date + '  \u2014  ' + memorial.meta.death_date
+    },
+    ...memorial.tributes.map(t => ({ type: 'tribute', lineA: '\u201C' + t.text + '\u201D' })),
+    ...memorial.service_details
+      .slice().sort((a, b) => a.order - b.order)
+      .map(d => ({ type: 'info', lineA: d.text }))
+  ];
+
+  const stage = document.getElementById('slideStage');
+  const dotsEl = document.getElementById('dots');
+  slides.forEach((s, i) => {
+    const el = document.createElement('div');
+    el.className = 'slide ' + s.type + (i === 0 ? ' is-active' : '');
+    const a = document.createElement('div');
+    a.className = 'line-a';
+    a.textContent = s.lineA;
+    el.appendChild(a);
+    if (s.lineB) {
+      const b = document.createElement('div');
+      b.className = 'line-b';
+      b.textContent = s.lineB;
+      el.appendChild(b);
+    }
+    stage.appendChild(el);
+
+    const dot = document.createElement('i');
+    if (i === 0) dot.className = 'on';
+    dotsEl.appendChild(dot);
+  });
+
+  const slideEls = stage.querySelectorAll('.slide');
+  const dotEls = dotsEl.querySelectorAll('i');
+  let activeIndex = 0;
+  setInterval(() => {
+    slideEls[activeIndex].classList.remove('is-active');
+    dotEls[activeIndex].classList.remove('on');
+    activeIndex = (activeIndex + 1) % slideEls.length;
+    slideEls[activeIndex].classList.add('is-active');
+    dotEls[activeIndex].classList.add('on');
+  }, SLIDE_MS);
+
+  // ---- live date + time ----
+  const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  function updateClock(){
+    const now = new Date();
+    let h = now.getHours();
+    const m = now.getMinutes();
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    h = h % 12; if (h === 0) h = 12;
+    document.getElementById('timeLabel').textContent =
+      MONTHS[now.getMonth()] + ' ' + now.getDate() + '  \u00B7  ' + h + ':' + (m < 10 ? '0' + m : m) + ' ' + ampm;
+  }
+  updateClock();
+  setInterval(updateClock, 15000);
+
+  // ---- ticker: repeat messages enough to always fill the ribbon,
+  // scroll exactly one copy for a seamless loop, rebuild on resize ----
+  (function initTicker(){
+    const track = document.getElementById('tickerTrack');
+    const wrap  = track.parentElement;
+    const items = memorial.ticker_messages.slice().sort((a, b) => a.order - b.order);
+    const PX_PER_SEC = 70;
+
+    function addPass(){
+      items.forEach(item => {
+        const span = document.createElement('span');
+        span.textContent = item.text;
+        track.appendChild(span);
+      });
+    }
+
+    function build(){
+      track.innerHTML = '';
+      track.style.animation = 'none';
+      addPass();
+      const copyW = track.scrollWidth;
+      if (!copyW) return;
+      const need = wrap.clientWidth + copyW;
+      let guard = 0;
+      while (track.scrollWidth < need && guard++ < 40) addPass();
+      track.style.setProperty('--shift', copyW + 'px');
+      void track.offsetWidth;
+      track.style.animation = '';
+      track.style.animationDuration = Math.max(copyW / PX_PER_SEC, 8) + 's';
+    }
+
+    const start = () => requestAnimationFrame(build);
+    (document.fonts && document.fonts.ready) ? document.fonts.ready.then(start) : start();
+
+    let t;
+    window.addEventListener('resize', () => { clearTimeout(t); t = setTimeout(build, 150); });
+  })();
+</script>
+
+<script>
+window.MEMORIAL_SETTINGS = {{ settings|tojson }};
+window.MEMORIAL_VARIANT = 'cameo';
+window.MEMORIAL_PREVIEW = {{ preview_mode|default(false)|tojson }};
+</script>
+<script src="{{ url_for('static', filename='js/memorial-template-bridge.js') }}"></script>
+</body>
+</html>

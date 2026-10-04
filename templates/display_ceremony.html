@@ -1241,6 +1241,19 @@
 
         function stopOverlayCycle() {
             if (overlayCycleTimer) { clearTimeout(overlayCycleTimer); overlayCycleTimer = null; }
+            overlayCycleState = 'visible';
+            overlayContainer.classList.remove('cycle-hiding');
+            overlayContainer.style.animation = '';
+            overlayContainer.style.clipPath = '';
+            overlayContainer.style.transform = '';
+            overlayContainer.style.transformOrigin = '';
+            [mainText, secondaryText, companyName].forEach(el => {
+                el.style.opacity = '';
+                el.style.transform = '';
+                el.style.filter = '';
+                el.style.transition = '';
+                el.style.animation = '';
+            });
         }
 
         function startOverlayCycle() {

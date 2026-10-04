@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>In Memoriam — Lower Third</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=Jost:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:        #12151a;
+    --bar-a:      #232a33;
+    --bar-b:      #14171c;
+    --bronze:     #aab2bd;
+    --bronze-lt:  #e4e8ed;
+    --bronze-dk:  #7c8591;
+    --ivory:      #f3efe4;
+    --ivory-dim:  rgba(243,239,228,0.65);
+  --time:       #9fb9cf;
+
+    /* responsive sizing: --s scales the whole graphic on small screens,
+       --bar-w is the length of the main bar and grows with the viewport */
+    --s: 1;
+    --gutter: 56px;
+    --bar-w: clamp(420px, min(calc(58vw / var(--s) - 118px), calc((100vw - 2 * var(--gutter)) / var(--s) - 118px)), 820px);
+  }
+
+  *{ box-sizing:border-box; }
+
+  html,body{
+    margin:0; padding:0; width:100%; height:100%;
+    background:transparent;   /* true overlay — nothing renders behind the graphic */
+    overflow:hidden;
+    font-family:"Jost", sans-serif;
+  }
+
+  .stage{ position:relative; width:100%; height:100vh; background:transparent; }
+
+  .lower-third{
+    position:absolute;
+    left:var(--gutter);
+    bottom:64px;
+    width:calc(118px + var(--bar-w));
+    height:186px;
+    transform:scale(var(--s));
+    transform-origin:bottom left;
+  }
+
+  .lower-third > *{ animation: settle .85s cubic-bezier(.19,.9,.22,1) both; }
+  .circle{ animation-delay:0s; }
+  .bar-main, .bar-main-shadow{ animation-delay:.1s; }
+  .accent-line{ animation-delay:.28s; }
+  .bar-sub, .bar-sub-shadow{ animation-delay:.2s; }
+
+  @keyframes settle{
+    from{ opacity:0; transform: translateX(-14px); }
+    to{ opacity:1; transform: translateX(0); }
+  }
+
+  /* ============ generic skewed bar shell ============ */
+  .bar{
+    position:absolute;
+    border-radius:11px;
+    transform: skewX(-11deg);
+    overflow:hidden;
+  }
+  .bar-inner{
+    position:relative;
+    height:100%;
+    transform: skewX(11deg);
+    padding:0 30px 0 34px;
+  }
+
+  /* ---- primary bar: identity, always on screen ---- */
+  .bar-main{
+    top:16px; left:118px;
+    width:var(--bar-w); height:78px;
+    border-radius:11px 11px 0 11px;
+    transform-origin:0 -16px;
+    background: linear-gradient(100deg, var(--bar-a), var(--bar-b) 78%);
+    box-shadow: 0 16px 30px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.05);
+    border:1px solid rgba(205,212,222,0.22);
+    z-index:4;
+  }
+  .bar-main-shadow{
+    top:24px; left:106px;
+    width:430px; height:78px;
+    background:#0a0c0f;
+    opacity:0.55;
+    z-index:3;
+  }
+  .bar-main .bar-inner{ display:flex; flex-direction:column; justify-content:center; gap:2px; }
+
+  .kicker-small{
+    font-family:"Jost", sans-serif;
+    font-weight:600;
+    font-size:11.5px;
+    letter-spacing:2.2px;
+    text-transform:uppercase;
+    color:var(--bronze-lt);
+  }
+  .name-big{
+    font-family:"Playfair Display", serif;
+    font-weight:800;
+    font-size:29px;
+    color:var(--ivory);
+    letter-spacing:0.2px;
+    line-height:1.05;
+    white-space:nowrap;
+  }
+
+  /* ---- thin trailing accent above the main bar ---- */
+  .accent-line{
+    position:absolute;
+    top:2px; left:calc(118px + var(--bar-w) / 2 - 100px);
+    width:200px; height:6px;
+    border-radius:4px;
+    transform: skewX(-11deg);
+    background: linear-gradient(90deg, var(--bronze-lt), var(--bronze));
+    z-index:5;
+    box-shadow: 0 3px 8px rgba(190,198,208,0.35);
+  }
+
+  /* ---- secondary bar: the ONE rotating slot ----
+     Everything that used to be scattered (relation, dates,
+     tribute quote, each service line) now lives here as a
+     single set of "slides" that crossfade in place. */
+  .bar-sub{
+    top:88px; left:198px;
+    width:calc(var(--bar-w) - 80px); height:50px;
+    border-radius:11px 0 11px 11px;
+    transform-origin:0 -88px;
+    background: linear-gradient(100deg, var(--bronze-lt), var(--bronze) 65%, var(--bronze-dk));
+    box-shadow: 0 10px 22px rgba(0,0,0,0.35);
+    z-index:4;
+  }
+  .bar-sub-shadow{
+    top:94px; left:188px;
+    width:calc(var(--bar-w) - 70px); height:74px;
+    border-radius:11px 0 11px 11px;
+    transform-origin:0 -94px;
+    background:#0b0d10;
+    border:1px solid rgba(205,212,222,0.22);
+    z-index:3;
+    overflow:hidden;
+  }
+  .bar-sub-shadow .bar-inner{
+    display:flex;
+    align-items:flex-end;
+    padding:0;
+  }
+  .bar-sub .bar-inner{ padding:0 26px 0 30px; }
+
+  .slide{
+    position:absolute;
+    inset:0;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    gap:2px;
+    opacity:0;
+    transform:translateY(6px);
+    transition: opacity .6s ease, transform .6s ease;
+    pointer-events:none;
+  }
+  .slide.is-active{
+    opacity:1;
+    transform:translateY(0);
+    pointer-events:auto;
+  }
+
+  .slide .line-a{
+    font-family:"Playfair Display", serif;
+    font-style:italic;
+    font-weight:700;
+    font-size:14.5px;
+    color:var(--ink);
+    line-height:1.25;
+  }
+  .slide .line-b{
+    font-family:"Jost", sans-serif;
+    font-weight:600;
+    font-size:10.5px;
+    letter-spacing:1.1px;
+    text-transform:uppercase;
+    color:rgba(18,21,26,0.72);
+    margin-top:2px;
+  }
+  .slide.tribute .line-a{ font-size:14px; }
+  .slide.info .line-a{ font-style:normal; font-weight:600; font-size:14px; }
+
+  /* ---- live date + time, now living at the right end of the dark strap ---- */
+  /* visible band of the strap = the part below the gold card (30px) */
+  .ticker-wrap{
+    position:relative;
+    flex:1;
+    min-width:0;
+    height:30px;
+    margin-left:-14px;            /* bleed under the skewed left edge: true edge to edge */
+    padding-left:14px;
+    overflow:hidden;
+    display:flex;
+    align-items:center;
+    /* text dissolves instead of being cut by a line */
+    -webkit-mask-image: linear-gradient(90deg, #000 0, #000 calc(100% - 56px), transparent 100%);
+            mask-image: linear-gradient(90deg, #000 0, #000 calc(100% - 56px), transparent 100%);
+  }
+
+  /* clock: same strap, just a gently darker zone that fades in — no edge, no divider */
+  .strap-time{
+    position:relative;
+    z-index:2;
+    flex:none;
+    height:30px;
+    display:flex;
+    align-items:center;
+    gap:7px;
+    margin-left:-30px;
+    padding:0 26px 0 46px;
+  }
+  .strap-time .dot{
+    width:6px; height:6px;
+    border-radius:50%;
+    background:var(--time);
+    animation: pulseDot 2.6s ease-in-out infinite;
+    flex:none;
+  }
+  @keyframes pulseDot{
+    0%,100%{ opacity:0.3; }
+    50%{ opacity:1; }
+  }
+  .strap-time span{
+    font-family:"Jost", sans-serif;
+    font-weight:600;
+    font-size:11.5px;
+    letter-spacing:0.9px;
+    text-transform:uppercase;
+    color:var(--time);
+    white-space:nowrap;
+  }
+
+  /* reserve a little breathing room so rotating text never runs under the clock card */
+  .slide{ padding:0 30px 0 36px; }
+
+  /* ---- cameo portrait, overlapping the main bar's left edge ---- */
+  .circle{
+    position:absolute;
+    top:6px; left:0;
+    z-index:7;
+    width:150px; height:150px;
+    border-radius:50%;
+    background: conic-gradient(from 210deg, var(--bronze-lt), var(--bronze) 40%, var(--bronze-dk) 62%, var(--bronze-lt) 100%);
+    padding:4px;
+    box-shadow: 0 18px 30px rgba(0,0,0,0.5), 0 0 0 1px rgba(0,0,0,0.3);
+  }
+  .circle .ring{ width:100%; height:100%; border-radius:50%; padding:5px; background:var(--ink); }
+  .circle img{
+    width:100%; height:100%;
+    border-radius:50%;
+    object-fit:cover;
+    display:block;
+    filter: saturate(0.85) sepia(0.06) contrast(1.04);
+    box-shadow: inset 0 0 22px rgba(0,0,0,0.5);
+  }
+
+  /* tiny laurel touch, tucked low behind the circle */
+  .sprig{
+    position:absolute;
+    left:6px; top:118px;
+    width:70px; height:50px;
+    z-index:2;
+    opacity:0.4;
+    pointer-events:none;
+  }
+
+  @media (max-width: 900px){ :root{ --s:0.72; --gutter:24px; } }
+  @media (max-width: 600px){ :root{ --s:0.5;  --gutter:16px; } }
+
+  @media (prefers-reduced-motion: reduce){
+    .lower-third > *{ animation:none; opacity:1; transform:none; }
+    .slide{ transition:none; }
+  }
+
+  /* ============ scrolling ticker text, living inside the
+     existing shadow strip beneath the gold card (not a new
+     element — the same thin black strap that was already
+     peeking out) ============ */
+  .ticker-track{
+    display:flex;
+    width:max-content;
+    align-items:center;
+    white-space:nowrap;
+    animation: tickerScroll linear infinite;
+  }
+  .ticker-track span{
+    font-family:"Jost", sans-serif;
+    font-weight:500;
+    font-size:11px;
+    letter-spacing:0.6px;
+    text-transform:uppercase;
+    color:var(--ivory-dim);
+    padding-right:34px;
+  }
+  .ticker-track span::after{
+    content:"\2022";
+    color:var(--bronze-lt);
+    margin-left:34px;
+  }
+  @keyframes tickerScroll{
+    from{ transform: translateX(0); }
+    to{ transform: translateX(calc(-1 * var(--shift, 50%))); }
+  }
+  @media (prefers-reduced-motion: reduce){
+    .ticker-track{ animation:none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="stage">
+  <div class="lower-third" style="visibility:hidden;opacity:0">
+
+    <div class="sprig">
+      <svg viewBox="0 0 70 50" xmlns="http://www.w3.org/2000/svg">
+        <path d="M4,46 C20,34 28,22 30,4" fill="none" stroke="#aab2bd" stroke-width="1.1" stroke-linecap="round"/>
+        <g stroke="#7c8591" stroke-width="1.1" fill="none" stroke-linecap="round">
+          <path d="M12,38 C8,34 6,29 8,24 C14,27 16,32 17,37 Z"/>
+          <path d="M17,26 C13,22 12,17 15,12 C20,15 21,21 22,25 Z"/>
+          <path d="M23,15 C20,11 20,7 23,3 C27,6 28,11 28,14 Z"/>
+        </g>
+      </svg>
+    </div>
+
+    <div class="bar bar-main-shadow"></div>
+    <div class="accent-line"></div>
+    <div class="bar bar-main">
+      <div class="bar-inner">
+        <div class="kicker-small" id="kickerLabel">In Loving Memory</div>
+        <div class="name-big" id="subjectName">Margaret Eleanor Hayes</div>
+      </div>
+    </div>
+
+    <div class="bar bar-sub-shadow">
+      <div class="bar-inner">
+        <div class="ticker-wrap">
+          <div class="ticker-track" id="tickerTrack"></div>
+        </div>
+        <div class="strap-time">
+          <span class="dot"></span>
+          <span id="timeLabel">-- --, ----</span>
+        </div>
+      </div>
+    </div>
+    <div class="bar bar-sub">
+      <div class="bar-inner">
+        <div id="slideStage"><!-- slides injected by script --></div>
+      </div>
+    </div>
+
+    <div class="circle">
+      <div class="ring">
+        <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=320&h=320&fit=crop" alt="Portrait">
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  /* =========================================================
+     DATA MODEL — shaped the way it would live in a database.
+     Each object below is one "table" / one row-group, so this
+     can be swapped for a real fetch() to your backend later
+     with no change to the rendering logic underneath.
+     ========================================================= */
+
+  const memorial = {
+    // subjects table: one row per person being honored
+    subject: {
+      label: "In Loving Memory",
+      name: "Margaret Eleanor Hayes",
+      photo_url: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=320&h=320&fit=crop"
+    },
+
+    // subject_meta table: relation + life dates, one row per subject
+    meta: {
+      relation: "Beloved mother, grandmother, and friend",
+      birth_date: "March 4, 1941",
+      death_date: "September 9, 2026"
+    },
+
+    // tributes table: quotes/remembrances, one-to-many per subject
+    tributes: [
+      { text: "She kept the family together, one Sunday supper at a time." }
+    ],
+
+    // service_details table: ordered rows per subject
+    service_details: [
+      { order: 1, text: "Service begins at 11:00 AM in the Fellowship Hall" },
+      { order: 2, text: "Reception follows immediately after in the garden courtyard" },
+      { order: 3, text: "In lieu of flowers, gifts may be made to St. Jude's Hospice in her memory" }
+    ],
+
+    // ticker_messages table: short, ordered items for the bottom scrolling band
+    ticker_messages: [
+      { order: 1, text: "Margaret Eleanor Hayes \u2014 March 4, 1941 to September 9, 2026" },
+      { order: 2, text: "Service begins at 11:00 AM in the Fellowship Hall" },
+      { order: 3, text: "Reception follows in the garden courtyard" },
+      { order: 4, text: "Gifts may be made to St. Jude's Hospice in her memory" }
+    ]
+  };
+
+  // ---- render the always-on identity bar from `subject` ----
+  document.getElementById('kickerLabel').textContent = memorial.subject.label;
+  document.getElementById('subjectName').textContent = memorial.subject.name;
+
+  // ---- build the rotating slide list from the other three groups ----
+  const slides = [
+    {
+      type: 'meta',
+      lineA: memorial.meta.relation,
+      lineB: memorial.meta.birth_date + '  —  ' + memorial.meta.death_date
+    },
+    ...memorial.tributes.map(t => ({ type: 'tribute', lineA: '\u201C' + t.text + '\u201D' })),
+    ...memorial.service_details
+      .sort((a, b) => a.order - b.order)
+      .map(d => ({ type: 'info', lineA: d.text }))
+  ];
+
+  const stage = document.getElementById('slideStage');
+  slides.forEach((s, i) => {
+    const el = document.createElement('div');
+    el.className = 'slide ' + s.type + (i === 0 ? ' is-active' : '');
+    const a = document.createElement('div');
+    a.className = 'line-a';
+    a.textContent = s.lineA;
+    el.appendChild(a);
+    if (s.lineB) {
+      const b = document.createElement('div');
+      b.className = 'line-b';
+      b.textContent = s.lineB;
+      el.appendChild(b);
+    }
+    stage.appendChild(el);
+  });
+
+  let activeIndex = 0;
+  const slideEls = stage.querySelectorAll('.slide');
+  setInterval(() => {
+    slideEls[activeIndex].classList.remove('is-active');
+    activeIndex = (activeIndex + 1) % slideEls.length;
+    slideEls[activeIndex].classList.add('is-active');
+  }, 5200);
+
+  // ---- live clock + date, tucked into the bronze card's corner ----
+  const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  function updateClock(){
+    const now = new Date();
+    let h24 = now.getHours();
+    const m = now.getMinutes();
+    const ampm = h24 >= 12 ? 'PM' : 'AM';
+    let h12 = h24 % 12; if (h12 === 0) h12 = 12;
+    const mm = m < 10 ? '0' + m : m;
+    const dateStr = MONTHS[now.getMonth()] + ' ' + now.getDate();
+    document.getElementById('timeLabel').textContent =
+      dateStr + '  \u00B7  ' + h12 + ':' + mm + ' ' + ampm;
+  }
+  updateClock();
+  setInterval(updateClock, 1000 * 15);
+
+  // ---- bottom ticker: repeat the messages enough times to always fill the
+  // strap (whatever its width), then scroll exactly one copy for a seamless loop ----
+  (function initTicker(){
+    const track = document.getElementById('tickerTrack');
+    const wrap  = track.parentElement;
+    const items = memorial.ticker_messages.slice().sort((a, b) => a.order - b.order);
+    const PX_PER_SEC = 70;   // reading speed
+
+    function addPass(){
+      items.forEach(item => {
+        const span = document.createElement('span');
+        span.textContent = item.text;
+        track.appendChild(span);
+      });
+    }
+
+    function build(){
+      track.innerHTML = '';
+      track.style.animation = 'none';
+      addPass();
+      const copyW = track.scrollWidth;           // width of one full copy
+      if (!copyW) return;
+      const need = wrap.clientWidth + copyW;     // visible width + one copy to scroll through
+      let guard = 0;
+      while (track.scrollWidth < need && guard++ < 40) addPass();
+      track.style.setProperty('--shift', copyW + 'px');
+      track.style.animationDuration = Math.max(copyW / PX_PER_SEC, 8) + 's';
+      void track.offsetWidth;                    // restart cleanly
+      track.style.animation = '';
+      track.style.animationDuration = Math.max(copyW / PX_PER_SEC, 8) + 's';
+    }
+
+    const start = () => requestAnimationFrame(build);
+    (document.fonts && document.fonts.ready) ? document.fonts.ready.then(start) : start();
+
+    let t;
+    window.addEventListener('resize', () => { clearTimeout(t); t = setTimeout(build, 150); });
+  })();
+</script>
+
+<script>
+window.MEMORIAL_SETTINGS = {{ settings|tojson }};
+window.MEMORIAL_VARIANT = 'classic';
+window.MEMORIAL_PREVIEW = {{ preview_mode|default(false)|tojson }};
+</script>
+<script src="{{ url_for('static', filename='js/memorial-template-bridge.js') }}"></script>
+</body>
+</html>

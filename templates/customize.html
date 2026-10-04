@@ -239,6 +239,13 @@ input[type="range"]{accent-color:#4F46E5}
 /* ── Tab content ─────────────────────────────────────── */
 .tab-content{display:none;padding:1rem 0 0}
 .tab-content.active{display:block}
+.static-design-notice{display:flex;align-items:flex-start;gap:.75rem;margin:0 0 1rem;padding:.85rem 1rem;border:1px solid #fde68a;border-radius:.5rem;background:#fffbeb;color:#78350f}
+.static-design-notice a{font-weight:700;text-decoration:underline}
+.static-locked-section{position:relative;opacity:.58}
+.static-locked-section::after{content:'Controlled by the selected design';position:absolute;top:.75rem;right:.85rem;padding:.2rem .5rem;border-radius:.35rem;background:#f3f4f6;color:#6b7280;font-size:.68rem;font-weight:700}
+.static-locked-section>*{pointer-events:none}
+.static-locked-control{opacity:.5}
+.static-locked-control input,.static-locked-control select,.static-locked-control textarea,.static-locked-control button{cursor:not-allowed}
 
 /* ── Search highlight ────────────────────────────────── */
 @keyframes settingHighlight{
@@ -300,9 +307,16 @@ input[type="range"]{accent-color:#4F46E5}
             </div>
         </div>
         <div class="page-header-actions">
+            {% if category == 'funeral' %}
+            <a href="{{ url_for('main.funeral_designs') }}" class="btn btn-secondary">
+                <i class="fas fa-th-large"></i>
+                <span class="hidden sm:inline">Change Design</span>
+                <span class="sm:hidden">Design</span>
+            </a>
+            {% endif %}
             <button onclick="resetToDefaults()" class="btn btn-danger-soft">
                 <i class="fas fa-undo"></i>
-                <span class="hidden sm:inline">Reset to Defaults</span>
+                <span class="hidden sm:inline">Reset All Settings</span>
                 <span class="sm:hidden">Reset</span>
             </button>
             <a href="{{ url_for('main.display', category=category) }}" target="_blank" class="btn btn-primary">
@@ -312,6 +326,18 @@ input[type="range"]{accent-color:#4F46E5}
             </a>
         </div>
     </div>
+
+    {% set active_layout = settings.layout_style or 'legacy' %}
+    {% set is_static_funeral = category == 'funeral' and active_layout not in ['default', 'legacy'] %}
+    {% if is_static_funeral %}
+    <div class="static-design-notice" id="static-design-notice">
+        <i class="fas fa-lock mt-0.5"></i>
+        <div>
+            <p class="font-semibold">{{ active_layout|replace('-', ' ')|title }} uses a fixed composition</p>
+            <p class="text-xs mt-0.5">Content, portrait, core colours, visibility and auto-cycle remain editable. Position, sizing, typography and template animations are locked so the design keeps its intended proportions. <a href="{{ url_for('main.funeral_designs') }}">Change design</a></p>
+        </div>
+    </div>
+    {% endif %}
 
     {# ── Sticky Tab Bar + Search ── #}
     <div class="sticky-tabs-bar" id="sticky-tabs-bar">
@@ -690,8 +716,8 @@ input[type="range"]{accent-color:#4F46E5}
                 {{ toggle_row('Enable Auto-Cycle','overlay_cycle_tog', settings.overlay_cycle_enabled, "toggleOverlayCycle(this)") }}
                 <div id="overlay_cycle_controls" style="display:{% if settings.overlay_cycle_enabled %}block{% else %}none{% endif %};">
                     <div class="grid-2">
-                        {{ range_slider('overlay_visible_duration','Visible Duration', settings.overlay_visible_duration or 10, 1, 300, 1, 's', 'overlay_visible_duration', hint='How long the overlay stays on screen') }}
-                        {{ range_slider('overlay_hidden_duration','Hidden Duration', settings.overlay_hidden_duration or 5, 1, 300, 1, 's', 'overlay_hidden_duration', hint='How long it disappears between appearances') }}
+                        {{ range_slider('overlay_visible_duration','Visible Duration', settings.overlay_visible_duration or 10, 1, 900, 1, 's', 'overlay_visible_duration', hint='How long the overlay stays on screen (up to 15 minutes)') }}
+                        {{ range_slider('overlay_hidden_duration','Hidden Duration', settings.overlay_hidden_duration or 5, 1, 900, 1, 's', 'overlay_hidden_duration', hint='How long it disappears between appearances (up to 15 minutes)') }}
                     </div>
                     <p class="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2 mt-1">Entry &amp; Exit Animations</p>
                     <div class="grid-2">
@@ -1281,10 +1307,10 @@ function toggleShowLogo(el)          { _togglePanel(el, 'show_company_logo',    
 function toggleShowCategoryImage(el) { _togglePanel(el, 'show_category_image',   'category_image_controls'); }
 
 function resetToDefaults() {
-    if (!confirm('Reset all settings to defaults?')) return;
+    if (!confirm('Reset every text, colour, layout, animation, visibility, and timing setting to this category\'s recommended design? Your uploaded portrait and logo will be kept.')) return;
     fetch(`/api/settings/${category}/reset`, { method: 'POST' })
         .then(r => r.json())
-        .then(d => { if (d.success) { showToast('Reset', 'success'); location.reload(); } });
+        .then(d => { if (d.success) { showToast('All settings reset', 'success'); location.reload(); } });
 }
 
 function toggleApplyAllFonts(el) {
@@ -1771,12 +1797,72 @@ document.addEventListener('click', e => {
     if (!e.target.closest('.search-wrap')) hideDropdown();
 });
 
+function applyStaticDesignLocks() {
+    const staticDesign = {{ 'true' if is_static_funeral else 'false' }};
+    if (!staticDesign) return;
+
+    const lockSection = section => {
+        if (!section) return;
+        section.classList.add('static-locked-section');
+        section.querySelectorAll('input,select,textarea,button').forEach(el => el.disabled = true);
+        section.querySelectorAll('.toggle-checkbox').forEach(el => {
+            el.style.pointerEvents = 'none';
+            el.setAttribute('aria-disabled', 'true');
+        });
+    };
+    const lockControl = id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.disabled = true;
+        const wrap = el.closest('.form-group') || el;
+        wrap.classList.add('static-locked-control');
+        if (el.classList.contains('toggle-checkbox')) {
+            el.style.pointerEvents = 'none';
+            el.setAttribute('aria-disabled', 'true');
+        }
+    };
+
+    // These layouts own their geometry and motion. Auto-cycle remains available.
+    document.querySelectorAll('#animations-tab .settings-section').forEach(section => {
+        if (!section.querySelector('h3')?.textContent.includes('Overlay Auto-Cycle')) lockSection(section);
+    });
+    document.querySelectorAll('#layout-tab .settings-section').forEach(lockSection);
+    document.querySelectorAll('#appearance-tab .settings-section').forEach(section => {
+        const heading = section.querySelector('h3')?.textContent || '';
+        if (heading.includes('Typography') || heading.includes('Decorative')) lockSection(section);
+    });
+    document.querySelectorAll('#assets-tab .settings-section').forEach(section => {
+        if (section.querySelector('h3')?.textContent.includes('Company Logo')) lockSection(section);
+    });
+
+    [
+        'main_font_size','main_font_family','secondary_font_size','secondary_font_family',
+        'secondary_rotation_toggle','secondary_display_duration','secondary_transition_duration',
+        'secondary_transition_type','ticker_font_size','ticker_font_family','ticker_speed',
+        'company_name_font_size','company_name_font_family','company_name_italic_tog',
+        'overlay_bg_opacity','main_text_bg_color_picker','main_text_bg_color','main_text_bg_opacity',
+        'secondary_text_bg_color_picker','secondary_text_bg_color','secondary_text_bg_opacity',
+        'company_name_color_picker','company_name_color','company_name_bg_color_picker',
+        'company_name_bg_color','company_name_bg_opacity','ticker_bg_opacity','border_color_picker',
+        'border_color','border_width','image_size','image_shape','image_position','image_fit',
+        'image_border_width','image_border_color_picker','image_border_color'
+    ].forEach(lockControl);
+
+    const sectionToggle = document.querySelector('#sections-panel')?.parentElement?.querySelector('.toggle-checkbox');
+    if (sectionToggle) {
+        sectionToggle.style.pointerEvents = 'none';
+        sectionToggle.setAttribute('aria-disabled', 'true');
+        sectionToggle.closest('.form-group')?.classList.add('static-locked-control');
+    }
+}
+
 /* ── Init ────────────────────────────────────────────── */
 document.addEventListener('DOMContentLoaded', () => {
     loadPhrases();
     toggleLogoCustomPos();
     initStaggerOrder();
     buildSearchIndex();
+    applyStaticDesignLocks();
 
     // Restore the tab the user was on before the page reloaded
     try {

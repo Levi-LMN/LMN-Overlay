@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>In Memoriam — Lower Third (Plate)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;0,700;1,600&family=Jost:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    /* deep oxblood + silver + pearl — one cool accent for the clock */
+    --wine-a:    #4a1d2b;
+    --wine-b:    #1c0a11;
+    --silver-lt: #eef1f5;
+    --silver:    #b9c1cc;
+    --silver-dk: #7d8795;
+    --pearl:     #f4f0e8;
+    --pearl-dim: rgba(244,240,232,0.62);
+    --ink:       #2a1119;
+    --time:      #a9bfd3;
+
+    --pl: 142px;                 /* how far the panel starts from the left (portrait overlap) */
+
+    /* responsive: --s scales the graphic on small screens, --bar-w is the panel length */
+    --s: 1;
+    --gutter: 56px;
+    --bar-w: clamp(540px,
+                   min(calc(58vw / var(--s) - var(--pl)),
+                       calc((100vw - 2 * var(--gutter)) / var(--s) - var(--pl))),
+                   820px);
+  }
+  @media (max-width: 900px){ :root{ --s:0.72; --gutter:24px; } }
+  @media (max-width: 600px){ :root{ --s:0.5;  --gutter:16px; } }
+
+  *{ box-sizing:border-box; }
+
+  html,body{
+    margin:0; padding:0; width:100%; height:100%;
+    background:transparent;              /* true overlay */
+    overflow:hidden;
+    font-family:"Jost", sans-serif;
+  }
+  .stage{ position:relative; width:100%; height:100vh; }
+
+  .lt{
+    position:absolute;
+    left:var(--gutter);
+    bottom:64px;
+    width:calc(var(--pl) + var(--bar-w));
+    height:214px;
+    transform:scale(var(--s));
+    transform-origin:bottom left;
+  }
+
+  /* octagon helper: chamfered corners, size set per element with --c */
+  .oct{
+    clip-path:polygon(
+      var(--c) 0, calc(100% - var(--c)) 0,
+      100% var(--c), 100% calc(100% - var(--c)),
+      calc(100% - var(--c)) 100%, var(--c) 100%,
+      0 calc(100% - var(--c)), 0 var(--c));
+  }
+
+  /* ================= portrait (octagon, layered) ================= */
+  .p-back, .portrait-fx{
+    position:absolute;
+    left:0; top:22px;
+    width:180px; height:180px;
+  }
+  /* offset plate peeking out behind the portrait */
+  .p-back{
+    z-index:5;
+    transform:translate(9px, 9px);
+    animation:plateOut .9s cubic-bezier(.19,.9,.22,1) .35s both;
+  }
+  .p-back .a{ position:absolute; inset:0; background:var(--silver); opacity:.55; --c:36px; }
+  .p-back .b{ position:absolute; inset:1.5px; background:#2a0f18; --c:35px; }
+
+  .portrait-fx{
+    z-index:6;
+    filter:drop-shadow(0 16px 20px rgba(0,0,0,0.5));
+    animation:pop .8s cubic-bezier(.19,.9,.22,1) both;
+  }
+  .frame{
+    position:absolute; inset:0; --c:36px;
+    background:linear-gradient(155deg, var(--silver-lt), var(--silver) 42%, var(--silver-dk) 78%, var(--silver) 100%);
+  }
+  .frame .inner{
+    position:absolute; inset:4px; --c:33.7px;
+    background:var(--wine-b);
+  }
+  .frame img{
+    position:absolute; inset:5px;
+    width:calc(100% - 10px); height:calc(100% - 10px);
+    object-fit:cover; --c:30.8px;
+    filter:saturate(0.85) contrast(1.04);
+  }
+
+  /* ================= label tab sitting on the panel ================= */
+  .tab{
+    position:absolute;
+    left:206px; top:6px;
+    height:27px;                          /* 1px overlap into the panel, no seam */
+    padding:0 26px 0 22px;
+    display:flex; align-items:center;
+    z-index:4;
+    background:linear-gradient(180deg, var(--silver-lt), var(--silver));
+    clip-path:polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%);
+    font-weight:600;
+    font-size:11px;
+    letter-spacing:3px;
+    text-transform:uppercase;
+    color:var(--ink);
+    white-space:nowrap;
+    animation:tabDrop .7s cubic-bezier(.19,.9,.22,1) .55s both;
+  }
+
+  /* ================= the panel: one slanted shape, three zones ================= */
+  .panel-fx{
+    position:absolute;
+    left:var(--pl); top:32px;
+    width:var(--bar-w); height:168px;
+    z-index:3;
+    filter:drop-shadow(0 16px 20px rgba(0,0,0,0.5));
+  }
+  .reveal{
+    position:absolute; inset:0;
+    animation:wipe 1s cubic-bezier(.19,.9,.22,1) .12s both;
+  }
+  .panel{
+    position:absolute; inset:0;
+    container-type:inline-size;
+    display:flex; flex-direction:column;
+    /* single right edge for all three zones: always perfectly straight */
+    clip-path:polygon(16px 0, 100% 0, calc(100% - 34px) 100%, 0 100%, 0 16px);
+  }
+
+  /* --- zone 1: name --- */
+  .name-zone{
+    position:relative;
+    flex:none;
+    height:84px;
+    padding:0 46px 0 62px;
+    display:flex; align-items:center; justify-content:space-between; gap:20px;
+    overflow:hidden;
+    background:
+      repeating-linear-gradient(115deg, rgba(255,255,255,0.028) 0 1px, transparent 1px 8px),
+      linear-gradient(100deg, var(--wine-a), var(--wine-b) 88%);
+  }
+  .name-zone::after{                       /* slow light sweep */
+    content:"";
+    position:absolute; top:0; bottom:0; left:0; width:140px;
+    background:linear-gradient(100deg, transparent, rgba(255,255,255,0.10), transparent);
+    transform:translateX(-220px) skewX(-18deg);
+    animation:sheen 11s ease-in-out 1.4s infinite;
+    pointer-events:none;
+  }
+  .name{
+    position:relative; z-index:1;
+    min-width:0;
+    font-family:"Cormorant Garamond", serif;
+    font-weight:700;
+    font-size:44px;
+    line-height:1;
+    letter-spacing:0.3px;
+    color:var(--pearl);
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    animation:fadeUp .8s ease .55s both;
+  }
+  .years{
+    position:relative; z-index:1;
+    flex:none;
+    font-family:"Cormorant Garamond", serif;
+    font-style:italic;
+    font-weight:600;
+    font-size:23px;
+    letter-spacing:1px;
+    color:var(--silver);
+    animation:fadeUp .8s ease .75s both;
+  }
+  @container (max-width: 680px){ .years{ display:none; } }
+
+  /* --- zone 2: the single rotating slot (pearl paper strip) --- */
+  .slot-zone{
+    position:relative;
+    flex:none;
+    height:52px;
+    background:linear-gradient(180deg, #f6f3ec, #dedacf);
+    box-shadow:inset 0 7px 9px -7px rgba(0,0,0,0.35);
+    color:var(--ink);
+  }
+  .slide{
+    position:absolute; inset:0;
+    padding:0 62px 0 62px;
+    display:flex; flex-direction:column; justify-content:center; gap:2px;
+    opacity:0;
+    transform:translateY(6px);
+    transition:opacity .6s ease, transform .6s ease;
+    pointer-events:none;
+  }
+  .slide.is-active{ opacity:1; transform:translateY(0); }
+  .line-a{
+    font-family:"Cormorant Garamond", serif;
+    font-style:italic;
+    font-weight:700;
+    font-size:21px;
+    line-height:1.12;
+    color:var(--ink);
+  }
+  .slide.info .line-a{
+    font-family:"Jost", sans-serif;
+    font-style:normal;
+    font-weight:600;
+    font-size:14.5px;
+    line-height:1.2;
+    letter-spacing:0.1px;
+  }
+  .line-b{
+    font-weight:600;
+    font-size:10.5px;
+    letter-spacing:2.2px;
+    text-transform:uppercase;
+    color:rgba(42,17,25,0.65);
+  }
+  .progress{
+    position:absolute; left:0; right:0; bottom:0; height:3px;
+    background:rgba(42,17,25,0.10);
+  }
+  .progress i{
+    display:block; height:100%; width:0;
+    background:linear-gradient(90deg, var(--wine-a), #7a3144);
+  }
+  .progress i.run{ animation:fill var(--slide-ms, 5200ms) linear forwards; }
+  @keyframes fill{ from{ width:0; } to{ width:100%; } }
+
+  /* --- zone 3: strap, ticker + date/time on one black band --- */
+  .strap{
+    flex:1;
+    display:flex; align-items:center;
+    background:#07080b;
+    border-top:1px solid rgba(185,193,204,0.14);
+  }
+  .ticker-wrap{
+    flex:1; min-width:0; height:100%;
+    overflow:hidden;
+    display:flex; align-items:center;
+    -webkit-mask-image:linear-gradient(90deg, #000 0, #000 calc(100% - 52px), transparent 100%);
+            mask-image:linear-gradient(90deg, #000 0, #000 calc(100% - 52px), transparent 100%);
+  }
+  .ticker-track{
+    display:flex; align-items:center;
+    width:max-content;
+    white-space:nowrap;
+    animation:tickerScroll linear infinite;
+  }
+  .ticker-track span{
+    font-weight:500;
+    font-size:11px;
+    letter-spacing:0.7px;
+    text-transform:uppercase;
+    color:var(--pearl-dim);
+    padding-right:30px;
+  }
+  .ticker-track span::after{
+    content:"";
+    display:inline-block;
+    width:4px; height:4px;
+    margin-left:30px;
+    background:var(--silver);
+    transform:rotate(45deg);
+    vertical-align:middle;
+    opacity:.75;
+  }
+  @keyframes tickerScroll{
+    from{ transform:translateX(0); }
+    to{ transform:translateX(calc(-1 * var(--shift, 50%))); }
+  }
+  .clock{
+    flex:none;
+    display:flex; align-items:center; gap:8px;
+    padding:0 50px 0 4px;                 /* clear of the slanted right edge */
+  }
+  .clock .dot{
+    width:6px; height:6px; border-radius:50%;
+    background:var(--time);
+    animation:pulseDot 2.6s ease-in-out infinite;
+  }
+  @keyframes pulseDot{ 0%,100%{ opacity:.3; } 50%{ opacity:1; } }
+  .clock span{
+    font-weight:600;
+    font-size:11.5px;
+    letter-spacing:1px;
+    text-transform:uppercase;
+    color:var(--time);
+    white-space:nowrap;
+  }
+
+  /* ================= motion ================= */
+  @keyframes pop{
+    from{ opacity:0; transform:scale(.88); }
+    to{   opacity:1; transform:scale(1); }
+  }
+  @keyframes plateOut{
+    from{ opacity:0; transform:translate(0,0); }
+    to{   opacity:1; transform:translate(9px,9px); }
+  }
+  @keyframes tabDrop{
+    from{ opacity:0; transform:translateY(14px); }
+    to{   opacity:1; transform:translateY(0); }
+  }
+  @keyframes wipe{
+    from{ clip-path:inset(0 100% 0 0); }
+    to{   clip-path:inset(0 0 0 0); }
+  }
+  @keyframes fadeUp{
+    from{ opacity:0; transform:translateY(8px); }
+    to{   opacity:1; transform:translateY(0); }
+  }
+  @keyframes sheen{
+    0%   { transform:translateX(-220px) skewX(-18deg); }
+    14%  { transform:translateX(calc(var(--bar-w) + 80px)) skewX(-18deg); }
+    100% { transform:translateX(calc(var(--bar-w) + 80px)) skewX(-18deg); }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .portrait-fx, .p-back, .tab, .reveal, .name, .years{ animation:none; }
+    .p-back{ transform:translate(9px,9px); }
+    .name-zone::after{ animation:none; display:none; }
+    .slide{ transition:none; }
+    .ticker-track{ animation:none; }
+    .progress i.run{ animation:none; width:100%; }
+  }
+</style>
+</head>
+<body>
+
+<div class="stage">
+  <div class="lt" style="visibility:hidden;opacity:0">
+
+    <div class="p-back"><div class="a oct"></div><div class="b oct"></div></div>
+
+    <div class="portrait-fx">
+      <div class="frame oct">
+        <div class="inner oct"></div>
+        <img class="oct" id="portrait" src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=360&h=360&fit=crop" alt="Portrait">
+      </div>
+    </div>
+
+    <div class="tab" id="kickerLabel">In Loving Memory</div>
+
+    <div class="panel-fx">
+      <div class="reveal">
+        <div class="panel">
+
+          <div class="name-zone">
+            <div class="name" id="subjectName">Margaret Eleanor Hayes</div>
+            <div class="years" id="years">1941 &mdash; 2026</div>
+          </div>
+
+          <div class="slot-zone">
+            <div id="slideStage"><!-- slides injected by script --></div>
+            <div class="progress"><i id="progressFill"></i></div>
+          </div>
+
+          <div class="strap">
+            <div class="ticker-wrap"><div class="ticker-track" id="tickerTrack"></div></div>
+            <div class="clock">
+              <span class="dot"></span>
+              <span id="timeLabel">-- --  ·  --:--</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  /* =========================================================
+     DATA MODEL — identical shape to the other designs, so one
+     backend payload can drive any of them.
+     ========================================================= */
+  const memorial = {
+    subject: {
+      label: "In Loving Memory",
+      name: "Margaret Eleanor Hayes",
+      photo_url: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=360&h=360&fit=crop"
+    },
+    meta: {
+      relation: "Beloved mother, grandmother, and friend",
+      birth_date: "March 4, 1941",
+      death_date: "September 9, 2026"
+    },
+    tributes: [
+      { text: "She kept the family together, one Sunday supper at a time." }
+    ],
+    service_details: [
+      { order: 1, text: "Service begins at 11:00 AM in the Fellowship Hall" },
+      { order: 2, text: "Reception follows immediately after in the garden courtyard" },
+      { order: 3, text: "In lieu of flowers, gifts may be made to St. Jude's Hospice in her memory" }
+    ],
+    ticker_messages: [
+      { order: 1, text: "Margaret Eleanor Hayes \u2014 March 4, 1941 to September 9, 2026" },
+      { order: 2, text: "Service begins at 11:00 AM in the Fellowship Hall" },
+      { order: 3, text: "Reception follows in the garden courtyard" },
+      { order: 4, text: "Gifts may be made to St. Jude's Hospice in her memory" }
+    ]
+  };
+
+  // ---- identity ----
+  document.getElementById('kickerLabel').textContent = memorial.subject.label;
+  document.getElementById('subjectName').textContent = memorial.subject.name;
+  document.getElementById('portrait').src = memorial.subject.photo_url;
+
+  const yearOf = d => (String(d).match(/\d{4}/) || [''])[0];
+  document.getElementById('years').textContent =
+    yearOf(memorial.meta.birth_date) + ' \u2014 ' + yearOf(memorial.meta.death_date);
+
+  // ---- rotating slides ----
+  const SLIDE_MS = 5200;
+  document.documentElement.style.setProperty('--slide-ms', SLIDE_MS + 'ms');
+
+  const slides = [
+    {
+      type: 'meta',
+      lineA: memorial.meta.relation,
+      lineB: memorial.meta.birth_date + '  \u2014  ' + memorial.meta.death_date
+    },
+    ...memorial.tributes.map(t => ({ type: 'tribute', lineA: '\u201C' + t.text + '\u201D' })),
+    ...memorial.service_details
+      .slice().sort((a, b) => a.order - b.order)
+      .map(d => ({ type: 'info', lineA: d.text }))
+  ];
+
+  const stage = document.getElementById('slideStage');
+  slides.forEach((s, i) => {
+    const el = document.createElement('div');
+    el.className = 'slide ' + s.type + (i === 0 ? ' is-active' : '');
+    const a = document.createElement('div');
+    a.className = 'line-a';
+    a.textContent = s.lineA;
+    el.appendChild(a);
+    if (s.lineB) {
+      const b = document.createElement('div');
+      b.className = 'line-b';
+      b.textContent = s.lineB;
+      el.appendChild(b);
+    }
+    stage.appendChild(el);
+  });
+
+  const slideEls = stage.querySelectorAll('.slide');
+  const fill = document.getElementById('progressFill');
+  function restartProgress(){
+    fill.classList.remove('run');
+    void fill.offsetWidth;
+    fill.classList.add('run');
+  }
+  let activeIndex = 0;
+  restartProgress();
+  setInterval(() => {
+    slideEls[activeIndex].classList.remove('is-active');
+    activeIndex = (activeIndex + 1) % slideEls.length;
+    slideEls[activeIndex].classList.add('is-active');
+    restartProgress();
+  }, SLIDE_MS);
+
+  // ---- live date + time ----
+  const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  function updateClock(){
+    const now = new Date();
+    let h = now.getHours();
+    const m = now.getMinutes();
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    h = h % 12; if (h === 0) h = 12;
+    document.getElementById('timeLabel').textContent =
+      MONTHS[now.getMonth()] + ' ' + now.getDate() + '  \u00B7  ' + h + ':' + (m < 10 ? '0' + m : m) + ' ' + ampm;
+  }
+  updateClock();
+  setInterval(updateClock, 15000);
+
+  // ---- ticker: repeat messages enough to always fill the strap,
+  // scroll exactly one copy for a seamless loop, rebuild on resize ----
+  (function initTicker(){
+    const track = document.getElementById('tickerTrack');
+    const wrap  = track.parentElement;
+    const items = memorial.ticker_messages.slice().sort((a, b) => a.order - b.order);
+    const PX_PER_SEC = 70;
+
+    function addPass(){
+      items.forEach(item => {
+        const span = document.createElement('span');
+        span.textContent = item.text;
+        track.appendChild(span);
+      });
+    }
+
+    function build(){
+      track.innerHTML = '';
+      track.style.animation = 'none';
+      addPass();
+      const copyW = track.scrollWidth;
+      if (!copyW) return;
+      const need = wrap.clientWidth + copyW;
+      let guard = 0;
+      while (track.scrollWidth < need && guard++ < 40) addPass();
+      track.style.setProperty('--shift', copyW + 'px');
+      void track.offsetWidth;
+      track.style.animation = '';
+      track.style.animationDuration = Math.max(copyW / PX_PER_SEC, 8) + 's';
+    }
+
+    const start = () => requestAnimationFrame(build);
+    (document.fonts && document.fonts.ready) ? document.fonts.ready.then(start) : start();
+
+    let t;
+    window.addEventListener('resize', () => { clearTimeout(t); t = setTimeout(build, 150); });
+  })();
+</script>
+
+<script>
+window.MEMORIAL_SETTINGS = {{ settings|tojson }};
+window.MEMORIAL_VARIANT = 'plate';
+window.MEMORIAL_PREVIEW = {{ preview_mode|default(false)|tojson }};
+</script>
+<script src="{{ url_for('static', filename='js/memorial-template-bridge.js') }}"></script>
+</body>
+</html>

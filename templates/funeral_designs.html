@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+
+{% block title %}Memorial Designs - {{ company_name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .design-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:1rem}
+    .design-card{border:1px solid #e5e7eb;border-radius:8px;background:#fff;overflow:hidden;transition:border-color .2s,box-shadow .2s}
+    .design-card.selected{border-color:#059669;box-shadow:0 0 0 2px rgba(5,150,105,.14)}
+    .design-use-btn{display:inline-flex;align-items:center;justify-content:center;gap:.45rem;min-width:126px;padding:.62rem .9rem;border:1px solid #047857;border-radius:6px;background:#047857;color:#fff;font-size:.82rem;font-weight:700;transition:background .2s,border-color .2s,transform .2s,box-shadow .2s}
+    .design-use-btn:hover{background:#065f46;border-color:#065f46;box-shadow:0 5px 14px rgba(4,120,87,.22);transform:translateY(-1px)}
+    .design-use-btn.selected{border-color:#a7f3d0;background:#ecfdf5;color:#047857;cursor:default;box-shadow:none;transform:none}
+    .preview-shell{height:232px;background:linear-gradient(135deg,#eef2f7,#fff);overflow:hidden;position:relative}
+    .preview-shell iframe{position:absolute;left:0;top:-60px;width:1600px;height:900px;border:0;transform:scale(.34);transform-origin:top left;pointer-events:none}
+    .swatch-input{width:46px;height:36px;padding:2px;border:1px solid #d1d5db;border-radius:6px;background:#fff}
+    .gallery-field-label{display:block;margin-bottom:.4rem;color:#374151;font-size:.82rem;font-weight:600}
+    .gallery-textarea{display:block;width:100%;min-height:68px;padding:.7rem .8rem;resize:vertical;border:1px solid #cbd5e1;border-radius:6px;background:#fff;color:#111827;font:inherit;line-height:1.4;transition:border-color .2s,box-shadow .2s}
+    .gallery-textarea:focus{outline:0;border-color:#059669;box-shadow:0 0 0 3px rgba(5,150,105,.12)}
+    .gallery-action{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;min-height:40px;padding:.62rem 1rem;border:1px solid transparent;border-radius:6px;font-size:.88rem;font-weight:700;line-height:1;text-decoration:none;white-space:nowrap;transition:background .2s,border-color .2s,box-shadow .2s,transform .2s}
+    .gallery-action:hover{transform:translateY(-1px)}
+    .gallery-action.primary{background:#047857;border-color:#047857;color:#fff;box-shadow:0 4px 12px rgba(4,120,87,.2)}
+    .gallery-action.primary:hover{background:#065f46;border-color:#065f46}
+    .gallery-action.secondary{background:#fff;border-color:#cbd5e1;color:#1f2937}
+    .gallery-action.secondary:hover{border-color:#059669;color:#047857;box-shadow:0 4px 12px rgba(15,23,42,.08)}
+    @media(max-width:640px){.design-grid{grid-template-columns:1fr}.preview-shell iframe{transform:scale(.32);top:-48px}.gallery-action{width:100%}}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex items-center justify-between gap-4 mb-6">
+        <div class="flex items-center gap-3 min-w-0">
+            <a href="{{ url_for('main.control') }}" class="text-gray-400 hover:text-emerald-700" title="Back to Control Panel">
+                <i class="fas fa-arrow-left"></i>
+            </a>
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900">Memorial Designs</h1>
+                <p class="text-sm text-gray-500">One set of details, one OBS URL, {{ designs|length + 1 }} interchangeable layouts.</p>
+            </div>
+        </div>
+        <a href="{{ url_for('main.display', category='funeral') }}" target="_blank" class="gallery-action primary">
+            <i class="fas fa-external-link-alt"></i> Open Live Preview
+        </a>
+    </div>
+
+    <section class="bg-white border border-gray-200 rounded-lg p-4 mb-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <label class="gallery-field-label" for="shared_main_text">Memorial name / main line</label>
+                <textarea id="shared_main_text" class="gallery-textarea" rows="2"
+                          onchange="saveSetting('main_text',this.value)">{{ settings.main_text or '' }}</textarea>
+            </div>
+            <div>
+                <label class="gallery-field-label" for="shared_secondary_text">Top caption</label>
+                <textarea id="shared_secondary_text" class="gallery-textarea" rows="2"
+                          placeholder="In Loving Memory" onchange="saveSetting('secondary_text',this.value)">{{ settings.secondary_text or '' }}</textarea>
+            </div>
+        </div>
+        <div class="flex flex-wrap items-end gap-4 mt-4">
+            <label class="text-xs font-medium text-gray-600">Panel<br><input class="swatch-input" type="color" value="{{ settings.overlay_bg_color or '#171A18' }}" onchange="saveSetting('overlay_bg_color',this.value)"></label>
+            <label class="text-xs font-medium text-gray-600">Accent<br><input class="swatch-input" type="color" value="{{ settings.accent_color or '#D8B875' }}" onchange="saveSetting('accent_color',this.value)"></label>
+            <label class="text-xs font-medium text-gray-600">Main text<br><input class="swatch-input" type="color" value="{{ settings.main_text_color or '#FFFFFF' }}" onchange="saveSetting('main_text_color',this.value)"></label>
+            <label class="text-xs font-medium text-gray-600">Secondary<br><input class="swatch-input" type="color" value="{{ settings.secondary_text_color or '#D8B875' }}" onchange="saveSetting('secondary_text_color',this.value)"></label>
+            <a href="{{ url_for('main.customize', category='funeral') }}" class="gallery-action secondary ml-auto">
+                <i class="fas fa-sliders-h"></i> Edit All Content &amp; Colours
+            </a>
+        </div>
+    </section>
+
+    {% set selected = settings.layout_style or 'default' %}
+    <div class="design-grid">
+        <article class="design-card {% if selected in ('default','legacy') %}selected{% endif %}" data-design="legacy">
+            <div class="preview-shell"><iframe loading="lazy" src="{{ url_for('main.display', category='funeral') }}&preview_design=legacy"></iframe></div>
+            <div class="p-4 flex items-center justify-between gap-3">
+                <div><h2 class="font-semibold text-gray-900">Legacy Funeral</h2><p class="text-xs text-gray-500 mt-1">The original fully customizable overlay</p></div>
+                <button class="design-use-btn {% if selected in ('default','legacy') %}selected{% endif %}" {% if selected in ('default','legacy') %}disabled{% else %}onclick="selectDesign('legacy')"{% endif %}>
+                    {% if selected in ('default','legacy') %}<i class="fas fa-check-circle"></i> Active Design{% else %}<i class="fas fa-check"></i> Use This Design{% endif %}
+                </button>
+            </div>
+        </article>
+
+        {% for design in designs %}
+        <article class="design-card {% if selected == design.id %}selected{% endif %}" data-design="{{ design.id }}">
+            <div class="preview-shell"><iframe loading="lazy" src="{{ url_for('main.display', category='funeral', preview_design=design.id) }}"></iframe></div>
+            <div class="p-4 flex items-center justify-between gap-3">
+                <div><h2 class="font-semibold text-gray-900">{{ design.name }}</h2><p class="text-xs text-gray-500 mt-1">{{ design.description }}</p></div>
+                <button class="design-use-btn {% if selected == design.id %}selected{% endif %}" {% if selected == design.id %}disabled{% else %}onclick="selectDesign('{{ design.id }}')"{% endif %}>
+                    {% if selected == design.id %}<i class="fas fa-check-circle"></i> Active Design{% else %}<i class="fas fa-check"></i> Use This Design{% endif %}
+                </button>
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+</div>
+
+<script>
+function notify(message, type='success') {
+    if (typeof window.showToast === 'function') {
+        window.showToast(message, type);
+        return;
+    }
+    const toast = document.createElement('div');
+    toast.textContent = message;
+    toast.style.cssText = `position:fixed;right:20px;bottom:20px;z-index:9999;padding:10px 14px;border-radius:6px;color:#fff;font-size:14px;box-shadow:0 8px 24px rgba(0,0,0,.2);background:${type === 'error' ? '#b91c1c' : '#047857'}`;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 2200);
+}
+
+async function saveSetting(key, value) {
+    const form = new FormData();
+    form.append(key, value);
+    const response = await fetch('/api/settings/funeral', {method:'POST', body:form});
+    if (!response.ok) throw new Error('Unable to save setting');
+    notify('Saved');
+}
+
+async function selectDesign(design) {
+    try {
+        await saveSetting('layout_style', design);
+        location.reload();
+    } catch (error) {
+        notify('Unable to change design', 'error');
+    }
+}
+</script>
+{% endblock %}

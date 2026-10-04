@@ -126,7 +126,10 @@ def manage_settings(category):
         for field in float_fields:
             if field in data and data[field] and data[field].strip():
                 try:
-                    setattr(settings, field, float(data[field]))
+                    value = float(data[field])
+                    if field in ('overlay_visible_duration', 'overlay_hidden_duration'):
+                        value = max(1.0, min(900.0, value))
+                    setattr(settings, field, value)
                 except ValueError:
                     # Skip if conversion fails
                     pass
@@ -185,6 +188,9 @@ def manage_settings(category):
 @login_required
 def reset_settings(category):
     """Reset settings to defaults for the category"""
+    if category not in ('funeral', 'wedding', 'ceremony'):
+        return jsonify({'error': 'Invalid overlay category'}), 400
+
     settings = OverlaySettings.query.filter_by(category=category).first()
 
     if not settings:
@@ -201,7 +207,41 @@ def reset_settings(category):
     settings.updated_at = datetime.utcnow()
     db.session.commit()
 
-    return jsonify({'success': True, 'settings': settings_to_dict(settings), 'message': 'Settings reset to defaults'})
+    return jsonify({
+        'success': True,
+        'settings': settings_to_dict(settings),
+        'message': 'All settings reset; uploaded image and logo were preserved'
+    })
+
+
+@api_bp.route('/settings/funeral/reset-memorial-style', methods=['POST'])
+@login_required
+def reset_memorial_style():
+    """Restore a restrained memorial palette without replacing content, portrait, or design."""
+    settings = OverlaySettings.query.filter_by(category='funeral').first()
+    if not settings:
+        return jsonify({'error': 'Settings not found'}), 404
+
+    defaults = {
+        'overlay_bg_color': '#171A18',
+        'ticker_bg_color': '#294936',
+        'accent_color': '#D8B875',
+        'main_text_color': '#F8F5ED',
+        'secondary_text_color': '#D8B875',
+        'ticker_text_color': '#FFFFFF',
+        'ticker_speed': 50,
+        'show_ticker': True,
+        'show_secondary_text': True,
+        'show_category_image': True,
+        'overlay_cycle_enabled': False,
+        'overlay_visible_duration': 10.0,
+        'overlay_hidden_duration': 900.0,
+    }
+    for key, value in defaults.items():
+        setattr(settings, key, value)
+    settings.updated_at = datetime.utcnow()
+    db.session.commit()
+    return jsonify({'success': True, 'settings': settings_to_dict(settings)})
 
 
 @api_bp.route('/secondary-phrases/<category>', methods=['GET', 'POST'])

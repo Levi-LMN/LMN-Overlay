@@ -19,7 +19,7 @@ def index():
 @login_required
 @license_required
 def control():
-    categories = ['funeral', 'wedding', 'ceremony']
+    categories = ['funeral']
     settings = {}
     for cat in categories:
         settings[cat] = OverlaySettings.query.filter_by(category=cat).first()
@@ -56,11 +56,46 @@ def customize(category):
         'ceremony': 'Ceremony'
     }
 
-    return render_template('customize.html',
+    layout_style = settings.layout_style or 'legacy'
+    is_memorial_template = category == 'funeral' and layout_style not in ('default', 'legacy')
+    template_name = 'customize_memorial.html' if is_memorial_template else 'customize.html'
+    design_names = {
+        'band': 'Editorial Ribbon', 'cameo': 'Garden Cameo', 'plate': 'Silver Plate',
+        'arch': 'Layered Tribute', 'classic': 'Classic Bar'
+    }
+
+    return render_template(template_name,
                            settings=settings,
                            category=category,
                            category_name=category_names.get(category, category.capitalize()),
+                           design_name=design_names.get(layout_style, layout_style.replace('-', ' ').title()),
+                           supports_company_name=layout_style in ('cameo', 'plate'),
                            current_user=current_user)
+
+
+@main_bp.route('/funeral-designs')
+@login_required
+@license_required
+def funeral_designs():
+    settings = OverlaySettings.query.filter_by(category='funeral').first()
+    if not settings:
+        settings = OverlaySettings(category='funeral', **OverlaySettings.get_defaults('funeral'))
+        db.session.add(settings)
+        db.session.commit()
+
+    designs = [
+        {'id': 'band', 'name': 'Editorial Ribbon', 'description': 'Modern portrait-led broadcast composition'},
+        {'id': 'cameo', 'name': 'Garden Cameo', 'description': 'Oval portrait with an elegant memorial wreath'},
+        {'id': 'plate', 'name': 'Silver Plate', 'description': 'Geometric wine and silver presentation'},
+        {'id': 'arch', 'name': 'Layered Tribute', 'description': 'Offset portrait with quiet editorial panels'},
+        {'id': 'classic', 'name': 'Classic Bar', 'description': 'Compact broadcast lower third'},
+    ]
+    return render_template(
+        'funeral_designs.html',
+        settings=settings,
+        designs=designs,
+        current_user=User.query.get(session['user_id'])
+    )
 
 
 @main_bp.route('/users')
@@ -232,6 +267,25 @@ def display():
         'wedding': 'display_wedding.html',
         'ceremony': 'display_ceremony.html'
     }
+
+    preview_design = request.args.get('preview_design', '').strip()
+    funeral_templates = {
+        'band': 'display_funeral_band.html',
+        'cameo': 'display_funeral_cameo.html',
+        'plate': 'display_funeral_plate.html',
+        'arch': 'display_funeral_arch.html',
+        'classic': 'display_funeral_classic.html',
+    }
+    if category == 'funeral':
+        selected_design = preview_design if preview_design in funeral_templates or preview_design == 'legacy' else settings.layout_style
+        template = funeral_templates.get(selected_design, 'display_funeral.html')
+        return render_template(
+            template,
+            settings=settings_dict,
+            category=category,
+            design_variant=selected_design,
+            preview_mode=preview_design in funeral_templates or preview_design == 'legacy'
+        )
 
     template = template_map.get(category, 'display_funeral.html')
     return render_template(template, settings=settings_dict, category=category)

@@ -11,7 +11,6 @@ from routes.files import files_bp
 from werkzeug.security import generate_password_hash
 from datetime import datetime
 import os
-import json
 
 
 def create_app(config_class=Config):
@@ -71,37 +70,10 @@ def init_db(app):
         )
         db.session.add(admin)
 
-    category_defaults = {
-        'funeral': {
-            'main_text': 'In Loving Memory',
-            'secondary_phrases': json.dumps(['Forever in Our Hearts', 'Celebrating a Life Well Lived']),
-            'vertical_position': 'bottom',
-            'horizontal_position': 'left',
-            'container_width': 'auto',
-            'text_scale_mode': 'responsive'
-        },
-        'wedding': {
-            'main_text': 'Together Forever',
-            'secondary_phrases': json.dumps(['Celebrating Love & Unity', 'Two Hearts Become One']),
-            'vertical_position': 'bottom',
-            'horizontal_position': 'left',
-            'container_width': 'auto',
-            'text_scale_mode': 'responsive'
-        },
-        'ceremony': {
-            'main_text': 'Special Ceremony',
-            'secondary_phrases': json.dumps(['A Moment to Remember', 'Celebrating Excellence']),
-            'vertical_position': 'bottom',
-            'horizontal_position': 'left',
-            'container_width': 'auto',
-            'text_scale_mode': 'responsive'
-        }
-    }
-
-    for category, defaults in category_defaults.items():
+    for category in ('funeral', 'wedding', 'ceremony'):
         settings = OverlaySettings.query.filter_by(category=category).first()
         if not settings:
-            settings = OverlaySettings(category=category, is_visible=False, **defaults)
+            settings = OverlaySettings(category=category, **OverlaySettings.get_defaults(category))
             db.session.add(settings)
 
     db.session.commit()

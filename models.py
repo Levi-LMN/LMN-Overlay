@@ -236,6 +236,9 @@ class OverlaySettings(db.Model):
     ticker_font_family = db.Column(db.String(100), default=None)
     company_name_font_family = db.Column(db.String(100), default=None)
 
+    main_text_italic = db.Column(db.Boolean, default=False)
+    secondary_text_italic = db.Column(db.Boolean, default=False)
+    ticker_text_italic = db.Column(db.Boolean, default=False)
     company_name_italic = db.Column(db.Boolean, default=True)
     ticker_speed = db.Column(db.Integer, default=50)
 
@@ -406,6 +409,9 @@ class OverlaySettings(db.Model):
             'secondary_font_family':    None,
             'ticker_font_family':       None,
             'company_name_font_family': None,
+            'main_text_italic':          False,
+            'secondary_text_italic':     False,
+            'ticker_text_italic':        False,
             'company_name_italic':      True,
             'ticker_speed':             50,
             'main_font_size':           34,

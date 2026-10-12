@@ -1,6 +1,7 @@
 from flask import Flask
 from config import Config
 from models import db
+from sqlalchemy import inspect, text
 from routes.auth import auth_bp, init_oauth
 from routes.main import main_bp
 from routes.licensing import licensing_bp
@@ -55,6 +56,16 @@ def init_db(app):
     from models import User, OverlaySettings
 
     db.create_all()
+
+    # create_all does not add columns to an existing installation. Keep these
+    # small preference additions self-migrating for deployed desktop copies.
+    existing_columns = {column['name'] for column in inspect(db.engine).get_columns('overlay_settings')}
+    for column_name in ('main_text_italic', 'secondary_text_italic', 'ticker_text_italic'):
+        if column_name not in existing_columns:
+            db.session.execute(text(
+                f'ALTER TABLE overlay_settings ADD COLUMN {column_name} BOOLEAN DEFAULT 0'
+            ))
+    db.session.commit()
 
     admin_email = app.config['ADMIN_EMAIL']
     admin_password = app.config['ADMIN_PASSWORD']

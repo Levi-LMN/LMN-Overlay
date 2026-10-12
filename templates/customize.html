@@ -398,6 +398,7 @@ input[type="range"]{accent-color:#4F46E5}
                         {{ font_select('main_font_family', settings.main_font_family, 'main_font_family') }}
                     </div>
                 </div>
+                {{ toggle_row('Italic Style','main_text_italic_tog', settings.main_text_italic, "toggleBoolean(this,'main_text_italic')") }}
             </div>
 
             <div class="settings-section" data-section-tab="content">
@@ -419,6 +420,7 @@ input[type="range"]{accent-color:#4F46E5}
                             {{ font_select('secondary_font_family', settings.secondary_font_family, 'secondary_font_family') }}
                         </div>
                     </div>
+                    {{ toggle_row('Italic Style','secondary_text_italic_tog', settings.secondary_text_italic, "toggleBoolean(this,'secondary_text_italic')") }}
                     <div class="form-group">
                         <label class="form-label flex items-center justify-between">
                             <span>Enable Rotation</span>
@@ -469,6 +471,7 @@ input[type="range"]{accent-color:#4F46E5}
                             {{ font_select('ticker_font_family', settings.ticker_font_family, 'ticker_font_family') }}
                         </div>
                     </div>
+                    {{ toggle_row('Italic Style','ticker_text_italic_tog', settings.ticker_text_italic, "toggleBoolean(this,'ticker_text_italic')") }}
                     {{ range_slider('ticker_speed','Scroll Speed (1–100)', settings.ticker_speed or 50, 10, 100, 1, '', 'ticker_speed') }}
                 </div>
             </div>

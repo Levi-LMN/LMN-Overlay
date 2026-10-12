@@ -97,6 +97,7 @@ _EXPORTABLE_FIELDS = [
     # Font families
     'font_family', 'main_font_family', 'secondary_font_family',
     'ticker_font_family', 'company_name_font_family',
+    'main_text_italic', 'secondary_text_italic', 'ticker_text_italic',
     'company_name_italic', 'ticker_speed',
 
     # Logo appearance

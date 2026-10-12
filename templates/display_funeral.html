@@ -553,6 +553,7 @@ function applyStyling(s) {
     lh:    s.text_line_height    || 1.2,
     pad:   '10px 15px',
   });
+  mainEl.style.fontStyle = s.main_text_italic ? 'italic' : 'normal';
   /* Secondary text */
   const secFontSize   = s.secondary_font_size      || 28;
   const secFontFamily = s.secondary_font_family    || gf;
@@ -568,6 +569,7 @@ function applyStyling(s) {
     bg:    s.secondary_text_bg_color,
     bgOp:  s.secondary_text_bg_opacity,
   });
+  secEl.style.fontStyle = s.secondary_text_italic ? 'italic' : 'normal';
 
   /* Lock secondary wrapper dimensions so overlay never reflowing during rotation */
   if (s.secondary_rotation_enabled && phrases.length > 0) {
@@ -605,6 +607,7 @@ function applyStyling(s) {
   tickerTxtEl.style.fontSize         = tkFontSize + 'px';
   tickerTxtEl.style.color            = s.ticker_text_color  || '#FFFFFF';
   tickerTxtEl.style.fontFamily       = s.ticker_font_family || gf;
+  tickerTxtEl.style.fontStyle        = s.ticker_text_italic ? 'italic' : 'normal';
 }
 
 /* ════════════════════════════════════════════════════════════════════════════

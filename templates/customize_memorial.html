@@ -30,17 +30,52 @@
     .color-field span{font-size:.78rem;font-weight:600;color:#374151}
     .range-line{display:grid;grid-template-columns:1fr 64px;gap:.75rem;align-items:center}
     .range-line input[type=range]{width:100%;accent-color:#059669}
+    .choice-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.55rem}
+    .choice{position:relative;display:flex;align-items:center;justify-content:center;min-height:42px;padding:.55rem;border:1px solid #d1d5db;border-radius:6px;background:#fff;color:#374151;font-size:.78rem;font-weight:700;cursor:pointer;text-align:center}
+    .choice:has(input:checked){border-color:#059669;background:#ecfdf5;color:#047857;box-shadow:0 0 0 1px #059669}
+    .choice input{position:absolute;opacity:0;pointer-events:none}
+    .type-row{display:grid;grid-template-columns:minmax(0,1fr) 88px auto;gap:.65rem;align-items:end;padding:.75rem;border:1px solid #e5e7eb;border-radius:6px;background:#f9fafb}
+    .italic-choice{display:flex;align-items:center;gap:.45rem;min-height:39px;padding:0 .7rem;border:1px solid #d1d5db;border-radius:6px;background:#fff;color:#374151;font-size:.78rem;font-weight:700;cursor:pointer}
+    .italic-choice input{accent-color:#059669}
+    .dimension-visual{margin-bottom:1.25rem;padding:12px;border:1px solid #dbe3ea;border-radius:8px;background:#f8fafc}
+    .dimension-screen{position:relative;height:188px;overflow:hidden;border-radius:6px;background:linear-gradient(180deg,#25313d 0 63%,#18212b 63% 100%);box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)}
+    .dimension-screen::before{content:'';position:absolute;inset:10px;border:1px solid rgba(255,255,255,.13);border-radius:4px}
+    .dimension-screen::after{content:'LIVE FRAME';position:absolute;top:18px;left:20px;color:rgba(255,255,255,.55);font-size:.58rem;font-weight:800;letter-spacing:1.3px}
+    .dimension-shape{position:absolute;left:50%;bottom:19px;transform:translateX(-50%);width:70%;height:47%;min-width:48%;max-width:93%;min-height:34%;max-height:66%;border-left:4px solid #d8b875;border-radius:4px;background:#f6f1e5;box-shadow:0 8px 18px rgba(0,0,0,.28);transition:width .12s ease,height .12s ease}
+    .dimension-shape::before{content:'';position:absolute;left:-17px;top:50%;width:44px;height:44px;transform:translateY(-50%);border:3px solid #d8b875;border-radius:50%;background:#dfe6eb;box-shadow:0 3px 8px rgba(0,0,0,.25)}
+    .dimension-shape::after{content:'';position:absolute;left:37px;right:12px;top:18px;height:7px;border-radius:2px;background:#27323b;box-shadow:0 15px 0 #d8b875,0 30px 0 #cbd5e1}
+    .dimension-readout{display:flex;align-items:center;justify-content:center;gap:.65rem;margin-top:10px;flex-wrap:wrap}
+    .dimension-readout span{display:inline-flex;align-items:center;gap:.4rem;padding:.38rem .62rem;border:1px solid #d1d5db;border-radius:6px;background:#fff;color:#475569;font-size:.72rem;font-weight:700}
+    .dimension-readout i{color:#059669}.dimension-readout strong{color:#047857;font-variant-numeric:tabular-nums}
     .phrase{display:grid;grid-template-columns:24px 1fr auto;gap:.5rem;align-items:center;margin-top:.5rem}
     .phrase input{width:100%;padding:.48rem .6rem;border:1px solid #d1d5db;border-radius:6px}
     .icon-btn{width:34px;height:34px;border:1px solid #fecaca;border-radius:6px;background:#fff;color:#dc2626}
     .portrait-row{display:flex;align-items:center;gap:1rem;flex-wrap:wrap}
     .portrait-row img{width:86px;height:86px;border-radius:50%;object-fit:cover;border:3px solid #e5e7eb}
+    .crop-summary{display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-top:1rem;padding:.75rem;border:1px solid #e5e7eb;border-radius:8px;background:#f9fafb}
+    .crop-summary-preview{width:72px;height:72px;overflow:hidden;border:3px solid #d8b875;border-radius:50%;background:#e5e7eb;flex:0 0 auto}
+    .crop-summary-preview img{width:100%;height:100%;object-fit:cover;display:block}
+    .crop-dialog{width:min(560px,calc(100vw - 2rem));max-height:calc(100vh - 2rem);padding:0;border:0;border-radius:8px;background:#fff;box-shadow:0 24px 70px rgba(15,23,42,.35)}
+    .crop-dialog::backdrop{background:rgba(15,23,42,.65);backdrop-filter:blur(3px)}
+    .crop-modal-head,.crop-modal-foot{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:1rem 1.15rem}
+    .crop-modal-head{border-bottom:1px solid #e5e7eb}.crop-modal-foot{justify-content:flex-end;border-top:1px solid #e5e7eb}
+    .crop-modal-head h3{margin:0;color:#111827;font-size:1rem;font-weight:800}
+    .crop-modal-body{padding:1.15rem;background:#f8fafc}
+    .crop-preview{position:relative;width:min(380px,100%);aspect-ratio:1;margin:0 auto;overflow:hidden;border:5px solid #d8b875;border-radius:50%;background:#dfe5ea;box-shadow:0 12px 30px rgba(15,23,42,.2);cursor:grab;touch-action:none;user-select:none}
+    .crop-preview:active{cursor:grabbing}
+    .crop-preview::after{content:'';position:absolute;inset:50% auto auto 50%;width:18px;height:18px;transform:translate(-50%,-50%);border:1px solid rgba(255,255,255,.7);border-radius:50%;box-shadow:0 0 0 1px rgba(15,23,42,.2);pointer-events:none}
+    .crop-preview img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none;will-change:transform,object-position}
+    .crop-toolbar{display:grid;grid-template-columns:40px minmax(0,1fr) 40px 44px;gap:.6rem;align-items:center;max-width:420px;margin:1rem auto 0}
+    .crop-toolbar input{width:100%;accent-color:#059669}
+    .crop-tool{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border:1px solid #d1d5db;border-radius:6px;background:#fff;color:#374151;cursor:pointer}
+    .crop-tool:hover{border-color:#6ee7b7;background:#ecfdf5;color:#047857}
+    .crop-zoom-value{margin-top:.45rem;text-align:center;color:#64748b;font-size:.72rem;font-weight:700;font-variant-numeric:tabular-nums}
     .save-state{min-height:1.2rem;color:#047857;font-size:.75rem;font-weight:600}
     .logo-current{display:flex;align-items:center;gap:.85rem;padding:.7rem;border:1px solid #d1fae5;border-radius:6px;background:#f0fdf4}
     .logo-current img{width:120px;height:54px;object-fit:contain;object-position:left center}
     .logo-status{color:#047857;font-size:.75rem;font-weight:700}
     .file-input-hidden{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
-    @media(max-width:700px){.memorial-header{display:block}.memorial-actions{justify-content:flex-start;margin-top:1rem}.field-grid,.color-row{grid-template-columns:1fr}.field.wide{grid-column:auto}}
+    @media(max-width:700px){.memorial-header{display:block}.memorial-actions{justify-content:flex-start;margin-top:1rem}.field-grid,.color-row{grid-template-columns:1fr}.field.wide{grid-column:auto}.type-row{grid-template-columns:1fr}.choice-row{grid-template-columns:1fr}}
 </style>
 {% endblock %}
 
@@ -131,23 +166,122 @@
     </section>
 
     <section class="memorial-section">
+        <h2><i class="fas fa-text-height text-emerald-700"></i> Layout & Typography</h2>
+        <div class="dimension-visual" aria-label="Overlay size preview">
+            <div class="dimension-screen"><div id="dimension-shape" class="dimension-shape"></div></div>
+            <div class="dimension-readout">
+                <span><i class="fas fa-arrows-alt-h"></i> Width <strong><span id="visual-width-value">{{ settings.custom_width or 900 }}</span> px</strong></span>
+                <span><i class="fas fa-arrows-alt-v"></i> Height <strong><span id="visual-height-value">{{ settings.custom_height or 200 }}</span> px</strong></span>
+            </div>
+        </div>
+        <div class="field">
+            <label>Horizontal width: <span id="overlay-width-value">{{ settings.custom_width or 900 }}</span> px</label>
+            <div class="range-line">
+                <input id="overlay-width-range" type="range" min="600" max="1200" step="20" value="{{ settings.custom_width or 900 }}" oninput="syncOverlayWidth(this.value,'range')" onchange="saveSetting('custom_width',this.value)">
+                <input id="overlay-width-number" type="number" min="600" max="1200" step="20" value="{{ settings.custom_width or 900 }}" oninput="syncOverlayWidth(this.value,'number')" onchange="saveSetting('custom_width',this.value)">
+            </div>
+            <p class="text-xs text-gray-500 mt-1">Changes the horizontal reach only. Portrait and text proportions stay the same.</p>
+        </div>
+        <div class="field mt-4">
+            <label>Overlay height: <span id="overlay-height-value">{{ settings.custom_height or 200 }}</span> px</label>
+            <div class="range-line">
+                <input id="overlay-height-range" type="range" min="140" max="300" step="10" value="{{ settings.custom_height or 200 }}" oninput="syncOverlayHeight(this.value,'range')" onchange="saveSetting('custom_height',this.value)">
+                <input id="overlay-height-number" type="number" min="140" max="300" step="10" value="{{ settings.custom_height or 200 }}" oninput="syncOverlayHeight(this.value,'number')" onchange="saveSetting('custom_height',this.value)">
+            </div>
+            <p class="text-xs text-gray-500 mt-1">Changes the vertical footprint without changing the horizontal width.</p>
+        </div>
+        {% set font_options = [
+            ('Segoe UI','Clean Sans'),
+            ('Arial','Classic Sans'),
+            ('Georgia','Elegant Serif'),
+            ('Times New Roman','Traditional Serif'),
+            ('Trebuchet MS','Warm Sans')
+        ] %}
+        <div class="field-grid mt-4">
+            {% for label,key,size_key,italic_key,current_font,current_size,current_italic in [
+                ('Main memorial line','main_font_family','main_font_size','main_text_italic',settings.main_font_family,settings.main_font_size,settings.main_text_italic),
+                ('Caption & remembrance','secondary_font_family','secondary_font_size','secondary_text_italic',settings.secondary_font_family,settings.secondary_font_size,settings.secondary_text_italic),
+                ('Ticker','ticker_font_family','ticker_font_size','ticker_text_italic',settings.ticker_font_family,settings.ticker_font_size,settings.ticker_text_italic),
+                ('Years / signature','company_name_font_family','company_name_font_size','company_name_italic',settings.company_name_font_family,settings.company_name_font_size,settings.company_name_italic),
+                ('Date & time','clock_font_family','clock_font_size',none,settings.clock_font_family,settings.clock_font_size,false)
+            ] %}
+            <div class="type-row">
+                <div class="field"><label>{{ label }} font</label><select onchange="saveSetting('{{ key }}',this.value)">
+                    {% for value,name in font_options %}<option value="{{ value }}" {% if current_font == value %}selected{% endif %}>{{ name }}</option>{% endfor %}
+                </select></div>
+                <div class="field"><label>Size</label><input type="number" min="10" max="64" value="{{ current_size }}" onchange="saveSetting('{{ size_key }}',this.value)"></div>
+                {% if italic_key %}<label class="italic-choice"><input type="checkbox" {% if current_italic %}checked{% endif %} onchange="saveSetting('{{ italic_key }}',this.checked?'true':'false')"><i>I</i> Italic</label>{% else %}<div></div>{% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+
+    <section class="memorial-section">
         <h2><i class="fas fa-portrait text-emerald-700"></i> Portrait</h2>
         <div class="toggle-row"><div><p class="font-semibold text-sm">Show portrait</p></div><button class="switch {% if settings.show_category_image %}on{% endif %}" data-key="show_category_image" data-panel="portrait-settings" onclick="toggleSetting(this)"></button></div>
         <div id="portrait-settings" {% if not settings.show_category_image %}hidden{% endif %}>
         {% if settings.category_image %}<div class="logo-current mt-2"><img src="{{ url_for('static', filename=settings.category_image) }}" alt="Current portrait" style="object-fit:cover"><div class="min-w-0"><p class="font-semibold text-sm text-gray-900">Current portrait</p><p class="logo-status"><i class="fas fa-check-circle"></i> Uploaded and ready</p></div></div>{% endif %}
         <div class="portrait-row mt-3">
             <div class="field flex-1"><label>{{ 'Replace portrait' if settings.category_image else 'Upload portrait' }}</label><input id="portrait-file" class="file-input-hidden" type="file" accept="image/*" onchange="uploadPortrait(this)"><div class="flex gap-2 flex-wrap"><label for="portrait-file" class="action-btn secondary"><i class="fas fa-upload"></i> {{ 'Choose replacement' if settings.category_image else 'Choose portrait' }}</label>{% if settings.category_image %}<button type="button" class="action-btn reset" onclick="removePortrait()"><i class="fas fa-trash"></i> Remove</button>{% endif %}</div></div>
-            <div class="field min-w-[190px]"><label>Face position</label><select onchange="saveSetting('image_object_position',this.value)">
-                {% for value,label in [('center center','Centre'),('center top','Upper centre'),('left center','Left'),('right center','Right'),('center 35%','Slightly higher')] %}<option value="{{ value }}" {% if (settings.image_object_position or 'center center') == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
-            </select></div>
         </div>
+        {% if settings.category_image %}
+        <div class="crop-summary">
+            <div class="flex items-center gap-3 min-w-0">
+                <div class="crop-summary-preview"><img id="crop-summary-image" src="{{ url_for('static', filename=settings.category_image) }}" alt="Current portrait crop"></div>
+                <div class="min-w-0"><p class="font-semibold text-sm text-gray-900">Portrait framing</p><p class="text-xs text-gray-500">Position and zoom</p></div>
+            </div>
+            <button type="button" class="action-btn secondary" onclick="openPortraitCrop()"><i class="fas fa-crop-alt"></i> Adjust</button>
+        </div>
+        <dialog id="crop-dialog" class="crop-dialog" aria-labelledby="crop-dialog-title">
+            <div class="crop-modal-head"><h3 id="crop-dialog-title">Adjust portrait</h3><button type="button" class="crop-tool" onclick="closePortraitCrop()" title="Close" aria-label="Close"><i class="fas fa-times"></i></button></div>
+            <div class="crop-modal-body">
+                <div id="crop-preview" class="crop-preview" title="Drag portrait to reposition">
+                    <img id="crop-preview-image" src="{{ url_for('static', filename=settings.category_image) }}" alt="Portrait crop preview">
+                </div>
+                <div class="crop-toolbar">
+                    <button type="button" class="crop-tool" onclick="stepPortraitZoom(-5)" title="Zoom out" aria-label="Zoom out"><i class="fas fa-minus"></i></button>
+                    <input id="crop-zoom" type="range" min="100" max="220" step="5" value="{{ settings.image_zoom or 100 }}" oninput="setPortraitZoom(this.value)" aria-label="Portrait zoom">
+                    <button type="button" class="crop-tool" onclick="stepPortraitZoom(5)" title="Zoom in" aria-label="Zoom in"><i class="fas fa-plus"></i></button>
+                    <button type="button" class="crop-tool" onclick="resetPortraitCrop()" title="Centre and reset zoom" aria-label="Centre and reset zoom"><i class="fas fa-crosshairs"></i></button>
+                </div>
+                <div id="crop-zoom-value" class="crop-zoom-value">{{ settings.image_zoom or 100 }}%</div>
+            </div>
+            <div class="crop-modal-foot"><button type="button" class="action-btn primary" onclick="closePortraitCrop()"><i class="fas fa-check"></i> Done</button></div>
+        </dialog>
+        {% endif %}
         </div>
     </section>
 </div>
 
 <script>
 let phrases = [];
+let portraitX = 50;
+let portraitY = 50;
+let savedPortraitX = 50;
+let savedPortraitY = 50;
+let savedPortraitZoom = 100;
+let portraitDrag = null;
+let cropSyncTimer = null;
 function status(message, error=false){const el=document.getElementById('save-state');el.textContent=message;el.style.color=error?'#b91c1c':'#047857';clearTimeout(status.timer);status.timer=setTimeout(()=>el.textContent='',2200)}
+function updateDimensionVisual(width,height){const shape=document.getElementById('dimension-shape');if(!shape)return;const widthPercent=48+((width-600)/600)*45;const heightPercent=34+((height-140)/160)*32;shape.style.width=`${Math.max(48,Math.min(93,widthPercent))}%`;shape.style.height=`${Math.max(34,Math.min(66,heightPercent))}%`;document.getElementById('visual-width-value').textContent=width;document.getElementById('visual-height-value').textContent=height}
+function syncOverlayWidth(value,source){const width=Math.max(600,Math.min(1200,Number(value)||900));document.getElementById('overlay-width-value').textContent=width;if(source!=='range')document.getElementById('overlay-width-range').value=width;if(source!=='number')document.getElementById('overlay-width-number').value=width;updateDimensionVisual(width,Number(document.getElementById('overlay-height-range').value))}
+function syncOverlayHeight(value,source){const height=Math.max(140,Math.min(300,Number(value)||200));document.getElementById('overlay-height-value').textContent=height;if(source!=='range')document.getElementById('overlay-height-range').value=height;if(source!=='number')document.getElementById('overlay-height-number').value=height;updateDimensionVisual(Number(document.getElementById('overlay-width-range').value),height)}
+function positionPercent(value,axis){const parts=String(value||'center center').trim().split(/\s+/);const token=parts[axis==='x'?0:1]||'center';const names=axis==='x'?{left:0,center:50,right:100}:{top:0,center:50,bottom:100};return token.endsWith('%')?Math.max(0,Math.min(100,parseFloat(token))):(names[token]??50)}
+function paintCropImage(image,zoom){if(!image)return;image.style.objectPosition=`${portraitX}% ${portraitY}%`;image.style.transform=`scale(${zoom/100})`;image.style.transformOrigin=`${portraitX}% ${portraitY}%`}
+function paintPortraitCrop(){const slider=document.getElementById('crop-zoom');if(!slider)return;const zoom=Number(slider.value)||100;paintCropImage(document.getElementById('crop-preview-image'),zoom);document.getElementById('crop-zoom-value').textContent=`${zoom}%`}
+function paintPortraitSummary(){portraitX=savedPortraitX;portraitY=savedPortraitY;paintCropImage(document.getElementById('crop-summary-image'),savedPortraitZoom)}
+async function persistPortraitCrop(x,y,zoom,showStatus=false){const roundedX=Math.round(x);const roundedY=Math.round(y);const form=new FormData();form.append('image_object_position',`${roundedX}% ${roundedY}%`);form.append('image_zoom',String(zoom));try{const response=await fetch('/api/settings/funeral',{method:'POST',body:form});if(!response.ok)throw new Error();savedPortraitX=roundedX;savedPortraitY=roundedY;savedPortraitZoom=Number(zoom);if(showStatus)status('Portrait framing saved')}catch(e){status('Could not save portrait framing',true)}}
+function queuePortraitCropSync(){clearTimeout(cropSyncTimer);cropSyncTimer=setTimeout(()=>persistPortraitCrop(portraitX,portraitY,Number(document.getElementById('crop-zoom').value)||100),140)}
+function setPortraitZoom(value){paintPortraitCrop();queuePortraitCropSync()}
+function stepPortraitZoom(amount){const slider=document.getElementById('crop-zoom');slider.value=Math.max(100,Math.min(220,Number(slider.value)+amount));paintPortraitCrop();queuePortraitCropSync()}
+function resetPortraitCrop(){portraitX=50;portraitY=50;document.getElementById('crop-zoom').value=100;paintPortraitCrop();queuePortraitCropSync()}
+function openPortraitCrop(){portraitX=savedPortraitX;portraitY=savedPortraitY;document.getElementById('crop-zoom').value=savedPortraitZoom;paintPortraitCrop();document.getElementById('crop-dialog').showModal()}
+async function closePortraitCrop(){clearTimeout(cropSyncTimer);const zoom=Number(document.getElementById('crop-zoom').value)||100;await persistPortraitCrop(portraitX,portraitY,zoom,true);paintPortraitSummary();document.getElementById('crop-dialog').close()}
+function startPortraitDrag(event){const preview=document.getElementById('crop-preview');portraitDrag={pointerId:event.pointerId,x:event.clientX,y:event.clientY,startX:portraitX,startY:portraitY};preview.setPointerCapture(event.pointerId)}
+function movePortraitDrag(event){if(!portraitDrag||event.pointerId!==portraitDrag.pointerId)return;const preview=document.getElementById('crop-preview');const rect=preview.getBoundingClientRect();portraitX=Math.max(0,Math.min(100,portraitDrag.startX-((event.clientX-portraitDrag.x)/rect.width)*100));portraitY=Math.max(0,Math.min(100,portraitDrag.startY-((event.clientY-portraitDrag.y)/rect.height)*100));paintPortraitCrop();queuePortraitCropSync()}
+function finishPortraitDrag(event){if(!portraitDrag||event.pointerId!==portraitDrag.pointerId)return;portraitDrag=null;clearTimeout(cropSyncTimer);persistPortraitCrop(portraitX,portraitY,Number(document.getElementById('crop-zoom').value)||100)}
+function flushPortraitCrop(){if(!cropSyncTimer)return;clearTimeout(cropSyncTimer);cropSyncTimer=null;const form=new FormData();form.append('image_object_position',`${Math.round(portraitX)}% ${Math.round(portraitY)}%`);form.append('image_zoom',String(Number(document.getElementById('crop-zoom').value)||100));navigator.sendBeacon('/api/settings/funeral',form)}
+function initializePortraitCrop(){const preview=document.getElementById('crop-preview');if(!preview)return;const current={{ (settings.image_object_position or 'center center')|tojson }};savedPortraitX=positionPercent(current,'x');savedPortraitY=positionPercent(current,'y');savedPortraitZoom={{ settings.image_zoom or 100 }};portraitX=savedPortraitX;portraitY=savedPortraitY;preview.addEventListener('pointerdown',startPortraitDrag);preview.addEventListener('pointermove',movePortraitDrag);preview.addEventListener('pointerup',finishPortraitDrag);preview.addEventListener('pointercancel',finishPortraitDrag);document.getElementById('crop-dialog').addEventListener('cancel',event=>{event.preventDefault();closePortraitCrop()});window.addEventListener('pagehide',flushPortraitCrop);paintPortraitSummary()}
 async function saveSetting(key,value){const form=new FormData();form.append(key,value);try{const response=await fetch('/api/settings/funeral',{method:'POST',body:form});if(!response.ok)throw new Error();status('Saved')}catch(e){status('Could not save',true)}}
 async function toggleSetting(button){button.classList.toggle('on');const enabled=button.classList.contains('on');if(button.dataset.panel){const panel=document.getElementById(button.dataset.panel);if(panel)panel.hidden=!enabled}if(button.dataset.key==='is_visible'){try{const response=await fetch('/api/visibility/funeral',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({visible:enabled})});if(!response.ok)throw new Error();status(enabled?'Overlay is live':'Overlay is hidden')}catch(e){button.classList.toggle('on');status('Could not change visibility',true)}return}saveSetting(button.dataset.key,enabled?'true':'false')}
 async function loadPhrases(){const response=await fetch('/api/secondary-phrases/funeral');phrases=(await response.json()).phrases||[];renderPhrases()}
@@ -161,7 +295,9 @@ async function uploadPortrait(input){if(!input.files[0])return;const form=new Fo
 async function removePortrait(){if(!confirm('Remove the uploaded portrait?'))return;const response=await fetch('/api/remove-image/funeral',{method:'POST'});if(response.ok)location.reload();else status('Portrait could not be removed',true)}
 async function uploadLogo(input){if(!input.files[0])return;const form=new FormData();form.append('file',input.files[0]);const response=await fetch('/api/upload/funeral/logo',{method:'POST',body:form});if(response.ok){await saveSetting('show_company_logo','true');location.reload()}else status('Logo upload failed',true)}
 async function removeLogo(){if(!confirm('Remove the uploaded company logo?'))return;const response=await fetch('/api/remove-logo/funeral',{method:'POST'});if(response.ok)location.reload();else status('Logo could not be removed',true)}
-async function resetStyle(){if(!confirm('Reset colours, ticker speed, visibility options and auto-cycle timing to the recommended memorial style? Your text, portrait and selected design will be kept.'))return;const response=await fetch('/api/settings/funeral/reset-memorial-style',{method:'POST'});if(response.ok)location.reload();else status('Could not reset the style',true)}
+async function resetStyle(){if(!confirm('Reset layout, dimensions, typography, colours, ticker, on-screen extras and auto-cycle timing to the recommended memorial style? Your text, uploaded media and selected design will be kept.'))return;const response=await fetch('/api/settings/funeral/reset-memorial-style',{method:'POST'});if(response.ok)location.reload();else status('Could not reset the style',true)}
 loadPhrases();
+updateDimensionVisual(Number(document.getElementById('overlay-width-range').value),Number(document.getElementById('overlay-height-range').value));
+initializePortraitCrop();
 </script>
 {% endblock %}

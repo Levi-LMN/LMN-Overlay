@@ -53,8 +53,8 @@
   .bar-sub, .bar-sub-shadow{ animation-delay:.2s; }
 
   @keyframes settle{
-    from{ opacity:0; transform: translateX(-14px); }
-    to{ opacity:1; transform: translateX(0); }
+    from{ opacity:0; }
+    to{ opacity:1; }
   }
 
   /* ============ generic skewed bar shell ============ */
@@ -89,7 +89,15 @@
     opacity:0.55;
     z-index:3;
   }
-  .bar-main .bar-inner{ display:flex; flex-direction:column; justify-content:center; gap:2px; }
+  .bar-main .bar-inner{
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    gap:2px;
+    /* The portrait intentionally overlaps the bar. Keep its frame and shadow
+       out of the caption/name reading area. */
+    padding-left:64px;
+  }
 
   .kicker-small{
     font-family:"Jost", sans-serif;
@@ -513,6 +521,6 @@ window.MEMORIAL_SETTINGS = {{ settings|tojson }};
 window.MEMORIAL_VARIANT = 'classic';
 window.MEMORIAL_PREVIEW = {{ preview_mode|default(false)|tojson }};
 </script>
-<script src="{{ url_for('static', filename='js/memorial-template-bridge.js') }}"></script>
+<script src="{{ url_for('static', filename='js/memorial-template-bridge.js', v='20261012-portrait-crop') }}"></script>
 </body>
 </html>

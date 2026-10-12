@@ -30,6 +30,48 @@
         setVar('--time', accentSoft);
     }
 
+    function applyDesignScale(s) {
+        if (!root) return;
+        const baseHeights = {band: 242, cameo: 202, plate: 214, arch: 272, classic: 186};
+        const baseHeight = baseHeights[window.MEMORIAL_VARIANT] || 220;
+        const requestedHeight = Math.max(140, Math.min(300, Number(s.custom_height || 200)));
+        const heightScale = Math.max(0.72, Math.min(1.16, requestedHeight / baseHeight));
+        root.style.transform = `scale(var(--s)) scaleY(${heightScale})`;
+        root.dataset.overlayHeight = String(requestedHeight);
+
+        const requestedWidth = Math.max(600, Math.min(1200, Number(s.custom_width || 900)));
+        const rootStyle = getComputedStyle(document.documentElement);
+        const responsiveScale = Math.max(0.1, Number(rootStyle.getPropertyValue('--s')) || 1);
+        const gutter = Math.max(0, parseFloat(rootStyle.getPropertyValue('--gutter')) || 0);
+        const viewportLimit = Math.max(600, (window.innerWidth - (gutter * 2)) / responsiveScale);
+        const totalWidth = Math.min(requestedWidth, viewportLimit);
+        if (window.MEMORIAL_VARIANT === 'band' || window.MEMORIAL_VARIANT === 'arch') {
+            setVar('--w', `${totalWidth}px`);
+        } else {
+            const portraitOverlap = window.MEMORIAL_VARIANT === 'classic'
+                ? 118
+                : window.MEMORIAL_VARIANT === 'plate' ? 142 : 96;
+            setVar('--bar-w', `${Math.max(480, totalWidth - portraitOverlap)}px`);
+        }
+    }
+
+    function applyTypography(s) {
+        const globalFont = s.font_family || 'Segoe UI, Arial, sans-serif';
+        const apply = (selector, family, size, italic) => {
+            document.querySelectorAll(selector).forEach(element => {
+                element.style.fontFamily = family || globalFont;
+                if (size) element.style.fontSize = `${size}px`;
+                element.style.fontStyle = italic ? 'italic' : 'normal';
+            });
+        };
+        apply('#subjectName, .name', s.main_font_family, s.main_font_size, s.main_text_italic);
+        apply('#kickerLabel, .kicker', s.secondary_font_family, Math.max(10, Number(s.secondary_font_size || 22) * 0.55), s.secondary_text_italic);
+        apply('#slideStage .line-a, #slideStage .line-b', s.secondary_font_family, s.secondary_font_size, s.secondary_text_italic);
+        apply('#tickerTrack, #tickerTrack span', s.ticker_font_family, s.ticker_font_size, s.ticker_text_italic);
+        apply('#years, #watermark', s.company_name_font_family, s.company_name_font_size, s.company_name_italic);
+        apply('#timeLabel', s.clock_font_family, s.clock_font_size, false);
+    }
+
     function applyText(s) {
         const name = document.getElementById('subjectName');
         const kicker = document.getElementById('kickerLabel');
@@ -106,7 +148,12 @@
                 if (portrait.complete && portrait.naturalWidth && portrait.src === desiredSrc) {
                     portrait.style.visibility = '';
                 }
-                portrait.style.objectPosition = s.image_object_position || 'center center';
+                const cropPosition = s.image_object_position || 'center center';
+                const zoom = Math.max(100, Math.min(220, Number(s.image_zoom || 100)));
+                portrait.style.objectPosition = cropPosition;
+                portrait.style.transform = `scale(${zoom / 100})`;
+                portrait.style.transformOrigin = cropPosition;
+                if (portrait.parentElement) portrait.parentElement.style.overflow = 'hidden';
             } else {
                 portrait.style.visibility = 'hidden';
             }
@@ -392,7 +439,9 @@
             return;
         }
         applyPalette(s);
+        applyDesignScale(s);
         applyText(s);
+        applyTypography(s);
         applyChrome(s);
         configureCycle(s);
     }
@@ -414,6 +463,7 @@
     }
 
     applySettings(current);
+    window.addEventListener('resize', () => applyDesignScale(current));
     setInterval(poll, 1000);
     poll();
 }());

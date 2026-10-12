@@ -360,6 +360,12 @@ let cycleTimer = null, cycleOn = false;
 let twTimers = { main: null, sec: null, co: null };
 let txtAnimTO = null, txtRepeatTO = null;
 let clockRAF = null;
+let cycleSignature = '';
+let rotationSignature = '';
+let entranceSignature = '';
+let displayAnimationSignature = '';
+let textRuntimeSignature = '';
+const tickerState = { text:'', pps:100, position:null, lastTs:null, width:0, textWidth:0 };
 
 /* ── Lookup tables ────────────────────────────────────────────────────────── */
 const CYCLE_MAP = {
@@ -399,13 +405,20 @@ const CONTINUOUS_SET = new Set([
 ════════════════════════════════════════════════════════════════════════════ */
 function applySettings(s) {
   /* 1. Visibility / cycle */
-  if (s.is_visible) {
-    if (s.overlay_cycle_enabled) { startCycle(s); }
-    else { stopCycle(); ovEl.classList.add('vis'); }
-  } else {
-    stopCycle();
-    ovEl.classList.remove('vis');
-    ovEl.style.visibility = '';
+  const nextCycleSignature = JSON.stringify([s.is_visible, s.overlay_cycle_enabled,
+    s.overlay_visible_duration, s.overlay_hidden_duration, s.cycle_transition_duration,
+    s.cycle_entry_animation, s.cycle_exit_animation, s.stagger_enabled,
+    s.stagger_order, s.stagger_delay, s.stagger_element_exit, s.stagger_element_entry]);
+  if (nextCycleSignature !== cycleSignature) {
+    cycleSignature = nextCycleSignature;
+    if (s.is_visible) {
+      if (s.overlay_cycle_enabled) { startCycle(s); }
+      else { stopCycle(); ovEl.classList.add('vis'); }
+    } else {
+      stopCycle();
+      ovEl.classList.remove('vis');
+      ovEl.style.visibility = '';
+    }
   }
 
   /* 2. Style, layout, assets */
@@ -416,11 +429,25 @@ function applySettings(s) {
 
   /* 3. Phrase data + text */
   phrases = s.secondary_phrases || [];
-  applyText(s);
+  const nextTextRuntimeSignature = JSON.stringify([s.main_text, s.secondary_text,
+    s.company_name, s.main_text_animation, s.secondary_text_animation,
+    s.company_name_animation, s.text_animation, s.text_animation_speed,
+    s.text_animation_repeat_interval]);
+  if (nextTextRuntimeSignature !== textRuntimeSignature) {
+    textRuntimeSignature = nextTextRuntimeSignature;
+    applyText(s);
+  }
 
   /* 4. Secondary rotation */
-  if (s.secondary_rotation_enabled && phrases.length > 0) startRotation(s);
-  else stopRotation();
+  const nextRotationSignature = JSON.stringify([s.secondary_rotation_enabled, phrases,
+    s.secondary_display_duration, s.secondary_transition_type,
+    s.secondary_transition_duration, s.secondary_text_animation,
+    s.text_animation, s.text_animation_speed]);
+  if (nextRotationSignature !== rotationSignature) {
+    rotationSignature = nextRotationSignature;
+    if (s.secondary_rotation_enabled && phrases.length > 0) startRotation(s);
+    else stopRotation();
+  }
 
   /* 5. Animations — last, so elements exist and are visible */
   applyAnimations(s);
@@ -970,6 +997,11 @@ function applyWave(el, text, spd) {
 ════════════════════════════════════════════════════════════════════════════ */
 function applyAnimations(s) {
   const dur = (s.entrance_duration || 1) + 's';
+  const nextEntranceSignature = JSON.stringify([s.entrance_animation, s.entrance_duration,
+    s.entrance_delay, s.logo_animation, s.logo_animation_delay, s.image_animation,
+    s.image_animation_delay, s.ticker_entrance, s.ticker_entrance_delay,
+    s.show_company_logo, s.company_logo, s.show_category_image, s.category_image,
+    s.show_ticker, s.ticker_text]);
 
   function entrance(el, anim, delay) {
     if (!anim || anim === 'none') return;
@@ -979,10 +1011,13 @@ function applyAnimations(s) {
     el.style.animationDelay   = (delay || 0) + 's';
   }
 
-  entrance(ovEl,       s.entrance_animation, s.entrance_delay           || 0);
-  if (s.show_company_logo   && s.company_logo)   entrance(logoImgEl, s.logo_animation,   s.logo_animation_delay   || 0);
-  if (s.show_category_image && s.category_image) entrance(catImgEl,  s.image_animation,  s.image_animation_delay  || 0);
-  if (s.show_ticker         && s.ticker_text)    entrance(tickerWrapEl, s.ticker_entrance, s.ticker_entrance_delay || 0);
+  if (nextEntranceSignature !== entranceSignature) {
+    entranceSignature = nextEntranceSignature;
+    entrance(ovEl,       s.entrance_animation, s.entrance_delay           || 0);
+    if (s.show_company_logo   && s.company_logo)   entrance(logoImgEl, s.logo_animation,   s.logo_animation_delay   || 0);
+    if (s.show_category_image && s.category_image) entrance(catImgEl,  s.image_animation,  s.image_animation_delay  || 0);
+    if (s.show_ticker         && s.ticker_text)    entrance(tickerWrapEl, s.ticker_entrance, s.ticker_entrance_delay || 0);
+  }
 
   /* Continuous display animations for logo and image */
   function displayAnim(el, enabled, anim, animDur) {
@@ -992,8 +1027,15 @@ function applyAnimations(s) {
       if (animDur) el.style.animationDuration = animDur + 's';
     }
   }
-  displayAnim(logoImgEl, s.logo_display_animation_enabled,  s.logo_display_animation,  s.logo_display_animation_duration);
-  displayAnim(catImgEl,  s.image_display_animation_enabled, s.image_display_animation, s.image_display_animation_duration);
+  const nextDisplaySignature = JSON.stringify([s.logo_display_animation_enabled,
+    s.logo_display_animation, s.logo_display_animation_duration,
+    s.image_display_animation_enabled, s.image_display_animation,
+    s.image_display_animation_duration]);
+  if (nextDisplaySignature !== displayAnimationSignature) {
+    displayAnimationSignature = nextDisplaySignature;
+    displayAnim(logoImgEl, s.logo_display_animation_enabled,  s.logo_display_animation,  s.logo_display_animation_duration);
+    displayAnim(catImgEl,  s.image_display_animation_enabled, s.image_display_animation, s.image_display_animation_duration);
+  }
 }
 
 /* ════════════════════════════════════════════════════════════════════════════
@@ -1111,25 +1153,39 @@ function syncTickerOffset(s) {
 }
 
 function startTicker(s) {
-  stopTicker();
+  const text = s.ticker_text || '';
+  const textChanged = tickerState.text !== text;
+  tickerState.text = text;
+  tickerState.pps = Math.max(2, Number(s.ticker_speed || 50) * 2);
   requestAnimationFrame(() => {
     const cw = tickerWrapEl.offsetWidth, tw = tickerTxtEl.scrollWidth;
     if (tw <= 0 || cw <= 0) return;
-    const pps   = (s.ticker_speed || 50) * 2;
-    const total = tw + cw;
-    const dur   = (total / pps) * 1000;
-    let start = null, pos = cw;
-    function frame(ts) {
-      if (!start) start = ts;
-      pos = cw - total * ((ts - start) / dur);
-      tickerTxtEl.style.transform = `translateX(${pos}px)`;
-      if (pos <= -tw) { start = ts; pos = cw; }
-      tickerRAF = requestAnimationFrame(frame);
+    tickerState.width = cw;
+    tickerState.textWidth = tw;
+    if (textChanged || tickerState.position == null) tickerState.position = cw;
+    if (!tickerRAF) {
+      tickerState.lastTs = null;
+      tickerRAF = requestAnimationFrame(tickerFrame);
     }
-    tickerRAF = requestAnimationFrame(frame);
   });
 }
-function stopTicker() { if (tickerRAF) { cancelAnimationFrame(tickerRAF); tickerRAF = null; } }
+function tickerFrame(ts) {
+  if (tickerState.lastTs != null) {
+    const elapsed = Math.min(100, ts - tickerState.lastTs) / 1000;
+    tickerState.position -= tickerState.pps * elapsed;
+    if (tickerState.position <= -tickerState.textWidth) tickerState.position = tickerState.width;
+    tickerTxtEl.style.transform = `translateX(${tickerState.position}px)`;
+  }
+  tickerState.lastTs = ts;
+  tickerRAF = requestAnimationFrame(tickerFrame);
+}
+function stopTicker() {
+  if (tickerRAF) cancelAnimationFrame(tickerRAF);
+  tickerRAF = null;
+  tickerState.lastTs = null;
+  tickerState.position = null;
+  tickerState.text = '';
+}
 
 /* ════════════════════════════════════════════════════════════════════════════
    CYCLE ENGINE  (auto show / hide with entry + exit + optional stagger)

@@ -12,9 +12,19 @@
         if (value) document.documentElement.style.setProperty(name, value);
     }
 
+    function withAlpha(color, alpha) {
+        const value = String(color || '#000000').replace('#', '');
+        const hex = value.length === 3 ? value.split('').map(part => part + part).join('') : value;
+        const number = Number.parseInt(hex, 16);
+        if (!Number.isFinite(number)) return 'transparent';
+        return `rgba(${(number >> 16) & 255},${(number >> 8) & 255},${number & 255},${Math.max(0, Math.min(1, Number(alpha)))})`;
+    }
+
     function applyPalette(s) {
-        const background = s.overlay_bg_color || '#171A18';
-        const dark = s.ticker_bg_color || background;
+        const backgroundColor = s.overlay_bg_color || '#171A18';
+        const tickerColor = s.ticker_bg_color || backgroundColor;
+        const background = withAlpha(backgroundColor, s.overlay_bg_opacity == null ? .96 : s.overlay_bg_opacity);
+        const dark = withAlpha(tickerColor, s.ticker_bg_opacity == null ? 1 : s.ticker_bg_opacity);
         const accent = s.accent_color || s.border_color || '#D8B875';
         const accentSoft = s.secondary_text_color || accent;
         const text = s.main_text_color || '#FFFFFF';
@@ -28,14 +38,27 @@
         ['--pearl', '--ivory'].forEach(v => setVar(v, text));
         ['--pearl-dim', '--ivory-dim'].forEach(v => setVar(v, muted));
         setVar('--time', accentSoft);
+
+        const mainBackground = withAlpha(s.main_text_bg_color || backgroundColor, s.main_text_bg_opacity == null ? 0 : s.main_text_bg_opacity);
+        const secondaryBackground = withAlpha(s.secondary_text_bg_color || backgroundColor, s.secondary_text_bg_opacity == null ? 0 : s.secondary_text_bg_opacity);
+        document.querySelectorAll('#subjectName').forEach(element => {
+            element.style.backgroundColor = mainBackground;
+            element.style.boxDecorationBreak = 'clone';
+        });
+        document.querySelectorAll('#slideStage, .slot-zone').forEach(element => {
+            element.style.backgroundColor = secondaryBackground;
+        });
+        document.querySelectorAll('.ticker-wrap').forEach(element => {
+            element.style.backgroundColor = dark;
+        });
     }
 
     function applyDesignScale(s) {
         if (!root) return;
         const baseHeights = {band: 242, cameo: 202, plate: 214, arch: 272, classic: 186};
         const baseHeight = baseHeights[window.MEMORIAL_VARIANT] || 220;
-        const requestedHeight = Math.max(140, Math.min(300, Number(s.custom_height || 200)));
-        const heightScale = Math.max(0.72, Math.min(1.16, requestedHeight / baseHeight));
+        const requestedHeight = Math.max(100, Math.min(300, Number(s.custom_height || 200)));
+        const heightScale = Math.max(0.52, Math.min(1.16, requestedHeight / baseHeight));
         root.style.transform = `scale(var(--s)) scaleY(${heightScale})`;
         root.dataset.overlayHeight = String(requestedHeight);
 
@@ -349,6 +372,20 @@
         chromeState.live = Boolean(s.show_live_indicator);
         badge.querySelector('strong').textContent = s.live_label || 'LIVE';
         badge.querySelector('span').textContent = s.live_location || '';
+        const label = badge.querySelector('strong');
+        const locationText = badge.querySelector('span');
+        label.style.fontSize = `${s.live_label_font_size || s.live_indicator_font_size || 13}px`;
+        locationText.style.fontSize = `${s.live_location_font_size || s.live_indicator_font_size || 16}px`;
+        label.style.color = s.live_label_color || '#FFFFFF';
+        locationText.style.color = s.live_location_color || '#FFFFFF';
+        label.style.backgroundColor = withAlpha(s.live_label_bg_color || '#CC0000', s.live_label_bg_opacity == null ? .9 : s.live_label_bg_opacity);
+        locationText.style.backgroundColor = withAlpha(s.live_location_bg_color || '#000000', s.live_location_bg_opacity == null ? 0 : s.live_location_bg_opacity);
+        label.style.padding = '4px 7px';
+        label.style.borderRadius = '3px';
+        locationText.style.padding = s.live_location_bg_opacity > 0 ? '4px 7px' : '0';
+        locationText.style.borderRadius = '3px';
+        badge.style.backgroundColor = 'transparent';
+        badge.style.fontFamily = s.live_indicator_font_family || 'Arial, sans-serif';
         badge.style.left = s.live_indicator_horizontal_position === 'right' ? 'auto' : '36px';
         badge.style.right = s.live_indicator_horizontal_position === 'right' ? '36px' : 'auto';
         const sameCorner = (s.logo_horizontal_position === 'left' ? 'left' : 'right') ===
@@ -375,7 +412,8 @@
             span.style.color = current.ticker_text_color || '#FFFFFF';
         });
         const tickerWrap = tickerTrack.closest('.ticker-wrap');
-        if (tickerWrap) tickerWrap.style.backgroundColor = current.ticker_bg_color || '';
+        if (tickerWrap) tickerWrap.style.backgroundColor = withAlpha(current.ticker_bg_color || '#111111', current.ticker_bg_opacity == null ? 1 : current.ticker_bg_opacity);
+        tickerTrack.style.animationPlayState = current.ticker_frozen ? 'paused' : 'running';
         requestAnimationFrame(() => {
             if (!tickerTrack.isConnected) return;
             tickerTrack.style.setProperty('--shift', Math.max(1, tickerTrack.scrollWidth / 2) + 'px');

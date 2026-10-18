@@ -28,6 +28,12 @@
     .color-field{display:flex;align-items:center;gap:.55rem;border:1px solid #e5e7eb;border-radius:6px;padding:.55rem}
     .color-field input{width:38px;height:32px;border:0;padding:0;background:transparent}
     .color-field span{font-size:.78rem;font-weight:600;color:#374151}
+    .surface-list{display:grid;gap:.65rem}
+    .surface-control{display:grid;grid-template-columns:minmax(150px,1fr) 48px minmax(180px,1.3fr) 92px;gap:.75rem;align-items:center;padding:.7rem .8rem;border:1px solid #e5e7eb;border-radius:7px;background:#f9fafb}
+    .surface-name{font-size:.8rem;font-weight:700;color:#1f2937}.surface-name small{display:block;margin-top:.15rem;color:#6b7280;font-size:.68rem;font-weight:500}
+    .surface-swatch{width:42px;height:36px;padding:3px;border:1px solid #cbd5e1;border-radius:6px;background-color:#fff;background-image:linear-gradient(45deg,#e5e7eb 25%,transparent 25%),linear-gradient(-45deg,#e5e7eb 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#e5e7eb 75%),linear-gradient(-45deg,transparent 75%,#e5e7eb 75%);background-size:10px 10px;background-position:0 0,0 5px,5px -5px,-5px 0}
+    .surface-swatch input{width:100%;height:100%;padding:0;border:0;background:transparent;cursor:pointer}
+    .surface-opacity{width:100%;accent-color:#059669}.surface-value{padding:.35rem .5rem;border-radius:5px;background:#fff;color:#475569;font-size:.72rem;font-weight:700;text-align:center;font-variant-numeric:tabular-nums}
     .range-line{display:grid;grid-template-columns:1fr 64px;gap:.75rem;align-items:center}
     .range-line input[type=range]{width:100%;accent-color:#059669}
     .choice-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.55rem}
@@ -75,7 +81,7 @@
     .logo-current img{width:120px;height:54px;object-fit:contain;object-position:left center}
     .logo-status{color:#047857;font-size:.75rem;font-weight:700}
     .file-input-hidden{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
-    @media(max-width:700px){.memorial-header{display:block}.memorial-actions{justify-content:flex-start;margin-top:1rem}.field-grid,.color-row{grid-template-columns:1fr}.field.wide{grid-column:auto}.type-row{grid-template-columns:1fr}.choice-row{grid-template-columns:1fr}}
+    @media(max-width:700px){.memorial-header{display:block}.memorial-actions{justify-content:flex-start;margin-top:1rem}.field-grid,.color-row{grid-template-columns:1fr}.field.wide{grid-column:auto}.type-row{grid-template-columns:1fr}.choice-row{grid-template-columns:1fr}.surface-control{grid-template-columns:minmax(0,1fr) 48px}.surface-opacity{grid-column:1/-1}.surface-value{position:absolute;right:1.7rem;margin-top:4.15rem}}
 </style>
 {% endblock %}
 
@@ -133,11 +139,26 @@
         <div class="toggle-row mt-4"><div><p class="font-semibold text-sm">Show LIVE and location badge</p></div><button class="switch {% if settings.show_live_indicator %}on{% endif %}" data-key="show_live_indicator" data-panel="live-settings" onclick="toggleSetting(this)"></button></div>
         <div id="live-settings" {% if not settings.show_live_indicator %}hidden{% endif %}>
         <div class="field-grid mt-2">
+            <div class="field"><label>LIVE label</label><input type="text" value="{{ settings.live_label or 'LIVE' }}" placeholder="LIVE" onchange="saveSetting('live_label',this.value)"></div>
             <div class="field"><label>Location</label><input type="text" value="{{ settings.live_location or '' }}" placeholder="For example: Nairobi, Kenya" onchange="saveSetting('live_location',this.value)"></div>
+            <div class="field"><label>LIVE label size (px)</label><input type="number" min="10" max="60" value="{{ settings.live_label_font_size or 13 }}" onchange="saveSetting('live_label_font_size',this.value)"></div>
+            <div class="field"><label>Location size (px)</label><input type="number" min="10" max="60" value="{{ settings.live_location_font_size or 16 }}" onchange="saveSetting('live_location_font_size',this.value)"></div>
             <div class="field"><label>Badge corner</label><select onchange="saveSetting('live_indicator_horizontal_position',this.value)"><option value="left" {% if settings.live_indicator_horizontal_position != 'right' %}selected{% endif %}>Top left</option><option value="right" {% if settings.live_indicator_horizontal_position == 'right' %}selected{% endif %}>Top right</option></select></div>
             <div class="field"><label>Badge animation</label><select onchange="saveSetting('live_indicator_animation',this.value)">
                 {% for value,label in [('none','None'),('pulse','Pulse'),('glow','Glow'),('float','Float'),('bounce','Bounce')] %}<option value="{{ value }}" {% if (settings.live_indicator_animation or 'pulse') == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
             </select></div>
+        </div>
+        <div class="color-row mt-3">
+            {% for label,key,value in [
+                ('LIVE text','live_label_color',settings.live_label_color or '#FFFFFF'),
+                ('LIVE background','live_label_bg_color',settings.live_label_bg_color or '#CC0000'),
+                ('Location text','live_location_color',settings.live_location_color or '#FFFFFF'),
+                ('Location background','live_location_bg_color',settings.live_location_bg_color or '#000000')
+            ] %}<label class="color-field"><input type="color" value="{{ value }}" onchange="saveSetting('{{ key }}',this.value)"><span>{{ label }}</span></label>{% endfor %}
+        </div>
+        <div class="field-grid mt-3">
+            <div class="field"><label>LIVE background opacity</label><input type="range" min="0" max="1" step="0.05" value="{{ settings.live_label_bg_opacity if settings.live_label_bg_opacity is not none else 0.9 }}" onchange="saveSetting('live_label_bg_opacity',this.value)"></div>
+            <div class="field"><label>Location background opacity</label><input type="range" min="0" max="1" step="0.05" value="{{ settings.live_location_bg_opacity if settings.live_location_bg_opacity is not none else 0 }}" onchange="saveSetting('live_location_bg_opacity',this.value)"></div>
         </div>
         </div>
     </section>
@@ -146,17 +167,36 @@
         <h2><i class="fas fa-scroll text-emerald-700"></i> Ticker</h2>
         <div class="toggle-row"><div><p class="font-semibold text-sm">Show ticker</p></div><button class="switch {% if settings.show_ticker %}on{% endif %}" data-key="show_ticker" data-panel="ticker-settings" onclick="toggleSetting(this)"></button></div>
         <div id="ticker-settings" {% if not settings.show_ticker %}hidden{% endif %}>
+        <div class="toggle-row mt-2"><div><p class="font-semibold text-sm">Freeze ticker</p><p class="text-xs text-gray-500">Pause the message where it is; unfreeze to continue.</p></div><button class="switch {% if settings.ticker_frozen %}on{% endif %}" data-key="ticker_frozen" onclick="toggleSetting(this)"></button></div>
         <div class="field mt-2"><label>Ticker text</label><textarea rows="3" onchange="saveSetting('ticker_text',this.value)">{{ settings.ticker_text or '' }}</textarea></div>
         <div class="field mt-4"><label>Ticker speed: <span id="ticker-speed-value">{{ settings.ticker_speed or 50 }}</span></label><div class="range-line"><input type="range" min="1" max="100" value="{{ settings.ticker_speed or 50 }}" oninput="document.getElementById('ticker-speed-value').textContent=this.value" onchange="saveSetting('ticker_speed',this.value)"><input type="number" min="1" max="100" value="{{ settings.ticker_speed or 50 }}" onchange="saveSetting('ticker_speed',this.value);location.reload()"></div><p class="text-xs text-gray-500 mt-1">1 is slowest; 100 is fastest.</p></div>
         </div>
     </section>
 
     <section class="memorial-section">
-        <h2><i class="fas fa-palette text-emerald-700"></i> Design Colours</h2>
+        <h2><i class="fas fa-layer-group text-emerald-700"></i> Section Backgrounds</h2>
+        <p class="text-xs text-gray-500 mb-3">Choose a colour, then fade only that section. Move the slider fully left for transparent.</p>
+        <div class="surface-list">
+            {% for label,description,color_key,opacity_key,color,opacity in [
+                ('Main panel','The body of the lower third','overlay_bg_color','overlay_bg_opacity',settings.overlay_bg_color or '#171A18',settings.overlay_bg_opacity if settings.overlay_bg_opacity is not none else 0.96),
+                ('Name line','Background directly behind the memorial name','main_text_bg_color','main_text_bg_opacity',settings.main_text_bg_color or '#171A18',settings.main_text_bg_opacity if settings.main_text_bg_opacity is not none else 0),
+                ('Supporting line','Background behind remembrance messages','secondary_text_bg_color','secondary_text_bg_opacity',settings.secondary_text_bg_color or '#171A18',settings.secondary_text_bg_opacity if settings.secondary_text_bg_opacity is not none else 0),
+                ('Ticker','The scrolling message strip','ticker_bg_color','ticker_bg_opacity',settings.ticker_bg_color or '#111111',settings.ticker_bg_opacity if settings.ticker_bg_opacity is not none else 1)
+            ] %}
+            <div class="surface-control">
+                <div class="surface-name">{{ label }}<small>{{ description }}</small></div>
+                <label class="surface-swatch" title="Choose {{ label|lower }} colour"><input type="color" value="{{ color }}" onchange="saveSetting('{{ color_key }}',this.value)"></label>
+                <input class="surface-opacity" type="range" min="0" max="1" step="0.05" value="{{ opacity }}" aria-label="{{ label }} opacity" oninput="updateOpacityLabel(this)" onchange="saveSetting('{{ opacity_key }}',this.value)">
+                <span class="surface-value">{{ (opacity * 100)|round|int }}% visible</span>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+
+    <section class="memorial-section">
+        <h2><i class="fas fa-palette text-emerald-700"></i> Text & Accent Colours</h2>
         <div class="color-row">
             {% for label, key, value in [
-                ('Panel','overlay_bg_color',settings.overlay_bg_color or '#171A18'),
-                ('Ticker panel','ticker_bg_color',settings.ticker_bg_color or '#111111'),
                 ('Accent','accent_color',settings.accent_color or '#D8B875'),
                 ('Main text','main_text_color',settings.main_text_color or '#FFFFFF'),
                 ('Supporting text','secondary_text_color',settings.secondary_text_color or '#D8B875'),
@@ -185,8 +225,8 @@
         <div class="field mt-4">
             <label>Overlay height: <span id="overlay-height-value">{{ settings.custom_height or 200 }}</span> px</label>
             <div class="range-line">
-                <input id="overlay-height-range" type="range" min="140" max="300" step="10" value="{{ settings.custom_height or 200 }}" oninput="syncOverlayHeight(this.value,'range')" onchange="saveSetting('custom_height',this.value)">
-                <input id="overlay-height-number" type="number" min="140" max="300" step="10" value="{{ settings.custom_height or 200 }}" oninput="syncOverlayHeight(this.value,'number')" onchange="saveSetting('custom_height',this.value)">
+                <input id="overlay-height-range" type="range" min="100" max="300" step="10" value="{{ settings.custom_height or 200 }}" oninput="syncOverlayHeight(this.value,'range')" onchange="saveSetting('custom_height',this.value)">
+                <input id="overlay-height-number" type="number" min="100" max="300" step="10" value="{{ settings.custom_height or 200 }}" oninput="syncOverlayHeight(this.value,'number')" onchange="saveSetting('custom_height',this.value)">
             </div>
             <p class="text-xs text-gray-500 mt-1">Changes the vertical footprint without changing the horizontal width.</p>
         </div>
@@ -263,9 +303,11 @@ let savedPortraitZoom = 100;
 let portraitDrag = null;
 let cropSyncTimer = null;
 function status(message, error=false){const el=document.getElementById('save-state');el.textContent=message;el.style.color=error?'#b91c1c':'#047857';clearTimeout(status.timer);status.timer=setTimeout(()=>el.textContent='',2200)}
-function updateDimensionVisual(width,height){const shape=document.getElementById('dimension-shape');if(!shape)return;const widthPercent=48+((width-600)/600)*45;const heightPercent=34+((height-140)/160)*32;shape.style.width=`${Math.max(48,Math.min(93,widthPercent))}%`;shape.style.height=`${Math.max(34,Math.min(66,heightPercent))}%`;document.getElementById('visual-width-value').textContent=width;document.getElementById('visual-height-value').textContent=height}
+function updateDimensionVisual(width,height){const shape=document.getElementById('dimension-shape');if(!shape)return;const widthPercent=48+((width-600)/600)*45;const heightPercent=24+((height-100)/200)*42;shape.style.width=`${Math.max(48,Math.min(93,widthPercent))}%`;shape.style.height=`${Math.max(24,Math.min(66,heightPercent))}%`;document.getElementById('visual-width-value').textContent=width;document.getElementById('visual-height-value').textContent=height}
 function syncOverlayWidth(value,source){const width=Math.max(600,Math.min(1200,Number(value)||900));document.getElementById('overlay-width-value').textContent=width;if(source!=='range')document.getElementById('overlay-width-range').value=width;if(source!=='number')document.getElementById('overlay-width-number').value=width;updateDimensionVisual(width,Number(document.getElementById('overlay-height-range').value))}
-function syncOverlayHeight(value,source){const height=Math.max(140,Math.min(300,Number(value)||200));document.getElementById('overlay-height-value').textContent=height;if(source!=='range')document.getElementById('overlay-height-range').value=height;if(source!=='number')document.getElementById('overlay-height-number').value=height;updateDimensionVisual(Number(document.getElementById('overlay-width-range').value),height)}
+function syncOverlayHeight(value,source){const height=Math.max(100,Math.min(300,Number(value)||200));document.getElementById('overlay-height-value').textContent=height;if(source!=='range')document.getElementById('overlay-height-range').value=height;if(source!=='number')document.getElementById('overlay-height-number').value=height;updateDimensionVisual(Number(document.getElementById('overlay-width-range').value),height)}
+function updateOpacityLabel(input){const value=Math.round(Number(input.value)*100);const label=input.nextElementSibling;label.textContent=value===0?'Transparent':value===100?'Solid':`${value}% visible`}
+document.querySelectorAll('.surface-opacity').forEach(updateOpacityLabel);
 function positionPercent(value,axis){const parts=String(value||'center center').trim().split(/\s+/);const token=parts[axis==='x'?0:1]||'center';const names=axis==='x'?{left:0,center:50,right:100}:{top:0,center:50,bottom:100};return token.endsWith('%')?Math.max(0,Math.min(100,parseFloat(token))):(names[token]??50)}
 function paintCropImage(image,zoom){if(!image)return;image.style.objectPosition=`${portraitX}% ${portraitY}%`;image.style.transform=`scale(${zoom/100})`;image.style.transformOrigin=`${portraitX}% ${portraitY}%`}
 function paintPortraitCrop(){const slider=document.getElementById('crop-zoom');if(!slider)return;const zoom=Number(slider.value)||100;paintCropImage(document.getElementById('crop-preview-image'),zoom);document.getElementById('crop-zoom-value').textContent=`${zoom}%`}

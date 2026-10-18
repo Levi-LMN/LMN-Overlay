@@ -299,13 +299,14 @@
     align-items:center;
     white-space:nowrap;
     animation: tickerScroll linear infinite;
+    will-change:transform;backface-visibility:hidden;
   }
   .ticker-track span{
     font-family:"Jost", sans-serif;
     font-weight:500;
     font-size:11px;
     letter-spacing:0.6px;
-    text-transform:uppercase;
+    text-transform:none;
     color:var(--ivory-dim);
     padding-right:34px;
   }
@@ -315,8 +316,8 @@
     margin-left:34px;
   }
   @keyframes tickerScroll{
-    from{ transform: translateX(0); }
-    to{ transform: translateX(calc(-1 * var(--shift, 50%))); }
+    from{ transform:translate3d(0,0,0); }
+    to{ transform:translate3d(calc(-1 * var(--shift, 50%)),0,0); }
   }
   @media (prefers-reduced-motion: reduce){
     .ticker-track{ animation:none; }
@@ -521,6 +522,6 @@ window.MEMORIAL_SETTINGS = {{ settings|tojson }};
 window.MEMORIAL_VARIANT = 'classic';
 window.MEMORIAL_PREVIEW = {{ preview_mode|default(false)|tojson }};
 </script>
-<script src="{{ url_for('static', filename='js/memorial-template-bridge.js', v='20261012-portrait-crop') }}"></script>
+<script src="{{ url_for('static', filename='js/memorial-template-bridge.js', v='20261018-ticker-freeze') }}"></script>
 </body>
 </html>

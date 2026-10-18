@@ -90,7 +90,7 @@ def manage_settings(category):
             # clock
             'clock_font_size',
             # live indicator
-            'live_indicator_font_size',
+            'live_indicator_font_size', 'live_label_font_size', 'live_location_font_size',
         ]
 
         for field in int_fields:
@@ -156,6 +156,7 @@ def manage_settings(category):
             ('enable_text_truncation', 'enable_text_truncation'),
             ('logo_shadow', 'logo_shadow'),
             ('show_ticker', 'show_ticker'),
+            ('ticker_frozen', 'ticker_frozen'),
             ('show_secondary_text', 'show_secondary_text'),
             ('show_company_name', 'show_company_name'),
             ('logo_display_animation_enabled', 'logo_display_animation_enabled'),
@@ -234,6 +235,7 @@ def reset_memorial_style():
         'ticker_text_color': '#FFFFFF',
         'ticker_speed': 50,
         'show_ticker': True,
+        'ticker_frozen': False,
         'show_secondary_text': True,
         'show_category_image': True,
         'overlay_cycle_enabled': False,
@@ -261,9 +263,18 @@ def reset_memorial_style():
         'logo_horizontal_position': 'right',
         'logo_animation': 'fade-in',
         'show_live_indicator': False,
+        'live_label': 'LIVE',
         'live_location': '',
         'live_indicator_horizontal_position': 'left',
         'live_indicator_animation': 'pulse',
+        'live_label_font_size': 13,
+        'live_location_font_size': 16,
+        'live_label_color': '#FFFFFF',
+        'live_label_bg_color': '#CC0000',
+        'live_label_bg_opacity': 0.9,
+        'live_location_color': '#FFFFFF',
+        'live_location_bg_color': '#000000',
+        'live_location_bg_opacity': 0.0,
         'image_object_position': 'center center',
         'image_zoom': 100,
     }
@@ -411,6 +422,7 @@ def settings_to_dict(settings):
         'show_category_image': settings.show_category_image,
         'show_company_logo': settings.show_company_logo,
         'show_ticker': settings.show_ticker,
+        'ticker_frozen': settings.ticker_frozen or False,
         'show_secondary_text': settings.show_secondary_text if settings.show_secondary_text is not None else True,
         'show_company_name': settings.show_company_name if settings.show_company_name is not None else True,
 
@@ -447,6 +459,8 @@ def settings_to_dict(settings):
         'live_indicator_bg_color':           settings.live_indicator_bg_color          or '#CC0000',
         'live_indicator_bg_opacity':         settings.live_indicator_bg_opacity        if settings.live_indicator_bg_opacity is not None else 0.9,
         'live_indicator_font_size':          settings.live_indicator_font_size         or 16,
+        'live_label_font_size':              settings.live_label_font_size             or 13,
+        'live_location_font_size':           settings.live_location_font_size          or 16,
         'live_indicator_font_family':        settings.live_indicator_font_family,
         'live_indicator_animation':          settings.live_indicator_animation         or 'pulse',
         'live_indicator_vertical_position':  settings.live_indicator_vertical_position or 'top',

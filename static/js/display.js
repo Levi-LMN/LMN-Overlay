@@ -407,6 +407,7 @@ class OverlayController {
             // Ticker Speed
             const speed = this.settings.ticker_speed || 50;
             tickerContent.style.animationDuration = `${speed}s`;
+            tickerContent.style.animationPlayState = this.settings.ticker_frozen ? 'paused' : 'running';
 
             // Ticker Entrance Animation
             const tickerEntrance = this.settings.ticker_entrance || 'slideInBottom';

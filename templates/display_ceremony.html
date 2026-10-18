@@ -1548,6 +1548,7 @@
         function startTicker() {
             stopTicker();
             const s = currentSettings;
+            if (s.ticker_frozen) return;
             const containerWidth = tickerContainer.offsetWidth;
             const contentWidth = tickerContent.scrollWidth;
             if (contentWidth <= containerWidth) {

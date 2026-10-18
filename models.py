@@ -107,6 +107,7 @@ class OverlaySettings(db.Model):
     show_category_image = db.Column(db.Boolean, default=True)
     show_company_logo = db.Column(db.Boolean, default=True)
     show_ticker = db.Column(db.Boolean, default=True)
+    ticker_frozen = db.Column(db.Boolean, default=False)
     show_secondary_text = db.Column(db.Boolean, default=True)
     show_company_name = db.Column(db.Boolean, default=True)
 
@@ -172,6 +173,8 @@ class OverlaySettings(db.Model):
     live_indicator_bg_color          = db.Column(db.String(7),   default='#CC0000')
     live_indicator_bg_opacity        = db.Column(db.Float,       default=0.9)
     live_indicator_font_size         = db.Column(db.Integer,     default=16)
+    live_label_font_size             = db.Column(db.Integer,     default=13)
+    live_location_font_size          = db.Column(db.Integer,     default=16)
     live_indicator_font_family       = db.Column(db.String(100), default=None)
     live_indicator_animation         = db.Column(db.String(50),  default='pulse')
     live_indicator_vertical_position   = db.Column(db.String(20), default='top')
@@ -362,6 +365,7 @@ class OverlaySettings(db.Model):
             'show_category_image':     True,
             'show_company_logo':       True,
             'show_ticker':             True,
+            'ticker_frozen':           False,
             'show_secondary_text':     True,
             'show_company_name':       True,
         }
@@ -528,6 +532,8 @@ class OverlaySettings(db.Model):
             'live_indicator_bg_color':            '#CC0000',
             'live_indicator_bg_opacity':          0.9,
             'live_indicator_font_size':           16,
+            'live_label_font_size':               13,
+            'live_location_font_size':            16,
             'live_indicator_font_family':         None,
             'live_indicator_animation':           'pulse',
             'live_indicator_vertical_position':   'top',

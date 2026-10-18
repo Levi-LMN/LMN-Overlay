@@ -457,6 +457,7 @@ input[type="range"]{accent-color:#4F46E5}
                 <h3><i class="fas fa-scroll"></i>Ticker</h3>
                 {{ toggle_row('Show Ticker','show_ticker_tog', settings.show_ticker, "toggleShowTicker(this)") }}
                 <div id="ticker_controls" style="display:{% if settings.show_ticker %}block{% else %}none{% endif %};">
+                    {{ toggle_row('Freeze Ticker','ticker_frozen_tog', settings.ticker_frozen, "toggleBoolean(this,'ticker_frozen')") }}
                     <div class="form-group">
                         <label class="form-label">Ticker Text</label>
                         <textarea id="ticker_text" class="form-input" rows="3" onchange="updateSetting('ticker_text',this.value)">{{ settings.ticker_text or '' }}</textarea>
@@ -864,13 +865,17 @@ input[type="range"]{accent-color:#4F46E5}
                     {# ── Typography ── #}
                     <div class="grid-2">
                         <div class="form-group">
-                            <label class="form-label">Font Size (px)</label>
-                            <input type="number" min="10" max="60" class="form-input" value="{{ settings.live_indicator_font_size or 16 }}" onchange="updateSetting('live_indicator_font_size',this.value)">
+                            <label class="form-label">LIVE Label Size (px)</label>
+                            <input type="number" min="10" max="60" class="form-input" value="{{ settings.live_label_font_size or 13 }}" onchange="updateSetting('live_label_font_size',this.value)">
                         </div>
                         <div class="form-group">
-                            <label class="form-label">Font Family</label>
-                            {{ font_select('live_indicator_font_family', settings.live_indicator_font_family, 'live_indicator_font_family') }}
+                            <label class="form-label">Location Size (px)</label>
+                            <input type="number" min="10" max="60" class="form-input" value="{{ settings.live_location_font_size or 16 }}" onchange="updateSetting('live_location_font_size',this.value)">
                         </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Font Family</label>
+                        {{ font_select('live_indicator_font_family', settings.live_indicator_font_family, 'live_indicator_font_family') }}
                     </div>
 
                     <hr class="my-3 border-gray-100">

@@ -31,7 +31,7 @@ _EXPORTABLE_FIELDS = [
     # Content
     'category', 'main_text', 'secondary_text', 'secondary_phrases',
     'ticker_text', 'company_name', 'company_logo', 'category_image',
-    'show_category_image', 'show_company_logo', 'show_ticker',
+    'show_category_image', 'show_company_logo', 'show_ticker', 'ticker_frozen',
     'show_secondary_text', 'show_company_name',
 
     # Secondary text rotation
@@ -65,7 +65,8 @@ _EXPORTABLE_FIELDS = [
     # Live indicator
     'show_live_indicator', 'live_label', 'live_location',
     'live_indicator_color', 'live_indicator_bg_color', 'live_indicator_bg_opacity',
-    'live_indicator_font_size', 'live_indicator_font_family',
+    'live_indicator_font_size', 'live_label_font_size', 'live_location_font_size',
+    'live_indicator_font_family',
     'live_indicator_animation', 'live_indicator_vertical_position',
     'live_indicator_horizontal_position',
 

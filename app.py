@@ -65,6 +65,15 @@ def init_db(app):
             db.session.execute(text(
                 f'ALTER TABLE overlay_settings ADD COLUMN {column_name} BOOLEAN DEFAULT 0'
             ))
+    if 'ticker_frozen' not in existing_columns:
+        db.session.execute(text(
+            'ALTER TABLE overlay_settings ADD COLUMN ticker_frozen BOOLEAN DEFAULT 0'
+        ))
+    for column_name, default in (('live_label_font_size', 13), ('live_location_font_size', 16)):
+        if column_name not in existing_columns:
+            db.session.execute(text(
+                f'ALTER TABLE overlay_settings ADD COLUMN {column_name} INTEGER DEFAULT {default}'
+            ))
     db.session.commit()
 
     admin_email = app.config['ADMIN_EMAIL']

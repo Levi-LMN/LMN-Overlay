@@ -75,7 +75,8 @@ body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;position:relative}
 #ticker-wrap.clock-adjacent.pos-bottom{ clip-path:polygon(0 0,100% 0,100% 100%,28px 100%); }
 #ticker-wrap.clock-adjacent.pos-top   { clip-path:polygon(28px 0,100% 0,100% 100%,0 100%); }
 #ticker-inner{position:relative;width:100%;overflow:hidden;display:flex;align-items:center}
-#ticker-txt{display:inline-block;white-space:nowrap;padding:0;font-weight:500;letter-spacing:.5px;will-change:transform}
+#ticker-txt{display:flex;align-items:center;gap:48px;width:max-content;white-space:nowrap;padding:0;font-weight:500;letter-spacing:.5px;text-transform:none;will-change:transform;backface-visibility:hidden}
+#ticker-txt span{display:inline-block;white-space:nowrap}
 
 /* ════════════════════════════════════════════════════════════════════════════
    ENTRANCE ANIMATIONS  (class = "anim-" + settings value)
@@ -365,7 +366,7 @@ let rotationSignature = '';
 let entranceSignature = '';
 let displayAnimationSignature = '';
 let textRuntimeSignature = '';
-const tickerState = { text:'', pps:100, position:null, lastTs:null, width:0, textWidth:0 };
+const tickerState = { text:'', pps:100, position:null, lastTs:null, width:0, textWidth:0, frozen:false };
 
 /* ── Lookup tables ────────────────────────────────────────────────────────── */
 const CYCLE_MAP = {
@@ -782,7 +783,16 @@ function applyAssets(s) {
 
   /* Ticker — lives inside overlay bottom strip; offset right of clock when clock is on */
   if (s.show_ticker && s.ticker_text) {
-    tickerTxtEl.textContent = s.ticker_text;
+    if (tickerTxtEl.dataset.text !== s.ticker_text) {
+      tickerTxtEl.dataset.text = s.ticker_text;
+      tickerTxtEl.replaceChildren();
+      const first = document.createElement('span');
+      const repeat = document.createElement('span');
+      first.textContent = s.ticker_text;
+      repeat.textContent = s.ticker_text;
+      repeat.setAttribute('aria-hidden', 'true');
+      tickerTxtEl.append(first, repeat);
+    }
     tickerWrapEl.classList.add('vis');
     syncTickerOffset(s);
     startTicker(s);
@@ -1157,8 +1167,12 @@ function startTicker(s) {
   const textChanged = tickerState.text !== text;
   tickerState.text = text;
   tickerState.pps = Math.max(2, Number(s.ticker_speed || 50) * 2);
+  tickerState.frozen = Boolean(s.ticker_frozen);
   requestAnimationFrame(() => {
-    const cw = tickerWrapEl.offsetWidth, tw = tickerTxtEl.scrollWidth;
+    const firstCopy = tickerTxtEl.querySelector('span');
+    const gap = parseFloat(getComputedStyle(tickerTxtEl).columnGap) || 48;
+    const cw = tickerWrapEl.offsetWidth;
+    const tw = firstCopy ? firstCopy.getBoundingClientRect().width + gap : tickerTxtEl.scrollWidth;
     if (tw <= 0 || cw <= 0) return;
     tickerState.width = cw;
     tickerState.textWidth = tw;
@@ -1170,11 +1184,11 @@ function startTicker(s) {
   });
 }
 function tickerFrame(ts) {
-  if (tickerState.lastTs != null) {
+  if (!tickerState.frozen && tickerState.lastTs != null) {
     const elapsed = Math.min(100, ts - tickerState.lastTs) / 1000;
     tickerState.position -= tickerState.pps * elapsed;
-    if (tickerState.position <= -tickerState.textWidth) tickerState.position = tickerState.width;
-    tickerTxtEl.style.transform = `translateX(${tickerState.position}px)`;
+    if (tickerState.position <= -tickerState.textWidth) tickerState.position += tickerState.textWidth;
+    tickerTxtEl.style.transform = `translate3d(${tickerState.position}px,0,0)`;
   }
   tickerState.lastTs = ts;
   tickerRAF = requestAnimationFrame(tickerFrame);
@@ -1442,11 +1456,12 @@ function applyLiveIndicator(s) {
 
   // ── Typography ────────────────────────────────────────────────────────────
   const gf = s.live_indicator_font_family || s.font_family || 'Segoe UI,sans-serif';
-  const fs = (s.live_indicator_font_size || 16) + 'px';
-  liveIndEl.style.fontSize   = fs;
+  liveIndEl.style.fontSize   = (s.live_indicator_font_size || 16) + 'px';
   liveIndEl.style.fontFamily = gf;
   liveLabelEl.style.fontFamily = gf;
   liveLocEl.style.fontFamily   = gf;
+  liveLabelEl.style.fontSize   = (s.live_label_font_size || s.live_indicator_font_size || 13) + 'px';
+  liveLocEl.style.fontSize     = (s.live_location_font_size || s.live_indicator_font_size || 16) + 'px';
 
   // ── Outer badge background (wraps both parts) ─────────────────────────────
   const outerOp = s.live_indicator_bg_opacity != null ? s.live_indicator_bg_opacity : 0.9;
